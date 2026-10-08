@@ -1,0 +1,45 @@
+# Pipeline image: data download, build, training and evaluation runs.
+#
+# The serving image is separate (infra/docker/Dockerfile.serve) and is added in the phase that
+# introduces the API, so this image stays small enough to iterate on quickly.
+
+FROM python:3.12-slim-bookworm AS base
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    UV_LINK_MODE=copy \
+    UV_COMPILE_BYTECODE=1 \
+    UV_NO_SYNC=1 \
+    UV_PROJECT_ENVIRONMENT=/opt/venv \
+    PATH="/opt/venv/bin:$PATH"
+
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y ca-certificates curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=ghcr.io/astral-sh/uv:0.9.7 /uv /usr/local/bin/uv
+
+WORKDIR /app
+
+# Dependency layer first so source edits do not invalidate the install.
+COPY pyproject.toml uv.lock README.md ./
+RUN uv sync --all-groups --locked --no-install-project
+
+# The project itself is installed as a non-editable package so the runtime user never needs to
+# write into the virtualenv.
+COPY src ./src
+COPY scripts ./scripts
+RUN uv sync --all-groups --locked --no-editable \
+    && rm -rf /root/.cache/uv
+
+# Datasets and artefacts are mounted, never baked into the image.
+RUN mkdir -p /data /artifacts \
+    && useradd --create-home --uid 10001 rankstack \
+    && chown -R rankstack:rankstack /data /artifacts /app
+USER rankstack
+
+ENV RANKSTACK_DATA_ROOT=/data \
+    RANKSTACK_ARTIFACT_ROOT=/artifacts
+
+ENTRYPOINT ["uv", "run", "python"]
+CMD ["scripts/build_dataset.py", "--help"]

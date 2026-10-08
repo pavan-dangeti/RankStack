@@ -1,0 +1,96 @@
+[project]
+name = "rankstack"
+version = "0.1.0"
+description = "Two-stage recommendation system with time-respecting evaluation"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "duckdb==1.5.6",
+    "pyarrow==25.0.0",
+    "pydantic==2.13.1",
+    "pydantic-settings==2.13.1",
+]
+
+[dependency-groups]
+dev = [
+    "hypothesis==6.151.1",
+    "mypy==1.19.1",
+    "pytest==9.0.1",
+    "pytest-cov==7.0.0",
+    "ruff==0.15.1",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rankstack"]
+# PEP 561: ship the marker so mypy reads annotations from the installed package.
+artifacts = ["src/rankstack/py.typed"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "ANN401",  # pydantic-settings takes Any by design
+    "COM812",  # conflicts with the formatter
+    "D203",    # incompatible with D211
+    "D213",    # incompatible with D212
+    "ISC001",  # conflicts with the formatter
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+    "S101",    # assert is the point of a test
+    "S608",    # test SQL is built from test-local paths
+    "PLR2004",  # magic numbers are expected values in tests
+    "ANN201",
+    "ANN001",
+    "D103",
+    "SLF001",
+    "INP001",
+  ]
+"scripts/**" = ["INP001", "T201"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["rankstack"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unreachable = true
+# disallow_any_explicit is off because pydantic types Field() and SettingsConfigDict() as Any, so
+# the rule fires on framework entry points rather than on this project's own signatures.
+files = ["src", "tests", "scripts"]
+
+[[tool.mypy.overrides]]
+module = ["hypothesis.*"]
+disallow_any_explicit = false
+
+[[tool.mypy.overrides]]
+module = ["pyarrow.*"]
+# pyarrow ships no py.typed marker; the schemas in rankstack.data.schema are plain constants.
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"
+markers = [
+    "integration: requires a local DuckDB database or containerised dependency",
+    "e2e: runs a whole pipeline stage set end to end",
+]
+
+[tool.coverage.run]
+branch = true
+source = ["rankstack"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]

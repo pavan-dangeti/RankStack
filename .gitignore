@@ -41,6 +41,10 @@ build/
 reports/
 loadtest-results/
 
+# Test and tool caches
+.hypothesis/
+.pytest_cache/
+
 # Local scratch
 scratch/
 *.log

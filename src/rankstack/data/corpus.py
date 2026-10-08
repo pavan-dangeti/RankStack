@@ -10,7 +10,10 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
-from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 _BASE = "https://mcauleylab.ucsd.edu/public_datasets/data/amazon_2023"
 _INTERACTIONS = _BASE + "/benchmark/{core}core/rating_only/{category}.csv.gz"
@@ -57,21 +60,26 @@ class Corpus:
 
     @property
     def interactions_url(self) -> str:
+        """Publisher URL of the `rating_only` interactions file."""
         return _INTERACTIONS.format(core=self.core, category=self.category)
 
     @property
     def metadata_url(self) -> str | None:
+        """Publisher URL of the item metadata file, or None when the corpus has none."""
         return _METADATA.format(category=self.category) if self.metadata_bytes else None
 
     def publisher_split_url(self, split: str) -> str:
+        """Return the publisher URL of a pre-split file, used only to cross-check our split."""
         return _PUBLISHER_SPLIT.format(category=self.category, split=split)
 
     @property
     def train_end_ms(self) -> int:
+        """Exclusive upper bound of the train partition, in epoch milliseconds."""
         return TRAIN_END_MS
 
     @property
     def test_start_ms(self) -> int:
+        """Inclusive lower bound of the test partition, in epoch milliseconds."""
         return TEST_START_MS
 
 
@@ -114,18 +122,21 @@ MUSICAL_INSTRUMENTS_5CORE = Corpus(
 )
 
 CORPORA: dict[str, Corpus] = {
-    corpus.name: corpus for corpus in (ELECTRONICS_0CORE, ELECTRONICS_5CORE, MUSICAL_INSTRUMENTS_5CORE)
+    corpus.name: corpus
+    for corpus in (ELECTRONICS_0CORE, ELECTRONICS_5CORE, MUSICAL_INSTRUMENTS_5CORE)
 }
 
 DEFAULT_CORPUS = ELECTRONICS_0CORE.name
 
 
 def get_corpus(name: str) -> Corpus:
+    """Look up a corpus by registry name."""
     try:
         return CORPORA[name]
     except KeyError as exc:
         known = ", ".join(sorted(CORPORA))
-        raise KeyError(f"unknown corpus {name!r}; known corpora: {known}") from exc
+        msg = f"unknown corpus {name!r}; known corpora: {known}"
+        raise KeyError(msg) from exc
 
 
 def raw_dir_for(data_root: Path, corpus: Corpus) -> Path:
@@ -134,6 +145,7 @@ def raw_dir_for(data_root: Path, corpus: Corpus) -> Path:
 
 
 def utc_iso(timestamp_ms: int) -> str:
+    """Format epoch milliseconds as an ISO-8601 UTC timestamp."""
     return datetime.fromtimestamp(timestamp_ms / 1000, tz=UTC).isoformat()
 
 

@@ -10,12 +10,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from enum import StrEnum
-from pathlib import Path
+from typing import TYPE_CHECKING
 
-import duckdb
-
-from rankstack.data.corpus import Corpus
 from rankstack.logging import get_logger
+
+if TYPE_CHECKING:
+    from pathlib import Path
+
+    import duckdb
+
+    from rankstack.data.corpus import Corpus
 
 _logger = get_logger(__name__)
 
@@ -39,6 +43,7 @@ class Leak:
     count: int
 
     def as_dict(self) -> dict[str, object]:
+        """Return the leak as a JSON-serialisable mapping."""
         return {"kind": str(self.kind), "detail": self.detail, "count": self.count}
 
 
@@ -54,9 +59,11 @@ class LeakageReport:
 
     @property
     def clean(self) -> bool:
+        """True when no leak was found."""
         return not self.leaks
 
     def add(self, kind: LeakKind, detail: str, count: int = 1) -> None:
+        """Record one leak; a zero count is ignored so the report carries no noise."""
         if count <= 0:
             return
         self.leaks.append(Leak(kind=kind, detail=detail, count=count))
@@ -65,6 +72,7 @@ class LeakageReport:
         )
 
     def raise_on_leak(self) -> None:
+        """Raise `LeakageError` listing every leak, or return when the report is clean."""
         if self.clean:
             return
         lines = "\n".join(f"  - [{leak.kind}] {leak.detail} (x{leak.count})" for leak in self.leaks)
@@ -72,6 +80,7 @@ class LeakageReport:
         raise LeakageError(msg)
 
     def as_dict(self) -> dict[str, object]:
+        """Return the report as a JSON-serialisable mapping."""
         return {"clean": self.clean, "leaks": [leak.as_dict() for leak in self.leaks]}
 
 
@@ -92,21 +101,29 @@ def check_partition_order(
             f"train reaches {train_max}, boundary is {corpus.train_end_ms}",
         )
     if valid_min is not None and valid_min < corpus.train_end_ms:
-        report.add(LeakKind.PARTITION_ORDER, f"valid starts at {valid_min}, before the train boundary")
+        report.add(
+            LeakKind.PARTITION_ORDER, f"valid starts at {valid_min}, before the train boundary"
+        )
     if valid_max is not None and valid_max >= corpus.test_start_ms:
         report.add(
             LeakKind.PARTITION_ORDER,
             f"valid reaches {valid_max}, boundary is {corpus.test_start_ms}",
         )
     if test_min is not None and test_min < corpus.test_start_ms:
-        report.add(LeakKind.PARTITION_ORDER, f"test starts at {test_min}, before the valid boundary")
+        report.add(
+            LeakKind.PARTITION_ORDER, f"test starts at {test_min}, before the valid boundary"
+        )
 
 
 def check_split_counts(report: LeakageReport, observed: dict[str, int], corpus: Corpus) -> None:
     """Compare measured partition sizes with the publisher's published split sizes."""
     if corpus.split is None:
         return
-    published = {"train": corpus.split.train, "valid": corpus.split.valid, "test": corpus.split.test}
+    published = {
+        "train": corpus.split.train,
+        "valid": corpus.split.valid,
+        "test": corpus.split.test,
+    }
     for partition, expected in published.items():
         actual = observed.get(partition, 0)
         if abs(actual - expected) > expected * 0.02:
@@ -126,7 +143,9 @@ def check_feature_values(
     from rankstack.data.asof import count_feature_leaks  # noqa: PLC0415 - avoids an import cycle
 
     mismatches = count_feature_leaks(
-        connection=connection, features_path=features_path, interactions_relation=interactions_relation
+        connection=connection,
+        features_path=features_path,
+        interactions_relation=interactions_relation,
     )
     report.add(
         LeakKind.FEATURE_VALUE,
@@ -142,7 +161,7 @@ def check_future_only_items(
     as_of_ms: int,
     interactions_relation: str,
 ) -> None:
-    """An item with no interaction before `as_of_ms` must have no snapshot at `as_of_ms`.
+    """Require that an item unseen before `as_of_ms` has no snapshot at `as_of_ms`.
 
     This is the cold-start boundary. An item that first appears after the prediction moment cannot
     appear in the trained features, so any score it receives must come from the content path.
@@ -175,7 +194,7 @@ def check_negatives_are_not_positives(
     positives_relation: str,
     train_end_ms: int,
 ) -> None:
-    """A sampled negative must not be a positive the user already had at prediction time."""
+    """Require that no sampled negative is a positive the user had at prediction time."""
     row = connection.execute(
         f"""
         SELECT count(*)
@@ -198,7 +217,6 @@ def check_shuffled_timeline_is_detected(
     connection: duckdb.DuckDBPyConnection,
     interactions_relation: str,
     features_path: Path,
-    as_of_ms: int,
 ) -> LeakageReport:
     """Negative control: shuffle timestamps, then require the feature check to complain.
 

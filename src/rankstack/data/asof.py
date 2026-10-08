@@ -5,20 +5,20 @@ from data that existed at that example's prediction moment. Here that is one pri
 feature snapshots carrying an `as_of_ms`, and a join that only ever returns snapshots with
 `as_of_ms <= query_as_of_ms`.
 
-Phase 1 materialises item-level snapshots. User-level and interaction-level snapshots arrive with the
-baselines that need them; the join below is the same for all three.
+Phase 1 materialises item-level snapshots. User-level and interaction-level snapshots arrive with
+the baselines that need them; the join below is the same for all three.
 """
 
 from __future__ import annotations
 
-import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Final
-
-import duckdb
+from typing import TYPE_CHECKING, Final
 
 from rankstack.logging import get_logger
+
+if TYPE_CHECKING:
+    import duckdb
 
 _logger = get_logger(__name__)
 
@@ -44,6 +44,7 @@ class AsOfReadStats:
     future_rows: int
 
     def as_dict(self) -> dict[str, object]:
+        """Return the counters as a JSON-serialisable mapping."""
         return {
             "features": self.features,
             "rows": self.rows,
@@ -57,7 +58,7 @@ def _quote(path: Path) -> str:
 
 
 def item_as_of_sql(source_relation: str, as_of_ms: int) -> str:
-    """SQL producing long-format item feature snapshots as of `as_of_ms`.
+    """Build SQL producing long-format item feature snapshots as of `as_of_ms`.
 
     Every aggregate filters with a strict `< as_of_ms`, so an interaction at exactly the boundary is
     not counted. The filter is inside each aggregate; filtering after aggregating would leak. Each
@@ -100,9 +101,7 @@ def write_item_as_of_features(
     union = "\nUNION ALL\n".join(statements)
     # Sorted output keeps the Parquet bytes identical across runs, so the manifest hash is a
     # meaningful build fingerprint rather than a record of DuckDB's thread scheduling.
-    ordered = (
-        f"SELECT * FROM ({union}) ORDER BY entity_type, entity_id, feature_name, as_of_ms"
-    )
+    ordered = f"SELECT * FROM ({union}) ORDER BY entity_type, entity_id, feature_name, as_of_ms"
     connection.execute(f"COPY ({ordered}) TO '{_quote(target)}' (FORMAT PARQUET, COMPRESSION ZSTD)")
     row = connection.execute(
         f"SELECT count(*), count(DISTINCT entity_id) FROM read_parquet('{_quote(target)}')"
@@ -114,7 +113,7 @@ def write_item_as_of_features(
 
 
 def as_of_join_sql(features_relation: str, query_relation: str) -> str:
-    """SQL that attaches each query row to the newest feature snapshot not from the future.
+    """Build SQL attaching each query row to its newest in-time feature snapshot.
 
     `query_relation` must expose `entity_type`, `entity_id` and `as_of_ms`.
     """
@@ -162,9 +161,10 @@ def read_as_of(
         raise FileNotFoundError(msg)
     id_list = ", ".join(f"'{value.replace(chr(39), chr(39) * 2)}'" for value in entity_ids)
     features = f"read_parquet('{_quote(features_path)}')"
-    query = f"""
-        (SELECT '{entity_type}' AS entity_type, unnest([{id_list}]) AS entity_id, {as_of_ms} AS as_of_ms)
-    """
+    query = (
+        f"(SELECT '{entity_type}' AS entity_type, unnest([{id_list}]) AS entity_id,"
+        f" {as_of_ms} AS as_of_ms)"
+    )
     sql = as_of_join_sql(features, query)
     rows = connection.execute(sql).fetchall()
     return [

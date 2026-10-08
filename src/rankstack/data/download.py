@@ -11,14 +11,17 @@ from __future__ import annotations
 import hashlib
 import shutil
 import urllib.request
-from collections.abc import Callable
 from dataclasses import dataclass
-from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from rankstack.config import Settings, settings as default_settings
+from rankstack.config import Settings
+from rankstack.config import settings as default_settings
 from rankstack.data.corpus import Corpus, raw_dir_for
 from rankstack.logging import get_logger
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from pathlib import Path
 
 _logger = get_logger(__name__)
 
@@ -42,6 +45,7 @@ class DownloadResult:
     already_present: bool
 
     def as_dict(self) -> dict[str, object]:
+        """Return the download record as a JSON-serialisable mapping."""
         return {
             "url": self.url,
             "path": str(self.path),
@@ -62,7 +66,9 @@ def _open(url: str) -> tuple[Any, int | None]:
         msg = f"refusing to download {url!r}: scheme {scheme!r} is not allowed"
         raise DownloadError(msg)
 
-    request = urllib.request.Request(url, headers={"User-Agent": "rankstack/0.1 (+research)"})
+    request = urllib.request.Request(  # noqa: S310 - scheme is allow-listed above
+        url, headers={"User-Agent": "rankstack/0.1 (+research)"}
+    )
     try:
         stream = urllib.request.urlopen(request)  # noqa: S310 - scheme is allow-listed above
     except OSError as exc:
@@ -79,6 +85,7 @@ def _open(url: str) -> tuple[Any, int | None]:
 
 
 def sha256_file(path: Path, chunk_bytes: int = _HASH_CHUNK) -> str:
+    """Return the SHA-256 of a file, read in chunks so file size does not matter."""
     digest = hashlib.sha256()
     with path.open("rb") as handle:
         while chunk := handle.read(chunk_bytes):
@@ -102,7 +109,10 @@ def download_file(
 
     if destination.exists() and destination.stat().st_size == expected_bytes:
         existing_digest = sha256_file(destination, settings.download_chunk_bytes)
-        _logger.info("dataset.file_reused", extra={"path": str(destination), "sha256": existing_digest})
+        _logger.info(
+            "dataset.file_reused",
+            extra={"path": str(destination), "sha256": existing_digest},
+        )
         return DownloadResult(
             path=destination,
             url=url,
@@ -158,7 +168,9 @@ def download_file(
     )
 
 
-def download_corpus_files(corpus_name: str, settings: Settings = default_settings) -> dict[str, DownloadResult]:
+def download_corpus_files(
+    corpus_name: str, settings: Settings = default_settings
+) -> dict[str, DownloadResult]:
     """Download the raw files of a registered corpus."""
     from rankstack.data.corpus import get_corpus  # noqa: PLC0415 - avoids an import cycle
 

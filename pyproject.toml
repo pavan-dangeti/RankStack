@@ -44,6 +44,10 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
+# SQL in the data layer is assembled from module constants, integer boundaries and paths that pass
+# through `_quote`. No request-derived value reaches it; user input arrives in the serving layer,
+# where this rule stays active.
+"src/rankstack/data/*.py" = ["S608"]
 "tests/**" = [
     "S101",    # assert is the point of a test
     "S608",    # test SQL is built from test-local paths

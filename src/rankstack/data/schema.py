@@ -110,6 +110,7 @@ class CheckResult:
 
     @property
     def passed(self) -> bool:
+        """True when the observed value satisfies this check's comparison."""
         match self.compare:
             case Compare.MUST_BE_ZERO:
                 return self.observed == 0
@@ -128,6 +129,7 @@ class CheckEvaluation:
 
     @property
     def failed(self) -> bool:
+        """True when a hard-fail check did not pass."""
         return self.check.kind is CheckKind.HARD_FAIL and not self.result.passed
 
 
@@ -138,6 +140,7 @@ class ValidationReport:
     evaluations: list[CheckEvaluation] = field(default_factory=list)
 
     def add(self, check: Check, observed: float) -> CheckEvaluation:
+        """Record one check outcome and return the evaluation."""
         evaluation = CheckEvaluation(
             check=check,
             result=CheckResult(
@@ -155,15 +158,18 @@ class ValidationReport:
 
     @property
     def failures(self) -> list[CheckEvaluation]:
+        """Evaluations that must stop the build."""
         return [e for e in self.evaluations if e.failed]
 
     @property
     def rows_dropped(self) -> int:
+        """Total rows removed by the drop-kind checks."""
         return sum(
             int(e.result.observed) for e in self.evaluations if e.check.kind is CheckKind.DROP
         )
 
     def raise_on_failure(self) -> None:
+        """Raise `ValidationError` listing every failing hard check, or return when clean."""
         if not self.failures:
             return
         lines = "\n".join(
@@ -176,6 +182,7 @@ class ValidationReport:
         raise ValidationError(msg)
 
     def as_dict(self) -> dict[str, object]:
+        """Return the report as a JSON-serialisable mapping."""
         return {
             "checks": [
                 {
@@ -270,7 +277,10 @@ def item_checks(min_metadata_coverage: float) -> list[Check]:
             name="null_item_parent_asin",
             kind=CheckKind.HARD_FAIL,
             compare=Compare.MUST_BE_ZERO,
-            sql="SELECT count(*) FROM staged_items WHERE parent_asin IS NULL OR trim(parent_asin) = ''",
+            sql=(
+                "SELECT count(*) FROM staged_items"
+                " WHERE parent_asin IS NULL OR trim(parent_asin) = ''"
+            ),
             expected=0.0,
             detail="item metadata must carry a parent_asin",
         ),
@@ -284,7 +294,8 @@ def item_checks(min_metadata_coverage: float) -> list[Check]:
                     SELECT count(*)
                     FROM interacted
                     WHERE NOT EXISTS (
-                        SELECT 1 FROM staged_items WHERE staged_items.parent_asin = interacted.parent_asin
+                        SELECT 1 FROM staged_items
+                        WHERE staged_items.parent_asin = interacted.parent_asin
                     )
                 )::DOUBLE / greatest((SELECT count(*) FROM interacted), 1)
             """,
@@ -295,7 +306,7 @@ def item_checks(min_metadata_coverage: float) -> list[Check]:
 
 
 def report_checks() -> list[Check]:
-    """Checks recorded but never fatal, so the manifest documents what was imperfect."""
+    """Record checks that are never fatal, so the manifest documents what was imperfect."""
     return [
         Check(
             name="items_without_title",
@@ -311,7 +322,7 @@ def report_checks() -> list[Check]:
             compare=Compare.AT_LEAST,
             sql="SELECT count(*) FROM staged_items WHERE category_path = ''",
             expected=0.0,
-            detail="category path is used for category affinity; a missing one is treated as unknown",
+            detail="category path feeds category affinity; a missing one is treated as unknown",
         ),
         Check(
             name="items_without_price",

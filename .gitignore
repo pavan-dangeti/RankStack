@@ -3,12 +3,13 @@
 .env.*
 !.env.example
 
-# Raw and processed datasets: never committed (see docs/design.md section 4.3)
-data/
-!data/README.md
+# Raw and processed datasets: never committed (see docs/design.md section 4.3).
+# Root-anchored on purpose: a bare `data/` also matches src/rankstack/data/ in the wheel builder.
+/data/
+!/data/README.md
 
 # Model, index and embedding artefacts: gitignored, attached to releases
-artifacts/
+/artifacts/
 *.faiss
 *.npy
 *.npz
@@ -19,7 +20,7 @@ artifacts/
 *.onnx
 
 # MLflow runtime state
-mlruns/
+/mlruns/
 mlflow.db
 
 # Python
@@ -38,7 +39,7 @@ dist/
 build/
 
 # Load-test and profiling output
-reports/
+/reports/
 loadtest-results/
 
 # Test and tool caches
@@ -46,7 +47,7 @@ loadtest-results/
 .pytest_cache/
 
 # Local scratch
-scratch/
+/scratch/
 *.log
 .DS_Store
 .idea/

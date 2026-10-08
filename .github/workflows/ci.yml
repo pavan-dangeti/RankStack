@@ -92,7 +92,7 @@ jobs:
       - name: Build the pipeline image for scanning
         run: docker build -f infra/docker/Dockerfile.pipeline -t rankstack-pipeline:ci .
       - name: Container scan
-        uses: aquasecurity/trivy-action@0.33.1 # v0.36.0
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: rankstack-pipeline:ci
           scan-type: image
@@ -123,4 +123,4 @@ jobs:
         run: docker build -f infra/docker/Dockerfile.pipeline -t rankstack-pipeline:ci .
       - name: Image runs the pipeline entry point
         run: |
-          docker run --rm rankstack-pipeline:ci python scripts/build_dataset.py --help
+          docker run --rm rankstack-pipeline:ci scripts/build_dataset.py --help

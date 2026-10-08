@@ -13,11 +13,12 @@ import sys
 import time
 from dataclasses import asdict, dataclass, field
 from datetime import UTC, datetime
-from pathlib import Path
+from typing import TYPE_CHECKING
 
 import duckdb
 
-from rankstack.config import Settings, settings as default_settings
+from rankstack.config import Settings
+from rankstack.config import settings as default_settings
 from rankstack.data.corpus import DEFAULT_CORPUS, Corpus, get_corpus, raw_dir_for, utc_iso
 from rankstack.data.download import download_corpus_files, sha256_file
 from rankstack.data.schema import (
@@ -33,6 +34,9 @@ from rankstack.data.schema import (
     report_checks,
 )
 from rankstack.logging import get_logger
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 _logger = get_logger(__name__)
 
@@ -55,6 +59,7 @@ class PartitionStats:
     max_timestamp_ms: int | None
 
     def as_dict(self) -> dict[str, object]:
+        """Return the counters as a JSON-serialisable mapping."""
         return asdict(self)
 
 
@@ -80,6 +85,7 @@ class BuildManifest:
     """Typed copy of `validation`, for summaries and tests. Not serialised."""
 
     def as_dict(self) -> dict[str, object]:
+        """Return the manifest as a JSON-serialisable mapping."""
         return {
             "corpus": self.corpus,
             "category": self.category,
@@ -135,7 +141,9 @@ def _stage_items(connection: duckdb.DuckDBPyConnection, jsonl_path: Path) -> Non
         CREATE OR REPLACE VIEW staged_items AS
         SELECT
             parent_asin,
-            coalesce(nullif(trim(title), ''), nullif(trim(main_category), ''), parent_asin) AS title,
+            coalesce(
+                nullif(trim(title), ''), nullif(trim(main_category), ''), parent_asin
+            ) AS title,
             main_category,
             coalesce(array_to_string(categories, ' > '), '') AS category_path,
             -- `price` is heterogeneous upstream: 526,449 numbers, 1,083,247 nulls and 316 strings
@@ -310,6 +318,7 @@ def _write_items(connection: duckdb.DuckDBPyConnection, out_dir: Path) -> dict[s
 def build_dataset(
     corpus: str | Corpus | None = None,
     settings: Settings = default_settings,
+    *,
     skip_download: bool = False,
 ) -> BuildManifest:
     """Run the full data build for one corpus and write its manifest.
@@ -317,14 +326,11 @@ def build_dataset(
     `corpus` is a registry name or a `Corpus` value, so a test can build a synthetic corpus that
     satisfies the same contract without the published row counts.
     """
-    if isinstance(corpus, Corpus):
-        corpus_value = corpus
-    else:
-        corpus_value = get_corpus(corpus or DEFAULT_CORPUS)
+    corpus_value = corpus if isinstance(corpus, Corpus) else get_corpus(corpus or DEFAULT_CORPUS)
     return _build(corpus_value, settings=settings, skip_download=skip_download)
 
 
-def _build(corpus_value: Corpus, settings: Settings, skip_download: bool) -> BuildManifest:
+def _build(corpus_value: Corpus, settings: Settings, *, skip_download: bool) -> BuildManifest:
     started = time.perf_counter()
     settings.ensure_directories()
     out_dir = settings.processed(corpus_value.name)
@@ -352,8 +358,7 @@ def _build(corpus_value: Corpus, settings: Settings, skip_download: bool) -> Bui
         )
         report.raise_on_failure()
 
-        dupes = duplicate_check()
-        dropped_duplicates = _run_checks(connection, [dupes], report)[dupes.name]
+        _run_checks(connection, [duplicate_check()], report)
         _clean_interactions(connection)
 
         if corpus_value.metadata_url and corpus_value.metadata_bytes:
@@ -418,7 +423,10 @@ def _build(corpus_value: Corpus, settings: Settings, skip_download: bool) -> Bui
     manifest.outputs = _hash_outputs(out_dir)
     manifest_path = out_dir / "manifest.json"
     manifest_path.write_text(json.dumps(manifest.as_dict(), indent=2, sort_keys=True) + "\n")
-    _logger.info("data.build_complete", extra={"corpus": corpus_value.name, "manifest": str(manifest_path)})
+    _logger.info(
+        "data.build_complete",
+        extra={"corpus": corpus_value.name, "manifest": str(manifest_path)},
+    )
     return manifest
 
 
@@ -428,7 +436,7 @@ def _as_int(value: object, default: int = 0) -> int:
 
 
 def result_summary(manifest: BuildManifest, command: str) -> dict[str, object]:
-    """The committed, human-readable result file behind every published figure.
+    """Build the committed result file that backs every published figure.
 
     Same numbers as the manifest, keyed so a document can point at a single value
     (`results/dataset_<corpus>.json#/partitions/train/rows`).
@@ -484,16 +492,14 @@ def write_result_file(manifest: BuildManifest, command: str, results_root: Path)
 
 
 def _hash_outputs(out_dir: Path) -> list[dict[str, object]]:
-    outputs: list[dict[str, object]] = []
-    for path in sorted(out_dir.rglob("*.parquet")):
-        outputs.append(
-            {
-                "path": str(path.relative_to(out_dir)),
-                "bytes": path.stat().st_size,
-                "sha256": sha256_file(path),
-            }
-        )
-    return outputs
+    return [
+        {
+            "path": str(path.relative_to(out_dir)),
+            "bytes": path.stat().st_size,
+            "sha256": sha256_file(path),
+        }
+        for path in sorted(out_dir.rglob("*.parquet"))
+    ]
 
 
 def _environment() -> dict[str, object]:
@@ -546,12 +552,12 @@ def load_manifest(corpus_name: str, settings: Settings = default_settings) -> di
 
 __all__ = [
     "BuildManifest",
-    "result_summary",
-    "write_result_file",
     "CheckKind",
     "CheckResult",
     "PartitionStats",
     "build_dataset",
     "load_manifest",
+    "result_summary",
     "summarise",
+    "write_result_file",
 ]

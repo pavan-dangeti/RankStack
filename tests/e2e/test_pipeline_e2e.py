@@ -76,7 +76,6 @@ def test_negative_control_detects_a_shuffled_timeline(built) -> None:  # type: i
         connection=connection,
         interactions_relation="clean_interactions",
         features_path=features_path,
-        as_of_ms=TRAIN_END_MS,
     )
     assert not report.clean, "a shuffled timeline must trip the leakage suite"
 

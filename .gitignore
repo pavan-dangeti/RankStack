@@ -1,0 +1,49 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+
+# Raw and processed datasets: never committed (see docs/design.md section 4.3)
+data/
+!data/README.md
+
+# Model, index and embedding artefacts: gitignored, attached to releases
+artifacts/
+*.faiss
+*.npy
+*.npz
+*.pt
+*.pth
+*.pkl
+*.joblib
+*.onnx
+
+# MLflow runtime state
+mlruns/
+mlflow.db
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# Load-test and profiling output
+reports/
+loadtest-results/
+
+# Local scratch
+scratch/
+*.log
+.DS_Store
+.idea/
+.vscode/

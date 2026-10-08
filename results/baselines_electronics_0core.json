@@ -1,0 +1,28 @@
+{
+  "als": {
+    "alpha": 40.0,
+    "factors": 32,
+    "iterations": 3,
+    "min_user_history": 2,
+    "regularisation": 0.01,
+    "seed": 20261008
+  },
+  "command": "uv run python scripts/train_baselines.py --corpus electronics_0core",
+  "cooccurrence": {
+    "density": 2.536398428395924e-05,
+    "max_history": 50,
+    "nnz": 45198503,
+    "top_k": 100
+  },
+  "corpus": "electronics_0core",
+  "elapsed_seconds": 296.1,
+  "interactions": 35335971,
+  "n_items": 1334914,
+  "n_users": 15441133,
+  "popularity": {
+    "nonzero_items": 1334914
+  },
+  "popularity_recent": {
+    "decay_days": 90.0
+  }
+}

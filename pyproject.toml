@@ -5,6 +5,7 @@ description = "Two-stage recommendation system with time-respecting evaluation"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "duckdb==1.5.6",
+    "implicit==0.7.3",
     "pyarrow==25.0.0",
     "pydantic==2.13.1",
     "pydantic-settings==2.13.1",
@@ -60,6 +61,11 @@ ignore = [
   ]
 "scripts/**" = ["INP001", "T201"]
 
+[tool.ruff.lint.pylint]
+# Training and evaluation entry points take several keyword-only hyperparameters. Ten-argument
+# functions still get bundled into a config object; eight is the ceiling here.
+max-args = 8
+
 [tool.ruff.lint.isort]
 known-first-party = ["rankstack"]
 
@@ -74,6 +80,11 @@ files = ["src", "tests", "scripts"]
 [[tool.mypy.overrides]]
 module = ["hypothesis.*"]
 disallow_any_explicit = false
+
+[[tool.mypy.overrides]]
+module = ["scipy.*", "implicit.*"]
+# Neither scipy nor implicit ships a py.typed marker.
+ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = ["pyarrow.*"]

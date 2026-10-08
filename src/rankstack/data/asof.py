@@ -140,8 +140,8 @@ def as_of_join_sql(features_relation: str, query_relation: str) -> str:
     """
 
 
+#: `(entity_id, feature_name, feature_as_of_ms, value)` for one feature of one entity.
 AsOfRow = tuple[str, str, int | None, float | None]
-"""`(entity_id, feature_name, feature_as_of_ms, value)` for one feature of one entity."""
 
 
 def read_as_of(

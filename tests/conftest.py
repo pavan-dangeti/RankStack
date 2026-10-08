@@ -43,6 +43,10 @@ class SyntheticCorpus:
     users: int
     new_item_asin: str
     """An item whose first and only interaction is inside the test window."""
+    single_history_user: str
+    """A user with exactly one train-window interaction."""
+    test_only_user: str
+    """A user whose first interaction is inside the test window."""
     empty_title_asin: str
     """An item with no title, to exercise the title fallback."""
 
@@ -106,6 +110,15 @@ def make_synthetic_corpus(
     empty_title_asin = "B0NOTITLE1"
     rows.append(("U0001", empty_title_asin, 4.0, _ts(1)))
 
+    # A user with exactly one train-window interaction: collaborative filtering has no signal beyond
+    # that item, so ALS cannot serve them while co-occurrence still can.
+    single_history_user = "U9998"
+    rows.append((single_history_user, catalogue[3], 5.0, _ts(0)))
+
+    # A user who appears only in the test window: the cold-start case at miniature scale.
+    test_only_user = "U9999"
+    rows.append((test_only_user, catalogue[5], 4.0, TEST_START_MS + DAY_MS * 5))
+
     # A duplicate event and an item with no metadata, so the drop and coverage paths run.
     duplicate = rows[0]
     rows.append(duplicate)
@@ -132,6 +145,8 @@ def make_synthetic_corpus(
 
     return SyntheticCorpus(
         csv_path=csv_path,
+        single_history_user=single_history_user,
+        test_only_user=test_only_user,
         metadata_path=metadata_path,
         interactions=len(rows),
         items=len({row[1] for row in rows}),

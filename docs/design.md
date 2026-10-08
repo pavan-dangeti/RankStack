@@ -217,6 +217,19 @@ runs. Validation is not a notebook assertion — it is a pipeline stage that fai
 | Same item with conflicting `parent_asin` metadata | keep newest metadata, count reported |
 | Items with no title | keep, flagged; title falls back to `main_category` |
 
+Three properties of the published data were found by running these checks rather than by reading
+about them, and are recorded in `results/dataset_electronics_0core.json` instead of being smoothed
+over:
+
+- `rating` is not reliably on the documented 1–5 scale: 2 of 43,365,426 rows are `0.0`. Those rows
+  are dropped and counted.
+- `price` is heterogeneous: 526,449 numeric values, 1,083,247 nulls and 316 strings, 266 of which are
+  the em-dash placeholder and the rest look like `from 9.95`. The reader takes the first number in a
+  string price and never turns a missing price into zero, because "unknown" and "free" are different
+  facts to a price-affinity feature.
+- 128,442 items have no category path and 106,334 have no `main_category`; category affinity treats
+  them as unknown rather than as a bucket.
+
 Every stage writes Parquet with a schema and a row-count manifest under `data/processed/`. DuckDB
 is the single processing engine (SQL over Parquet, streaming from the gzip files, ~1–2 GB peak
 RSS on this dataset), so there is exactly one thing to learn, profile and pin instead of two.

@@ -1,0 +1,222 @@
+{
+  "boundaries": {
+    "test_start_ms": 1658002729837,
+    "train_end_ms": 1628643414042
+  },
+  "boundary_iso": {
+    "test_start": "2022-07-16T20:18:49.837000+00:00",
+    "train_end": "2021-08-11T00:56:54.042000+00:00"
+  },
+  "category": "Electronics",
+  "cold_start": {
+    "new_items": 274946,
+    "new_users": 2845057
+  },
+  "command": "uv run python scripts/build_dataset.py --corpus electronics_0core --skip-download",
+  "core": 0,
+  "corpus": "electronics_0core",
+  "elapsed_seconds": 125.23404754199873,
+  "environment": {
+    "distinct_interacted_items": 1609860,
+    "distinct_items": 1610012,
+    "distinct_users": 18286190,
+    "duckdb": "1.5.6",
+    "machine": "arm64",
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "python": "3.12.13"
+  },
+  "features": {
+    "entities": 1472372,
+    "path": "features/item_as_of_features.parquet",
+    "rows": 8421858
+  },
+  "generated_at": "2026-10-08T15:39:22.825436+00:00",
+  "items": {
+    "rows": 1610012,
+    "rows_with_description": 927264,
+    "rows_with_price": 526499,
+    "rows_without_category_path": 128442,
+    "rows_without_main_category": 106334
+  },
+  "outputs": [
+    {
+      "bytes": 53474467,
+      "path": "features/item_as_of_features.parquet",
+      "sha256": "9efcffa266a0cf932b72752dc453a42e71aba75a8a168930314ddf41a6cec5e0"
+    },
+    {
+      "bytes": 105003713,
+      "path": "interactions/test.parquet",
+      "sha256": "f3478df696b0449e0acf7e2120aa28a5f9cb6e4a9dc6b61668a6bab6065ff729"
+    },
+    {
+      "bytes": 877213219,
+      "path": "interactions/train.parquet",
+      "sha256": "e2bdc0f23ea3fae2554eb8df5c333090cadb3980e2d894a7bd9edbe228530555"
+    },
+    {
+      "bytes": 104141600,
+      "path": "interactions/valid.parquet",
+      "sha256": "f703756afe9f5dce6af52ea9de817de234e001030e8eca4b08ed271d87e032dc"
+    },
+    {
+      "bytes": 181118171,
+      "path": "items/items.parquet",
+      "sha256": "46c140a626d8399d609f136a9960ae282e9daa9411caf3f0ef747144b533b795"
+    }
+  ],
+  "partitions": {
+    "test": {
+      "items": 370211,
+      "max_timestamp_ms": 1694625981867,
+      "min_timestamp_ms": 1658002731354,
+      "partition": "test",
+      "rows": 4075665,
+      "users": 2766198
+    },
+    "train": {
+      "items": 1334914,
+      "max_timestamp_ms": 1628643412916,
+      "min_timestamp_ms": 848336280000,
+      "partition": "train",
+      "rows": 35335971,
+      "users": 15441133
+    },
+    "valid": {
+      "items": 374522,
+      "max_timestamp_ms": 1658002726779,
+      "min_timestamp_ms": 1628643418497,
+      "partition": "valid",
+      "rows": 3953788,
+      "users": 2880726
+    }
+  },
+  "seed": 20261008,
+  "sources": {
+    "interactions_sha256": {
+      "sha256": "2ac3508c5d0ee55ed9fdc833629f751e0f0120b9a8cb30867c8c14b87911c170"
+    },
+    "metadata_sha256": {
+      "sha256": "a4a196a1c8e443e0942d8a5c79b5a5d2d68e29d483f2badec1126690b4b2790d"
+    }
+  },
+  "totals": {
+    "interacted_items": 1609860,
+    "interactions": 43365424,
+    "items_with_metadata": 1610012,
+    "users": 18286190
+  },
+  "validation": {
+    "checks": [
+      {
+        "compare": "must_be_zero",
+        "detail": "user_id must be present and non-empty",
+        "expected": 0.0,
+        "kind": "hard_fail",
+        "name": "null_user_id",
+        "observed": 0.0,
+        "passed": true
+      },
+      {
+        "compare": "must_be_zero",
+        "detail": "parent_asin must be present and non-empty",
+        "expected": 0.0,
+        "kind": "hard_fail",
+        "name": "null_parent_asin",
+        "observed": 0.0,
+        "passed": true
+      },
+      {
+        "compare": "must_be_zero",
+        "detail": "ratings are on a 1-5 scale; the publisher's Electronics 0-core file contains 2 rows rated 0.0 and 1 null rating, which are dropped and counted",
+        "expected": 0.0,
+        "kind": "drop",
+        "name": "rating_out_of_scale",
+        "observed": 2.0,
+        "passed": false
+      },
+      {
+        "compare": "must_be_zero",
+        "detail": "timestamps must fall within the publisher's corpus range 820454400000..1698796800000",
+        "expected": 0.0,
+        "kind": "hard_fail",
+        "name": "timestamp_out_of_range",
+        "observed": 0.0,
+        "passed": true
+      },
+      {
+        "compare": "within_tolerance",
+        "detail": "electronics_0core published interaction count, rounded to 3 significant figures",
+        "expected": 43400000.0,
+        "kind": "hard_fail",
+        "name": "interaction_count",
+        "observed": 43365426.0,
+        "passed": true
+      },
+      {
+        "compare": "must_be_zero",
+        "detail": "exact duplicate (user_id, parent_asin, timestamp) rows; one copy is kept",
+        "expected": 0.0,
+        "kind": "drop",
+        "name": "duplicate_events",
+        "observed": 0.0,
+        "passed": true
+      },
+      {
+        "compare": "must_be_zero",
+        "detail": "item metadata must carry a parent_asin",
+        "expected": 0.0,
+        "kind": "hard_fail",
+        "name": "null_item_parent_asin",
+        "observed": 0.0,
+        "passed": true
+      },
+      {
+        "compare": "at_least",
+        "detail": "fraction of interacted items that have metadata; a partial download fails here",
+        "expected": 0.9,
+        "kind": "hard_fail",
+        "name": "item_metadata_coverage",
+        "observed": 1.0,
+        "passed": true
+      },
+      {
+        "compare": "at_least",
+        "detail": "titled from main_category when absent",
+        "expected": 0.0,
+        "kind": "report",
+        "name": "items_without_title",
+        "observed": 0.0,
+        "passed": true
+      },
+      {
+        "compare": "at_least",
+        "detail": "category path is used for category affinity; a missing one is treated as unknown",
+        "expected": 0.0,
+        "kind": "report",
+        "name": "items_without_category_path",
+        "observed": 128442.0,
+        "passed": true
+      },
+      {
+        "compare": "at_least",
+        "detail": "price is optional; the ranker treats it as missing rather than zero",
+        "expected": 0.0,
+        "kind": "report",
+        "name": "items_without_price",
+        "observed": 1083513.0,
+        "passed": true
+      },
+      {
+        "compare": "must_be_zero",
+        "detail": "conflicting metadata rows for one parent_asin; the first occurrence is kept",
+        "expected": 0.0,
+        "kind": "drop",
+        "name": "duplicate_item_metadata",
+        "observed": 0.0,
+        "passed": true
+      }
+    ],
+    "rows_dropped": 2
+  }
+}

@@ -26,6 +26,9 @@ import numpy as np
 
 DEFAULT_KS: tuple[int, ...] = (10, 20, 50)
 
+#: A list needs two items before a pairwise distance exists, and a zero vector has no direction.
+MIN_COMPARABLE_ITEMS = 2
+
 #: A rank is a scalar for one user or an array for a whole cohort; the metric functions accept both
 #: because the harness evaluates every user in one vectorised pass.
 RankLike = float | np.ndarray
@@ -161,12 +164,12 @@ def intra_list_diversity(
         return 0.0
     scores: list[float] = []
     for codes in list(recommendations.values())[:max_users]:
-        if codes.size < 2:
+        if codes.size < MIN_COMPARABLE_ITEMS:
             continue
         vectors = embeddings[codes]
         norms = np.linalg.norm(vectors, axis=1)
         keep = norms > 0
-        if keep.sum() < 2:
+        if int(keep.sum()) < MIN_COMPARABLE_ITEMS:
             continue
         vectors = vectors[keep] / norms[keep, None]
         similarity = vectors @ vectors.T

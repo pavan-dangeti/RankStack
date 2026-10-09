@@ -2,113 +2,17 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
-
 import duckdb
 import numpy as np
 import pytest
 
-from rankstack.data.build import BuildManifest, build_dataset
-from rankstack.data.encode import build_cohort, build_encoding, load_encoding, write_encoding
-from rankstack.eval.harness import CohortHistory, EvalConfig, compare_sources, evaluate_source
-from rankstack.retrieval.als import AlsConfig, train_als
+from rankstack.data.encode import build_cohort, load_encoding
+from rankstack.eval.harness import EvalConfig, compare_sources, evaluate_source
 from rankstack.retrieval.base import exact_rank
-from rankstack.retrieval.cooccurrence import build_history, train_cooccurrence
-from rankstack.retrieval.popularity import train_popularity
-from tests.integration.test_pipeline import synthetic_corpus_spec
-
-if TYPE_CHECKING:
-    from pathlib import Path
-
-    from rankstack.config import Settings
-    from rankstack.data.corpus import Corpus
-    from rankstack.data.encode import Encoding
-    from rankstack.retrieval.als import AlsModel
-    from rankstack.retrieval.cooccurrence import CooccurrenceModel
-    from rankstack.retrieval.popularity import PopularityModel
-    from tests.conftest import SyntheticCorpus
+from rankstack.retrieval.cooccurrence import build_history
+from tests.conftest import Trained, history_for, popularity_counts
 
 pytestmark = pytest.mark.integration
-
-
-def boundaries_of(manifest: BuildManifest) -> dict[str, int]:
-    """Read the split boundaries a build recorded, as plain integers."""
-    boundaries = manifest.boundaries
-    return {
-        "train_end_ms": int(boundaries["train_end_ms"]),
-        "test_start_ms": int(boundaries["test_start_ms"]),
-    }
-
-
-@dataclass(frozen=True, slots=True)
-class Trained:
-    """Every artefact produced by one baseline training run on the synthetic corpus."""
-
-    spec: Corpus
-    settings: Settings
-    synthetic: SyntheticCorpus
-    processed: Path
-    encoding: Encoding
-    boundaries: dict[str, int]
-    popularity: PopularityModel
-    cooccurrence: CooccurrenceModel
-    als: AlsModel
-
-
-@pytest.fixture
-def trained(synthetic_corpus: SyntheticCorpus, test_settings: Settings) -> Trained:
-    """Build the synthetic corpus, then fit every baseline on its train partition."""
-    spec = synthetic_corpus_spec(synthetic_corpus)
-    manifest = build_dataset(spec, settings=test_settings, skip_download=True)
-    processed = test_settings.processed(spec.name)
-    train = processed / "interactions" / "train.parquet"
-
-    boundaries = {
-        "train_end_ms": int(boundaries_of(manifest)["train_end_ms"]),
-        "test_start_ms": int(boundaries_of(manifest)["test_start_ms"]),
-    }
-    encoding = build_encoding(train, boundaries, seed=test_settings.seed)
-    write_encoding(encoding, test_settings.artifact_root / spec.name)
-
-    popularity = train_popularity(train, encoding.item_to_code, boundaries["train_end_ms"])
-    cooccurrence = train_cooccurrence(train, encoding.user_to_code, encoding.item_to_code, top_k=10)
-    als = train_als(
-        cooccurrence.history_indptr,
-        cooccurrence.history_codes,
-        encoding.n_users,
-        encoding.n_items,
-        AlsConfig(factors=8, iterations=3, min_user_history=2, seed=test_settings.seed),
-    )
-    return Trained(
-        spec=spec,
-        settings=test_settings,
-        synthetic=synthetic_corpus,
-        processed=processed,
-        encoding=encoding,
-        boundaries=boundaries,
-        popularity=popularity,
-        cooccurrence=cooccurrence,
-        als=als,
-    )
-
-
-def history_for(trained: Trained, counts: np.ndarray) -> CohortHistory:
-    """Build the evaluation history from the co-occurrence model's capped train history."""
-    return CohortHistory(
-        indptr=trained.cooccurrence.history_indptr,
-        codes=trained.cooccurrence.history_codes,
-        n_items=trained.encoding.n_items,
-        popularity=counts,
-    )
-
-
-def popularity_counts(trained: Trained) -> np.ndarray:
-    """Train-window interaction count per item, used for novelty and target-popularity segments."""
-    codes = trained.cooccurrence.history_codes
-    return np.bincount(codes.astype(np.int64), minlength=trained.encoding.n_items).astype(
-        np.float32
-    )
 
 
 def test_encoding_round_trips_through_disk(trained: Trained) -> None:

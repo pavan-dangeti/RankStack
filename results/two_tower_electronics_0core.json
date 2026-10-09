@@ -1,0 +1,32 @@
+{
+  "ablation_without_log_q_correction": {
+    "device": "mps",
+    "eligible_users": 6388175,
+    "final_loss": 11.233352,
+    "steps": 1560
+  },
+  "command": "uv run python scripts/train_two_tower.py --corpus electronics_0core --factors 128 --epochs 1",
+  "config": {
+    "batch_size": 4096,
+    "epochs": 1,
+    "factors": 128,
+    "learning_rate": 0.001,
+    "log_q_correction": true,
+    "max_history": 50,
+    "min_user_history": 2,
+    "recency_decay": 0.9,
+    "seed": 20261008,
+    "temperature": 0.05,
+    "weight_decay": 1e-06
+  },
+  "corpus": "electronics_0core",
+  "elapsed_seconds": 836.0,
+  "n_items": 1334914,
+  "n_users": 15441133,
+  "training": {
+    "device": "mps",
+    "eligible_users": 6388175,
+    "final_loss": 12.863848,
+    "steps": 1560
+  }
+}

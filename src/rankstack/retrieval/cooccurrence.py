@@ -81,10 +81,18 @@ class CooccurrenceModel:
 
     def score(self, user_code: int, seen: np.ndarray) -> np.ndarray:
         """Score every item as the similarity-weighted sum over the user's capped history."""
-        codes = self.history(user_code)
+        return self.score_with_history(self.history(user_code), seen)
+
+    def score_with_history(self, history: np.ndarray, seen: np.ndarray) -> np.ndarray:
+        """Score every item from an explicit history, for leave-one-out training.
+
+        A held-out item is still inside the model's stored history, so scoring a user with that
+        stored history would let the target boost itself through its own row. Passing the history in
+        is what makes leave-one-out honest.
+        """
         scores = np.zeros(self.n_items(), dtype=np.float32)
-        if codes.size:
-            accumulated = np.asarray(self.similarity[codes].sum(axis=0)).ravel()
+        if history.size:
+            accumulated = np.asarray(self.similarity[history].sum(axis=0)).ravel()
             scores[: accumulated.size] = accumulated.astype(np.float32)
         scores[seen] = -np.inf
         return scores
@@ -197,6 +205,9 @@ def train_cooccurrence(
     norm = np.sqrt(popularity)
     inverse = np.where(norm > 0, 1.0 / np.where(norm > 0, norm, 1.0), 0.0).astype(np.float32)
     cosine = (sp.diags(inverse) @ counts @ sp.diags(inverse)).tocsr()
+    # An item is its own most frequent co-occurrer, so the diagonal is a self-count artefact rather
+    # than a neighbour signal. Leaving it in would make every item in a user's history rank first.
+    cosine.setdiag(0.0)
     cosine.eliminate_zeros()
 
     model = CooccurrenceModel(

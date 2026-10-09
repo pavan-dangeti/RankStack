@@ -9,7 +9,7 @@ import pytest
 from rankstack.data.encode import build_cohort, load_encoding
 from rankstack.eval.harness import EvalConfig, compare_sources, evaluate_source
 from rankstack.retrieval.base import exact_rank
-from rankstack.retrieval.cooccurrence import build_history
+from rankstack.retrieval.cooccurrence import CooccurrenceModel, build_history
 from tests.conftest import Trained, history_for, popularity_counts
 
 pytestmark = pytest.mark.integration
@@ -202,3 +202,62 @@ def test_paired_comparison_reports_an_interval_and_a_probability(trained: Traine
     assert isinstance(probability, float)
     assert 0.0 <= probability <= 1.0
     assert entry["n"] == len(cohort)
+
+
+def test_removing_the_self_similarity_diagonal_cannot_change_a_masked_score(
+    trained: Trained,
+) -> None:
+    """The diagonal fix must not alter evaluation: it only touched already-seen items.
+
+    Every item in a user's history scored itself highest, but those items are masked to `-inf`
+    before ranking, so no evaluated rank can depend on the diagonal. This asserts that directly
+    rather than leaving it as an argument in a comment.
+    """
+    cooccurrence = trained.cooccurrence
+    user = next(
+        code for code in range(trained.encoding.n_users) if cooccurrence.history_length(code) >= 2
+    )
+    seen = np.zeros(trained.encoding.n_items, dtype=bool)
+    seen[cooccurrence.history(user)] = True
+
+    stripped = cooccurrence.similarity.copy()
+    stripped.setdiag(0.0)
+    stripped.eliminate_zeros()
+    without_diagonal = CooccurrenceModel(
+        similarity=stripped,
+        item_popularity=cooccurrence.item_popularity,
+        history_indptr=cooccurrence.history_indptr,
+        history_codes=cooccurrence.history_codes,
+        max_history=cooccurrence.max_history,
+        top_k=cooccurrence.top_k,
+        user_block=cooccurrence.user_block,
+    )
+    assert np.array_equal(
+        cooccurrence.score(user, seen)[~seen], without_diagonal.score(user, seen)[~seen]
+    )
+
+
+def test_the_cooccurrence_similarity_has_no_self_count(trained: Trained) -> None:
+    """The diagonal must be zero, or an item outranks itself purely by being in the history.
+
+    This is what made leave-one-out leaky: with the diagonal intact, a held-out item still inside
+    the model's stored history scored above every unseen item, and stage 1 reported a candidate
+    recall of 1.0 — impossible in any real recommender.
+    """
+    diagonal = trained.cooccurrence.similarity.diagonal()
+    assert np.count_nonzero(diagonal) == 0
+
+
+def test_scoring_from_an_explicit_history_excludes_the_holdout(trained: Trained) -> None:
+    """`score_with_history` is what lets leave-one-out drop the held-out item from its own input."""
+    cooccurrence = trained.cooccurrence
+    user = next(
+        code for code in range(trained.encoding.n_users) if cooccurrence.history_length(code) >= 2
+    )
+    start, end = cooccurrence.history_indptr[user], cooccurrence.history_indptr[user + 1]
+    stored = cooccurrence.history(user)
+    assert stored.size == end - start
+
+    held_out = cooccurrence.history_codes[start + 1 : end]
+    assert held_out.size == stored.size - 1
+    assert not np.array_equal(held_out, stored)

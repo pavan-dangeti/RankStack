@@ -1,0 +1,58 @@
+{
+  "as_of_ms": 1628643414042,
+  "candidate_ceiling": {
+    "candidate_recall": 1.0,
+    "eligible_users": 2000.0,
+    "mean_candidates": 155.421,
+    "recall_at_100": 1.0,
+    "recall_at_20": 1.0,
+    "recall_at_50": 1.0,
+    "recall_full_list": 1.0
+  },
+  "candidates_per_source": 60,
+  "command": "uv run python scripts/train_reranker.py --corpus electronics_0core --train-users 2000 --candidates 60",
+  "corpus": "electronics_0core",
+  "elapsed_seconds": 62.3,
+  "feature_importance": {
+    "candidate_position": 0.524338,
+    "category_affinity": 0.366908,
+    "item_days_since_first": 0.000905,
+    "item_days_since_last": 0.002107,
+    "log_item_interactions": 0.001428,
+    "log_price": 0.00944,
+    "log_user_depth": 0.00279,
+    "price_affinity": 0.02615,
+    "price_missing": 0.0,
+    "price_percentile": 7.7e-05,
+    "rank_popularity_recent": 0.014493,
+    "score_als": 0.0,
+    "score_cooccurrence": 0.017528,
+    "score_margin_to_best": 0.002984,
+    "score_popularity": 0.020862,
+    "score_popularity_recent": 0.009988,
+    "score_two_tower": 0.0,
+    "source_count": 0.0
+  },
+  "positive_rate": 0.006434,
+  "ranker": {
+    "bagging_fraction": 0.9,
+    "bagging_freq": 1,
+    "feature_fraction": 0.9,
+    "lambdarank_truncation_level": 30,
+    "learning_rate": 0.05,
+    "metric": "ndcg",
+    "min_child_samples": 50,
+    "n_estimators": 50,
+    "num_leaves": 31,
+    "objective": "lambdarank",
+    "seed": 20261008
+  },
+  "rows": 310842,
+  "rules": {
+    "category_cap": 3,
+    "freshness_halflife_days": 30.0,
+    "freshness_weight": 0.05,
+    "mmr_lambda": 0.7
+  },
+  "users": 2000
+}

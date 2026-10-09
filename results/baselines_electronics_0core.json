@@ -9,13 +9,13 @@
   },
   "command": "uv run python scripts/train_baselines.py --corpus electronics_0core",
   "cooccurrence": {
-    "density": 2.536398428395924e-05,
+    "density": 2.4680535264610373e-05,
     "max_history": 50,
-    "nnz": 45198503,
+    "nnz": 43980600,
     "top_k": 100
   },
   "corpus": "electronics_0core",
-  "elapsed_seconds": 296.1,
+  "elapsed_seconds": 264.2,
   "interactions": 35335971,
   "n_items": 1334914,
   "n_users": 15441133,

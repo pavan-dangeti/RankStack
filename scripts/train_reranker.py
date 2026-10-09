@@ -16,7 +16,7 @@ import argparse
 import json
 import sys
 import time
-from typing import TYPE_CHECKING
+from pathlib import Path
 
 import numpy as np
 import scipy.sparse as sp
@@ -40,9 +40,6 @@ from rankstack.retrieval.base import CandidateSource, top_k
 from rankstack.retrieval.cooccurrence import CooccurrenceModel
 from rankstack.retrieval.popularity import PopularityModel
 
-if TYPE_CHECKING:
-    from pathlib import Path
-
 _logger = get_logger(__name__)
 
 DEFAULT_TRAIN_USERS = 120_000
@@ -58,6 +55,21 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--validation-users", type=int, default=DEFAULT_VALIDATION_USERS)
     parser.add_argument("--candidates", type=int, default=DEFAULT_CANDIDATES_PER_SOURCE)
     parser.add_argument("--trees", type=int, default=400)
+    parser.add_argument(
+        "--truncation",
+        type=int,
+        default=300,
+        help=(
+            "lambdarank_truncation_level. The default 30 is below the average position of the "
+            "held-out item in a ~290-candidate list, which leaves the positive outside the window "
+            "the gradient is computed over."
+        ),
+    )
+    parser.add_argument(
+        "--reuse-dataset",
+        action="store_true",
+        help="Reuse the cached candidate matrices instead of rebuilding them.",
+    )
     return parser.parse_args(argv)
 
 
@@ -178,27 +190,42 @@ def main(argv: list[str] | None = None) -> int:
     sample = rng.choice(eligible, size=min(args.train_users, eligible.size), replace=False)
     sample.sort()
 
-    features, all_labels, group_sizes, ceiling = build_dataset(
-        sample,
-        history_ptr,
-        history_codes,
-        models,
-        item_features,
-        args.candidates,
-        n_items,
-    )
+    cache = root / "rerank_dataset.npz"
+    if args.reuse_dataset and cache.exists():
+        saved = np.load(cache)
+        features = saved["features"]
+        all_labels = saved["labels"]
+        group_sizes = saved["group_sizes"]
+        ceiling = json.loads(Path(cache.with_suffix(".json")).read_text())
+        _logger.info("rerank.dataset_reused", extra={"rows": int(features.shape[0])})
+    else:
+        features, all_labels, group_sizes, ceiling = build_dataset(
+            sample,
+            history_ptr,
+            history_codes,
+            models,
+            item_features,
+            args.candidates,
+            n_items,
+        )
+        np.savez(
+            cache,
+            features=features,
+            labels=all_labels,
+            group_sizes=group_sizes,
+        )
+        cache.with_suffix(".json").write_text(json.dumps(ceiling, indent=2) + "\n")
     _logger.info(
         "rerank.dataset",
         extra={"rows": int(features.shape[0]), "users": int(group_sizes.size), **ceiling},
     )
 
-    ranker = train_ranker(
-        features,
-        all_labels,
-        group_sizes,
-        FEATURE_NAMES,
-        RankerConfig(n_estimators=args.trees, seed=settings.seed),
+    ranker_config = RankerConfig(
+        n_estimators=args.trees,
+        lambdarank_truncation_level=args.truncation,
+        seed=settings.seed,
     )
+    ranker = train_ranker(features, all_labels, group_sizes, FEATURE_NAMES, ranker_config)
     ranker.save(root / "reranker.npz")
 
     payload = {
@@ -213,7 +240,7 @@ def main(argv: list[str] | None = None) -> int:
         "positive_rate": round(float(all_labels.mean()), 6),
         "as_of_ms": train_end_ms,
         "candidate_ceiling": ceiling,
-        "ranker": RankerConfig(n_estimators=args.trees, seed=settings.seed).as_dict(),
+        "ranker": ranker_config.as_dict(),
         "rules": RuleConfig().as_dict(),
         "feature_importance": ranker.importance,
         "elapsed_seconds": round(time.perf_counter() - started, 1),

@@ -26,6 +26,7 @@ from rankstack.logging import configure_logging, get_logger
 from rankstack.retrieval.als import AlsModel
 from rankstack.retrieval.cooccurrence import CooccurrenceModel
 from rankstack.retrieval.popularity import PopularityModel
+from rankstack.retrieval.two_tower import load_model
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -36,7 +37,13 @@ _logger = get_logger(__name__)
 
 DEFAULT_COHORT_SIZE = 20_000
 DEFAULT_COHORTS = ("all_test_users", "warm_users")
-DEFAULT_SOURCES = ("popularity", "popularity_recent", "cooccurrence", "als")
+DEFAULT_SOURCES = (
+    "popularity",
+    "popularity_recent",
+    "cooccurrence",
+    "als",
+    "two_tower",
+)
 BASELINE_NAME = "popularity_recent"
 
 
@@ -64,6 +71,10 @@ def load_sources(root: Path, names: list[str]) -> dict[str, CandidateSource]:
                 loaded[name] = _load_cooccurrence(root)
             case "als":
                 loaded[name] = _load_als(root)
+            case "two_tower":
+                loaded[name] = load_model(root / "two_tower.npz")
+            case "two_tower_no_logq":
+                loaded[name] = load_model(root / "two_tower_no_logq.npz")
             case _:
                 msg = f"unknown source {name!r}"
                 raise KeyError(msg)

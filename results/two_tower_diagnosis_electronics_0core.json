@@ -1,0 +1,35 @@
+{
+  "cohort_size": 2000,
+  "command": "uv run python scripts/diagnose_two_tower.py",
+  "corpus": "electronics_0core",
+  "note": "Sampled from the warm_users cohort, so these numbers are not comparable with the committed evaluation file; the point is the trend across epochs and learning rates.",
+  "rows": [
+    {
+      "epochs": 1,
+      "hr@10": 0.004,
+      "hr@20": 0.0055,
+      "hr@50": 0.0145,
+      "learning_rate": 0.001,
+      "ndcg@20": 0.001877,
+      "served_fraction": 1.0,
+      "temperature": 1.0,
+      "train_loss": 9.8203,
+      "train_steps": 98,
+      "wall_clock_seconds": 77.3
+    },
+    {
+      "epochs": 6,
+      "hr@10": 0.004,
+      "hr@20": 0.0055,
+      "hr@50": 0.0145,
+      "learning_rate": 0.001,
+      "ndcg@20": 0.001877,
+      "served_fraction": 1.0,
+      "temperature": 1.0,
+      "train_loss": 1.6303,
+      "train_steps": 588,
+      "wall_clock_seconds": 225.8
+    }
+  ],
+  "training_users": 400000
+}

@@ -18,7 +18,7 @@ from rankstack.data.leakage import (
     check_shuffled_timeline_is_detected,
     check_split_counts,
 )
-from tests.integration.test_pipeline import synthetic_corpus_spec
+from tests.conftest import synthetic_corpus_spec
 
 if TYPE_CHECKING:
     from collections.abc import Generator

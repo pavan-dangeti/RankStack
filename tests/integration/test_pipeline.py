@@ -10,30 +10,20 @@ import pytest
 
 from rankstack.config import Settings
 from rankstack.data.build import _stage_interactions, _stage_items, build_dataset
-from rankstack.data.corpus import Corpus, get_corpus
+from rankstack.data.corpus import get_corpus
 from rankstack.data.download import DownloadError, download_file, sha256_file
-from tests.conftest import SyntheticCorpus, make_synthetic_corpus, raw_dir_for
+from tests.conftest import (
+    SyntheticCorpus,
+    make_synthetic_corpus,
+    raw_dir_for,
+    synthetic_corpus_spec,
+)
 from tests.helpers import row, scalar
 
 if TYPE_CHECKING:
     from pathlib import Path
 
 pytestmark = pytest.mark.integration
-
-
-def synthetic_corpus_spec(corpus: SyntheticCorpus, name: str = "synthetic") -> Corpus:
-    """Return a `Corpus` whose published expectations match the generated fixture."""
-    return Corpus(
-        name=name,
-        category="Electronics",
-        core=0,
-        expected_users=corpus.users,
-        expected_items=corpus.items + 1,
-        expected_interactions=corpus.interactions,
-        interactions_bytes=corpus.csv_path.stat().st_size,
-        metadata_bytes=corpus.metadata_path.stat().st_size if corpus.metadata_path else None,
-        is_primary=True,
-    )
 
 
 def test_reads_the_publisher_csv_format(

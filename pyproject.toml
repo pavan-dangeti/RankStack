@@ -70,6 +70,17 @@ max-args = 8
 [tool.ruff.lint.isort]
 known-first-party = ["rankstack"]
 
+[[tool.uv.index]]
+# The default Linux torch wheel on PyPI bundles the CUDA runtime: 555 MB compressed, ~2.5 GB
+# installed, downloaded on every CI build. Nothing here trains on a GPU in CI, so Linux resolves the
+# CPU build instead. macOS is unaffected and keeps the standard wheel.
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu", marker = "sys_platform == 'linux'" }]
+
 [tool.mypy]
 python_version = "3.12"
 strict = true

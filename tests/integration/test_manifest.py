@@ -10,7 +10,7 @@ from rankstack.data.asof import read_as_of
 from rankstack.data.build import build_dataset, load_manifest, summarise
 from rankstack.data.corpus import Corpus
 from rankstack.data.download import download_corpus_files_from, sha256_file
-from tests.integration.test_pipeline import synthetic_corpus_spec
+from tests.conftest import synthetic_corpus_spec
 
 if TYPE_CHECKING:
     import duckdb

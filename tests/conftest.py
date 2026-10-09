@@ -15,15 +15,35 @@ from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
 import duckdb
+import numpy as np
 import pytest
 
 from rankstack.config import Settings
-from rankstack.data.corpus import DEFAULT_CORPUS, TEST_START_MS, TRAIN_END_MS, get_corpus
+from rankstack.data.build import build_dataset
+from rankstack.data.corpus import (
+    DEFAULT_CORPUS,
+    TEST_START_MS,
+    TRAIN_END_MS,
+    Corpus,
+    get_corpus,
+)
 from rankstack.data.corpus import raw_dir_for as package_raw_dir_for
+from rankstack.data.encode import build_encoding, write_encoding
+from rankstack.eval.harness import CohortHistory
+from rankstack.retrieval.als import AlsConfig, train_als
+from rankstack.retrieval.cooccurrence import train_cooccurrence
+from rankstack.retrieval.popularity import train_popularity
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
     from pathlib import Path
+
+    from rankstack.data.build import BuildManifest
+    from rankstack.data.encode import Encoding
+    from rankstack.retrieval.als import AlsModel
+    from rankstack.retrieval.cooccurrence import CooccurrenceModel
+    from rankstack.retrieval.popularity import PopularityModel
+    from rankstack.retrieval.two_tower import TwoTowerModel
 
 SEED = 20261008
 ITEMS = 40
@@ -186,3 +206,98 @@ def connection() -> Iterator[object]:
 
 def iso(timestamp_ms: int) -> str:
     return datetime.fromtimestamp(timestamp_ms / 1000, tz=UTC).isoformat()
+
+
+def synthetic_corpus_spec(corpus: SyntheticCorpus, name: str = "synthetic") -> Corpus:
+    """Return a `Corpus` whose published expectations match the generated fixture."""
+    return Corpus(
+        name=name,
+        category="Electronics",
+        core=0,
+        expected_users=corpus.users,
+        expected_items=corpus.items + 1,
+        expected_interactions=corpus.interactions,
+        interactions_bytes=corpus.csv_path.stat().st_size,
+        metadata_bytes=corpus.metadata_path.stat().st_size if corpus.metadata_path else None,
+        is_primary=True,
+    )
+
+
+def boundaries_of(manifest: BuildManifest) -> dict[str, int]:
+    """Read the split boundaries a build recorded, as plain integers."""
+    boundaries = manifest.boundaries
+    return {
+        "train_end_ms": int(boundaries["train_end_ms"]),
+        "test_start_ms": int(boundaries["test_start_ms"]),
+    }
+
+
+@dataclass(frozen=True, slots=True)
+class Trained:
+    """Every artefact produced by one baseline training run on the synthetic corpus."""
+
+    spec: Corpus
+    settings: Settings
+    synthetic: SyntheticCorpus
+    processed: Path
+    encoding: Encoding
+    boundaries: dict[str, int]
+    popularity: PopularityModel
+    cooccurrence: CooccurrenceModel
+    als: AlsModel
+    two_tower: TwoTowerModel | None = None
+
+
+@pytest.fixture
+def trained(synthetic_corpus: SyntheticCorpus, test_settings: Settings) -> Trained:
+    """Build the synthetic corpus, then fit every baseline on its train partition."""
+    spec = synthetic_corpus_spec(synthetic_corpus)
+    manifest = build_dataset(spec, settings=test_settings, skip_download=True)
+    processed = test_settings.processed(spec.name)
+    train = processed / "interactions" / "train.parquet"
+
+    boundaries = {
+        "train_end_ms": int(boundaries_of(manifest)["train_end_ms"]),
+        "test_start_ms": int(boundaries_of(manifest)["test_start_ms"]),
+    }
+    encoding = build_encoding(train, boundaries, seed=test_settings.seed)
+    write_encoding(encoding, test_settings.artifact_root / spec.name)
+
+    popularity = train_popularity(train, encoding.item_to_code, boundaries["train_end_ms"])
+    cooccurrence = train_cooccurrence(train, encoding.user_to_code, encoding.item_to_code, top_k=10)
+    als = train_als(
+        cooccurrence.history_indptr,
+        cooccurrence.history_codes,
+        encoding.n_users,
+        encoding.n_items,
+        AlsConfig(factors=8, iterations=3, min_user_history=2, seed=test_settings.seed),
+    )
+    return Trained(
+        spec=spec,
+        settings=test_settings,
+        synthetic=synthetic_corpus,
+        processed=processed,
+        encoding=encoding,
+        boundaries=boundaries,
+        popularity=popularity,
+        cooccurrence=cooccurrence,
+        als=als,
+    )
+
+
+def history_for(trained: Trained, counts: np.ndarray) -> CohortHistory:
+    """Build the evaluation history from the co-occurrence model's capped train history."""
+    return CohortHistory(
+        indptr=trained.cooccurrence.history_indptr,
+        codes=trained.cooccurrence.history_codes,
+        n_items=trained.encoding.n_items,
+        popularity=counts,
+    )
+
+
+def popularity_counts(trained: Trained) -> np.ndarray:
+    """Train-window interaction count per item, used for novelty and target-popularity segments."""
+    codes = trained.cooccurrence.history_codes
+    return np.bincount(codes.astype(np.int64), minlength=trained.encoding.n_items).astype(
+        np.float32
+    )

@@ -9,6 +9,7 @@ dependencies = [
     "pyarrow==25.0.0",
     "pydantic==2.13.1",
     "pydantic-settings==2.13.1",
+    "torch==2.14.1",
 ]
 
 [dependency-groups]
@@ -90,6 +91,8 @@ ignore_missing_imports = true
 module = ["pyarrow.*"]
 # pyarrow ships no py.typed marker; the schemas in rankstack.data.schema are plain constants.
 ignore_missing_imports = true
+
+
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

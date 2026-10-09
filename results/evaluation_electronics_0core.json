@@ -412,6 +412,274 @@
             "alternative": 1.0,
             "baseline": 1.0
           }
+        },
+        "two_tower": {
+          "hr": {
+            "hr@10": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.008977,
+              "ci_low": -0.012948,
+              "difference": -0.010962,
+              "measurable": true,
+              "metric": "hr@10",
+              "n": 11585,
+              "resamples": 1000
+            },
+            "hr@20": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.01312,
+              "ci_low": -0.017784,
+              "difference": -0.015451,
+              "measurable": true,
+              "metric": "hr@20",
+              "n": 11585,
+              "resamples": 1000
+            },
+            "hr@50": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.027967,
+              "ci_low": -0.034271,
+              "difference": -0.031075,
+              "measurable": true,
+              "metric": "hr@50",
+              "n": 11585,
+              "resamples": 1000
+            }
+          },
+          "mrr": {
+            "mrr@10": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.00174,
+              "ci_low": -0.003321,
+              "difference": -0.002506,
+              "measurable": true,
+              "metric": "mrr@10",
+              "n": 11585,
+              "resamples": 1000
+            },
+            "mrr@20": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.002048,
+              "ci_low": -0.003696,
+              "difference": -0.002832,
+              "measurable": true,
+              "metric": "mrr@20",
+              "n": 11585,
+              "resamples": 1000
+            },
+            "mrr@50": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.002586,
+              "ci_low": -0.004218,
+              "difference": -0.00336,
+              "measurable": true,
+              "metric": "mrr@50",
+              "n": 11585,
+              "resamples": 1000
+            }
+          },
+          "ndcg": {
+            "ndcg@10": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.003469,
+              "ci_low": -0.005513,
+              "difference": -0.004486,
+              "measurable": true,
+              "metric": "ndcg@10",
+              "n": 11585,
+              "resamples": 1000
+            },
+            "ndcg@20": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.004583,
+              "ci_low": -0.006757,
+              "difference": -0.005638,
+              "measurable": true,
+              "metric": "ndcg@20",
+              "n": 11585,
+              "resamples": 1000
+            },
+            "ndcg@50": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.007676,
+              "ci_low": -0.009974,
+              "difference": -0.008793,
+              "measurable": true,
+              "metric": "ndcg@50",
+              "n": 11585,
+              "resamples": 1000
+            }
+          },
+          "recall": {
+            "recall@10": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": 0.0,
+              "ci_low": 0.0,
+              "difference": 0.0,
+              "measurable": false,
+              "metric": "recall@10",
+              "n": 11585,
+              "resamples": 1000
+            },
+            "recall@20": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": 0.0,
+              "ci_low": 0.0,
+              "difference": 0.0,
+              "measurable": false,
+              "metric": "recall@20",
+              "n": 11585,
+              "resamples": 1000
+            },
+            "recall@50": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": 0.0,
+              "ci_low": 0.0,
+              "difference": 0.0,
+              "measurable": false,
+              "metric": "recall@50",
+              "n": 11585,
+              "resamples": 1000
+            }
+          },
+          "served_fraction": {
+            "alternative": 1.0,
+            "baseline": 1.0
+          }
+        },
+        "two_tower_no_logq": {
+          "hr": {
+            "hr@10": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.009668,
+              "ci_low": -0.013552,
+              "difference": -0.011567,
+              "measurable": true,
+              "metric": "hr@10",
+              "n": 11585,
+              "resamples": 1000
+            },
+            "hr@20": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.01312,
+              "ci_low": -0.017784,
+              "difference": -0.015451,
+              "measurable": true,
+              "metric": "hr@20",
+              "n": 11585,
+              "resamples": 1000
+            },
+            "hr@50": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.027965,
+              "ci_low": -0.034268,
+              "difference": -0.030988,
+              "measurable": true,
+              "metric": "hr@50",
+              "n": 11585,
+              "resamples": 1000
+            }
+          },
+          "mrr": {
+            "mrr@10": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.002461,
+              "ci_low": -0.003772,
+              "difference": -0.00311,
+              "measurable": true,
+              "metric": "mrr@10",
+              "n": 11585,
+              "resamples": 1000
+            },
+            "mrr@20": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.002784,
+              "ci_low": -0.004077,
+              "difference": -0.003396,
+              "measurable": true,
+              "metric": "mrr@20",
+              "n": 11585,
+              "resamples": 1000
+            },
+            "mrr@50": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.003291,
+              "ci_low": -0.004597,
+              "difference": -0.003922,
+              "measurable": true,
+              "metric": "mrr@50",
+              "n": 11585,
+              "resamples": 1000
+            }
+          },
+          "ndcg": {
+            "ndcg@10": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.004162,
+              "ci_low": -0.006017,
+              "difference": -0.005091,
+              "measurable": true,
+              "metric": "ndcg@10",
+              "n": 11585,
+              "resamples": 1000
+            },
+            "ndcg@20": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.005175,
+              "ci_low": -0.007092,
+              "difference": -0.006091,
+              "measurable": true,
+              "metric": "ndcg@20",
+              "n": 11585,
+              "resamples": 1000
+            },
+            "ndcg@50": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.008189,
+              "ci_low": -0.010315,
+              "difference": -0.009231,
+              "measurable": true,
+              "metric": "ndcg@50",
+              "n": 11585,
+              "resamples": 1000
+            }
+          },
+          "recall": {
+            "recall@10": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": 0.0,
+              "ci_low": 0.0,
+              "difference": 0.0,
+              "measurable": false,
+              "metric": "recall@10",
+              "n": 11585,
+              "resamples": 1000
+            },
+            "recall@20": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": 0.0,
+              "ci_low": 0.0,
+              "difference": 0.0,
+              "measurable": false,
+              "metric": "recall@20",
+              "n": 11585,
+              "resamples": 1000
+            },
+            "recall@50": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": 0.0,
+              "ci_low": 0.0,
+              "difference": 0.0,
+              "measurable": false,
+              "metric": "recall@50",
+              "n": 11585,
+              "resamples": 1000
+            }
+          },
+          "served_fraction": {
+            "alternative": 1.0,
+            "baseline": 1.0
+          }
         }
       },
       "sources": {
@@ -428,7 +696,7 @@
             "recommended_gini": 0.532061
           },
           "cohort": "all_test_users",
-          "elapsed_seconds": 142.8,
+          "elapsed_seconds": 203.9,
           "ranking": {
             "hr@10": 0.003625,
             "hr@20": 0.00587,
@@ -543,7 +811,7 @@
             "recommended_gini": 0.897452
           },
           "cohort": "all_test_users",
-          "elapsed_seconds": 71.7,
+          "elapsed_seconds": 112.5,
           "ranking": {
             "hr@10": 0.00095,
             "hr@20": 0.001985,
@@ -658,7 +926,7 @@
             "recommended_gini": 0.359197
           },
           "cohort": "all_test_users",
-          "elapsed_seconds": 93.0,
+          "elapsed_seconds": 215.3,
           "ranking": {
             "hr@10": 0.005697,
             "hr@20": 0.006733,
@@ -773,7 +1041,7 @@
             "recommended_gini": 0.539688
           },
           "cohort": "all_test_users",
-          "elapsed_seconds": 79.1,
+          "elapsed_seconds": 134.8,
           "ranking": {
             "hr@10": 0.011567,
             "hr@20": 0.016055,
@@ -874,6 +1142,236 @@
             }
           },
           "source": "popularity_recent"
+        },
+        "two_tower": {
+          "beyond_list": {
+            "catalogue_gini": 0.870636,
+            "coverage_at_50": 0.091544,
+            "intra_list_diversity_at_50": 0.0,
+            "intra_list_diversity_basis": "interaction_profile",
+            "mean_user_depth": 13.5823,
+            "new_item_share_at_50": 0.002719,
+            "novelty_at_50": 15.881715,
+            "popularity_bias_at_50": 0.988749,
+            "recommended_gini": 0.988749
+          },
+          "cohort": "all_test_users",
+          "elapsed_seconds": 647.1,
+          "ranking": {
+            "hr@10": 0.000604,
+            "hr@20": 0.000604,
+            "hr@50": 0.000604,
+            "ks": [
+              10,
+              20,
+              50
+            ],
+            "mean_rank_when_served": 651271.8479930945,
+            "mrr@10": 0.000604,
+            "mrr@20": 0.000604,
+            "mrr@50": 0.000604,
+            "ndcg@10": 0.000604,
+            "ndcg@20": 0.000604,
+            "ndcg@50": 0.000604,
+            "recall@10": 1.0,
+            "recall@20": 1.0,
+            "recall@50": 1.0,
+            "served": 11585,
+            "served_fraction": 1.0,
+            "users": 11585
+          },
+          "segments": {
+            "heavy_user": {
+              "hr@10": 0.0,
+              "hr@20": 0.0,
+              "hr@50": 0.0,
+              "mrr@10": 0.0,
+              "mrr@20": 0.0,
+              "mrr@50": 0.0,
+              "n": 2553,
+              "ndcg@10": 0.0,
+              "ndcg@20": 0.0,
+              "ndcg@50": 0.0,
+              "recall@10": 1.0,
+              "recall@20": 1.0,
+              "recall@50": 1.0,
+              "served": 2553
+            },
+            "light_user": {
+              "hr@10": 0.001257,
+              "hr@20": 0.001257,
+              "hr@50": 0.001257,
+              "mrr@10": 0.001257,
+              "mrr@20": 0.001257,
+              "mrr@50": 0.001257,
+              "n": 5568,
+              "ndcg@10": 0.001257,
+              "ndcg@20": 0.001257,
+              "ndcg@50": 0.001257,
+              "recall@10": 1.0,
+              "recall@20": 1.0,
+              "recall@50": 1.0,
+              "served": 5568
+            },
+            "long_tail_target": {
+              "hr@10": 0.0,
+              "hr@20": 0.0,
+              "hr@50": 0.0,
+              "mrr@10": 0.0,
+              "mrr@20": 0.0,
+              "mrr@50": 0.0,
+              "n": 1054,
+              "ndcg@10": 0.0,
+              "ndcg@20": 0.0,
+              "ndcg@50": 0.0,
+              "recall@10": 1.0,
+              "recall@20": 1.0,
+              "recall@50": 1.0,
+              "served": 1054
+            },
+            "new_user": {
+              "n": 0
+            },
+            "popular_target": {
+              "hr@10": 0.001035,
+              "hr@20": 0.001035,
+              "hr@50": 0.001035,
+              "mrr@10": 0.001035,
+              "mrr@20": 0.001035,
+              "mrr@50": 0.001035,
+              "n": 6765,
+              "ndcg@10": 0.001035,
+              "ndcg@20": 0.001035,
+              "ndcg@50": 0.001035,
+              "recall@10": 1.0,
+              "recall@20": 1.0,
+              "recall@50": 1.0,
+              "served": 6765
+            },
+            "segment_sizes": {
+              "heavy_user": 2553,
+              "light_user": 5568,
+              "long_tail_target": 1054,
+              "new_user": 0,
+              "popular_target": 6765
+            }
+          },
+          "source": "two_tower"
+        },
+        "two_tower_no_logq": {
+          "beyond_list": {
+            "catalogue_gini": 0.870636,
+            "coverage_at_50": 0.092606,
+            "intra_list_diversity_at_50": 0.0,
+            "intra_list_diversity_basis": "interaction_profile",
+            "mean_user_depth": 13.5823,
+            "new_item_share_at_50": 0.00266,
+            "novelty_at_50": 16.004195,
+            "popularity_bias_at_50": 0.961593,
+            "recommended_gini": 0.961593
+          },
+          "cohort": "all_test_users",
+          "elapsed_seconds": 936.2,
+          "ranking": {
+            "hr@10": 0.0,
+            "hr@20": 0.000604,
+            "hr@50": 0.000691,
+            "ks": [
+              10,
+              20,
+              50
+            ],
+            "mean_rank_when_served": 660958.1938713854,
+            "mrr@10": 0.0,
+            "mrr@20": 4e-05,
+            "mrr@50": 4.2e-05,
+            "ndcg@10": 0.0,
+            "ndcg@20": 0.000151,
+            "ndcg@50": 0.000167,
+            "recall@10": 1.0,
+            "recall@20": 1.0,
+            "recall@50": 1.0,
+            "served": 11585,
+            "served_fraction": 1.0,
+            "users": 11585
+          },
+          "segments": {
+            "heavy_user": {
+              "hr@10": 0.0,
+              "hr@20": 0.0,
+              "hr@50": 0.0,
+              "mrr@10": 0.0,
+              "mrr@20": 0.0,
+              "mrr@50": 0.0,
+              "n": 2553,
+              "ndcg@10": 0.0,
+              "ndcg@20": 0.0,
+              "ndcg@50": 0.0,
+              "recall@10": 1.0,
+              "recall@20": 1.0,
+              "recall@50": 1.0,
+              "served": 2553
+            },
+            "light_user": {
+              "hr@10": 0.0,
+              "hr@20": 0.001257,
+              "hr@50": 0.001257,
+              "mrr@10": 0.0,
+              "mrr@20": 8.4e-05,
+              "mrr@50": 8.4e-05,
+              "n": 5568,
+              "ndcg@10": 0.0,
+              "ndcg@20": 0.000314,
+              "ndcg@50": 0.000314,
+              "recall@10": 1.0,
+              "recall@20": 1.0,
+              "recall@50": 1.0,
+              "served": 5568
+            },
+            "long_tail_target": {
+              "hr@10": 0.0,
+              "hr@20": 0.0,
+              "hr@50": 0.0,
+              "mrr@10": 0.0,
+              "mrr@20": 0.0,
+              "mrr@50": 0.0,
+              "n": 1054,
+              "ndcg@10": 0.0,
+              "ndcg@20": 0.0,
+              "ndcg@50": 0.0,
+              "recall@10": 1.0,
+              "recall@20": 1.0,
+              "recall@50": 1.0,
+              "served": 1054
+            },
+            "new_user": {
+              "n": 0
+            },
+            "popular_target": {
+              "hr@10": 0.0,
+              "hr@20": 0.001035,
+              "hr@50": 0.001183,
+              "mrr@10": 0.0,
+              "mrr@20": 6.9e-05,
+              "mrr@50": 7.2e-05,
+              "n": 6765,
+              "ndcg@10": 0.0,
+              "ndcg@20": 0.000259,
+              "ndcg@50": 0.000285,
+              "recall@10": 1.0,
+              "recall@20": 1.0,
+              "recall@50": 1.0,
+              "served": 6765
+            },
+            "segment_sizes": {
+              "heavy_user": 2553,
+              "light_user": 5568,
+              "long_tail_target": 1054,
+              "new_user": 0,
+              "popular_target": 6765
+            }
+          },
+          "source": "two_tower_no_logq"
         }
       }
     },
@@ -1287,6 +1785,274 @@
             "alternative": 1.0,
             "baseline": 1.0
           }
+        },
+        "two_tower": {
+          "hr": {
+            "hr@10": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.01285,
+              "ci_low": -0.01605,
+              "difference": -0.0145,
+              "measurable": true,
+              "metric": "hr@10",
+              "n": 20000,
+              "resamples": 1000
+            },
+            "hr@20": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.0215,
+              "ci_low": -0.02585,
+              "difference": -0.0237,
+              "measurable": true,
+              "metric": "hr@20",
+              "n": 20000,
+              "resamples": 1000
+            },
+            "hr@50": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.03665,
+              "ci_low": -0.0419,
+              "difference": -0.0393,
+              "measurable": true,
+              "metric": "hr@50",
+              "n": 20000,
+              "resamples": 1000
+            }
+          },
+          "mrr": {
+            "mrr@10": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.003369,
+              "ci_low": -0.004464,
+              "difference": -0.003923,
+              "measurable": true,
+              "metric": "mrr@10",
+              "n": 20000,
+              "resamples": 1000
+            },
+            "mrr@20": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.003983,
+              "ci_low": -0.005089,
+              "difference": -0.004546,
+              "measurable": true,
+              "metric": "mrr@20",
+              "n": 20000,
+              "resamples": 1000
+            },
+            "mrr@50": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.00452,
+              "ci_low": -0.00561,
+              "difference": -0.005075,
+              "measurable": true,
+              "metric": "mrr@50",
+              "n": 20000,
+              "resamples": 1000
+            }
+          },
+          "ndcg": {
+            "ndcg@10": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.005627,
+              "ci_low": -0.007143,
+              "difference": -0.006395,
+              "measurable": true,
+              "metric": "ndcg@10",
+              "n": 20000,
+              "resamples": 1000
+            },
+            "ndcg@20": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.007854,
+              "ci_low": -0.009523,
+              "difference": -0.008702,
+              "measurable": true,
+              "metric": "ndcg@20",
+              "n": 20000,
+              "resamples": 1000
+            },
+            "ndcg@50": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.010993,
+              "ci_low": -0.012776,
+              "difference": -0.011848,
+              "measurable": true,
+              "metric": "ndcg@50",
+              "n": 20000,
+              "resamples": 1000
+            }
+          },
+          "recall": {
+            "recall@10": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": 0.0,
+              "ci_low": 0.0,
+              "difference": 0.0,
+              "measurable": false,
+              "metric": "recall@10",
+              "n": 20000,
+              "resamples": 1000
+            },
+            "recall@20": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": 0.0,
+              "ci_low": 0.0,
+              "difference": 0.0,
+              "measurable": false,
+              "metric": "recall@20",
+              "n": 20000,
+              "resamples": 1000
+            },
+            "recall@50": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": 0.0,
+              "ci_low": 0.0,
+              "difference": 0.0,
+              "measurable": false,
+              "metric": "recall@50",
+              "n": 20000,
+              "resamples": 1000
+            }
+          },
+          "served_fraction": {
+            "alternative": 1.0,
+            "baseline": 1.0
+          }
+        },
+        "two_tower_no_logq": {
+          "hr": {
+            "hr@10": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.01305,
+              "ci_low": -0.0163,
+              "difference": -0.0147,
+              "measurable": true,
+              "metric": "hr@10",
+              "n": 20000,
+              "resamples": 1000
+            },
+            "hr@20": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.0217,
+              "ci_low": -0.026001,
+              "difference": -0.0239,
+              "measurable": true,
+              "metric": "hr@20",
+              "n": 20000,
+              "resamples": 1000
+            },
+            "hr@50": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.036949,
+              "ci_low": -0.0421,
+              "difference": -0.0396,
+              "measurable": true,
+              "metric": "hr@50",
+              "n": 20000,
+              "resamples": 1000
+            }
+          },
+          "mrr": {
+            "mrr@10": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.003489,
+              "ci_low": -0.00458,
+              "difference": -0.004033,
+              "measurable": true,
+              "metric": "mrr@10",
+              "n": 20000,
+              "resamples": 1000
+            },
+            "mrr@20": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.00411,
+              "ci_low": -0.005215,
+              "difference": -0.004655,
+              "measurable": true,
+              "metric": "mrr@20",
+              "n": 20000,
+              "resamples": 1000
+            },
+            "mrr@50": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.00463,
+              "ci_low": -0.005741,
+              "difference": -0.005188,
+              "measurable": true,
+              "metric": "mrr@50",
+              "n": 20000,
+              "resamples": 1000
+            }
+          },
+          "ndcg": {
+            "ndcg@10": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.005753,
+              "ci_low": -0.007291,
+              "difference": -0.006527,
+              "measurable": true,
+              "metric": "ndcg@10",
+              "n": 20000,
+              "resamples": 1000
+            },
+            "ndcg@20": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.007986,
+              "ci_low": -0.009653,
+              "difference": -0.008833,
+              "measurable": true,
+              "metric": "ndcg@20",
+              "n": 20000,
+              "resamples": 1000
+            },
+            "ndcg@50": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": -0.011138,
+              "ci_low": -0.012931,
+              "difference": -0.012,
+              "measurable": true,
+              "metric": "ndcg@50",
+              "n": 20000,
+              "resamples": 1000
+            }
+          },
+          "recall": {
+            "recall@10": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": 0.0,
+              "ci_low": 0.0,
+              "difference": 0.0,
+              "measurable": false,
+              "metric": "recall@10",
+              "n": 20000,
+              "resamples": 1000
+            },
+            "recall@20": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": 0.0,
+              "ci_low": 0.0,
+              "difference": 0.0,
+              "measurable": false,
+              "metric": "recall@20",
+              "n": 20000,
+              "resamples": 1000
+            },
+            "recall@50": {
+              "bootstrap_probability_alternative_wins": 0.0,
+              "ci_high": 0.0,
+              "ci_low": 0.0,
+              "difference": 0.0,
+              "measurable": false,
+              "metric": "recall@50",
+              "n": 20000,
+              "resamples": 1000
+            }
+          },
+          "served_fraction": {
+            "alternative": 1.0,
+            "baseline": 1.0
+          }
         }
       },
       "sources": {
@@ -1303,7 +2069,7 @@
             "recommended_gini": 0.529661
           },
           "cohort": "warm_users",
-          "elapsed_seconds": 251.4,
+          "elapsed_seconds": 405.1,
           "ranking": {
             "hr@10": 0.00345,
             "hr@20": 0.00525,
@@ -1418,7 +2184,7 @@
             "recommended_gini": 0.934911
           },
           "cohort": "warm_users",
-          "elapsed_seconds": 110.6,
+          "elapsed_seconds": 196.2,
           "ranking": {
             "hr@10": 0.0015,
             "hr@20": 0.00295,
@@ -1533,7 +2299,7 @@
             "recommended_gini": 0.358982
           },
           "cohort": "warm_users",
-          "elapsed_seconds": 205.2,
+          "elapsed_seconds": 572.2,
           "ranking": {
             "hr@10": 0.00625,
             "hr@20": 0.0069,
@@ -1648,7 +2414,7 @@
             "recommended_gini": 0.53966
           },
           "cohort": "warm_users",
-          "elapsed_seconds": 164.1,
+          "elapsed_seconds": 335.4,
           "ranking": {
             "hr@10": 0.0147,
             "hr@20": 0.02395,
@@ -1749,13 +2515,243 @@
             }
           },
           "source": "popularity_recent"
+        },
+        "two_tower": {
+          "beyond_list": {
+            "catalogue_gini": 0.870636,
+            "coverage_at_50": 0.49341,
+            "intra_list_diversity_at_50": 0.0,
+            "intra_list_diversity_basis": "interaction_profile",
+            "mean_user_depth": 6.3407,
+            "new_item_share_at_50": 0.002712,
+            "novelty_at_50": 15.88808,
+            "popularity_bias_at_50": 0.988757,
+            "recommended_gini": 0.988757
+          },
+          "cohort": "warm_users",
+          "elapsed_seconds": 703.8,
+          "ranking": {
+            "hr@10": 0.0002,
+            "hr@20": 0.00025,
+            "hr@50": 0.0004,
+            "ks": [
+              10,
+              20,
+              50
+            ],
+            "mean_rank_when_served": 645331.36055,
+            "mrr@10": 0.00011,
+            "mrr@20": 0.000113,
+            "mrr@50": 0.000119,
+            "ndcg@10": 0.000132,
+            "ndcg@20": 0.000144,
+            "ndcg@50": 0.000176,
+            "recall@10": 1.0,
+            "recall@20": 1.0,
+            "recall@50": 1.0,
+            "served": 20000,
+            "served_fraction": 1.0,
+            "users": 20000
+          },
+          "segments": {
+            "heavy_user": {
+              "hr@10": 0.0,
+              "hr@20": 0.0,
+              "hr@50": 0.0,
+              "mrr@10": 0.0,
+              "mrr@20": 0.0,
+              "mrr@50": 0.0,
+              "n": 1039,
+              "ndcg@10": 0.0,
+              "ndcg@20": 0.0,
+              "ndcg@50": 0.0,
+              "recall@10": 1.0,
+              "recall@20": 1.0,
+              "recall@50": 1.0,
+              "served": 1039
+            },
+            "light_user": {
+              "hr@10": 0.00018,
+              "hr@20": 0.000241,
+              "hr@50": 0.000421,
+              "mrr@10": 0.00012,
+              "mrr@20": 0.000124,
+              "mrr@50": 0.000131,
+              "n": 16622,
+              "ndcg@10": 0.000136,
+              "ndcg@20": 0.00015,
+              "ndcg@50": 0.000188,
+              "recall@10": 1.0,
+              "recall@20": 1.0,
+              "recall@50": 1.0,
+              "served": 16622
+            },
+            "long_tail_target": {
+              "hr@10": 0.0,
+              "hr@20": 0.0,
+              "hr@50": 0.0,
+              "mrr@10": 0.0,
+              "mrr@20": 0.0,
+              "mrr@50": 0.0,
+              "n": 1746,
+              "ndcg@10": 0.0,
+              "ndcg@20": 0.0,
+              "ndcg@50": 0.0,
+              "recall@10": 1.0,
+              "recall@20": 1.0,
+              "recall@50": 1.0,
+              "served": 1746
+            },
+            "new_user": {
+              "n": 0
+            },
+            "popular_target": {
+              "hr@10": 0.000336,
+              "hr@20": 0.00042,
+              "hr@50": 0.000672,
+              "mrr@10": 0.000185,
+              "mrr@20": 0.000189,
+              "mrr@50": 0.000199,
+              "n": 11908,
+              "ndcg@10": 0.000222,
+              "ndcg@20": 0.000242,
+              "ndcg@50": 0.000295,
+              "recall@10": 1.0,
+              "recall@20": 1.0,
+              "recall@50": 1.0,
+              "served": 11908
+            },
+            "segment_sizes": {
+              "heavy_user": 1039,
+              "light_user": 16622,
+              "long_tail_target": 1746,
+              "new_user": 0,
+              "popular_target": 11908
+            }
+          },
+          "source": "two_tower"
+        },
+        "two_tower_no_logq": {
+          "beyond_list": {
+            "catalogue_gini": 0.870636,
+            "coverage_at_50": 0.512444,
+            "intra_list_diversity_at_50": 0.0,
+            "intra_list_diversity_basis": "interaction_profile",
+            "mean_user_depth": 6.3407,
+            "new_item_share_at_50": 0.002724,
+            "novelty_at_50": 15.992551,
+            "popularity_bias_at_50": 0.946322,
+            "recommended_gini": 0.946322
+          },
+          "cohort": "warm_users",
+          "elapsed_seconds": 719.4,
+          "ranking": {
+            "hr@10": 0.0,
+            "hr@20": 5e-05,
+            "hr@50": 0.0001,
+            "ks": [
+              10,
+              20,
+              50
+            ],
+            "mean_rank_when_served": 657686.47705,
+            "mrr@10": 0.0,
+            "mrr@20": 3e-06,
+            "mrr@50": 6e-06,
+            "ndcg@10": 0.0,
+            "ndcg@20": 1.3e-05,
+            "ndcg@50": 2.4e-05,
+            "recall@10": 1.0,
+            "recall@20": 1.0,
+            "recall@50": 1.0,
+            "served": 20000,
+            "served_fraction": 1.0,
+            "users": 20000
+          },
+          "segments": {
+            "heavy_user": {
+              "hr@10": 0.0,
+              "hr@20": 0.0,
+              "hr@50": 0.0,
+              "mrr@10": 0.0,
+              "mrr@20": 0.0,
+              "mrr@50": 0.0,
+              "n": 1039,
+              "ndcg@10": 0.0,
+              "ndcg@20": 0.0,
+              "ndcg@50": 0.0,
+              "recall@10": 1.0,
+              "recall@20": 1.0,
+              "recall@50": 1.0,
+              "served": 1039
+            },
+            "light_user": {
+              "hr@10": 0.0,
+              "hr@20": 6e-05,
+              "hr@50": 0.00012,
+              "mrr@10": 0.0,
+              "mrr@20": 4e-06,
+              "mrr@50": 7e-06,
+              "n": 16622,
+              "ndcg@10": 0.0,
+              "ndcg@20": 1.5e-05,
+              "ndcg@50": 2.9e-05,
+              "recall@10": 1.0,
+              "recall@20": 1.0,
+              "recall@50": 1.0,
+              "served": 16622
+            },
+            "long_tail_target": {
+              "hr@10": 0.0,
+              "hr@20": 0.0,
+              "hr@50": 0.0,
+              "mrr@10": 0.0,
+              "mrr@20": 0.0,
+              "mrr@50": 0.0,
+              "n": 1746,
+              "ndcg@10": 0.0,
+              "ndcg@20": 0.0,
+              "ndcg@50": 0.0,
+              "recall@10": 1.0,
+              "recall@20": 1.0,
+              "recall@50": 1.0,
+              "served": 1746
+            },
+            "new_user": {
+              "n": 0
+            },
+            "popular_target": {
+              "hr@10": 0.0,
+              "hr@20": 8.4e-05,
+              "hr@50": 0.000168,
+              "mrr@10": 0.0,
+              "mrr@20": 6e-06,
+              "mrr@50": 1e-05,
+              "n": 11908,
+              "ndcg@10": 0.0,
+              "ndcg@20": 2.1e-05,
+              "ndcg@50": 4e-05,
+              "recall@10": 1.0,
+              "recall@20": 1.0,
+              "recall@50": 1.0,
+              "served": 11908
+            },
+            "segment_sizes": {
+              "heavy_user": 1039,
+              "light_user": 16622,
+              "long_tail_target": 1746,
+              "new_user": 0,
+              "popular_target": 11908
+            }
+          },
+          "source": "two_tower_no_logq"
         }
       }
     }
   },
   "command": "uv run python scripts/evaluate_baselines.py --corpus electronics_0core",
   "corpus": "electronics_0core",
-  "elapsed_seconds": 1135.6,
+  "elapsed_seconds": 5293.0,
   "intra_list_diversity_basis": "interaction_profile",
   "metric_note": "exact full-catalogue ranking, no sampled negatives",
   "n_items": 1334914,

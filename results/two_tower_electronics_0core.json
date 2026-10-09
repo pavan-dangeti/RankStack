@@ -20,7 +20,7 @@
     "weight_decay": 1e-06
   },
   "corpus": "electronics_0core",
-  "elapsed_seconds": 836.0,
+  "elapsed_seconds": 497.4,
   "n_items": 1334914,
   "n_users": 15441133,
   "training": {

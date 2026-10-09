@@ -75,3 +75,51 @@ The pipeline also cross-checks its split against the publisher's published split
 re-derives rather than trusting: 35,335,971 measured against 35,300,000 published for train,
 3,953,788 against 4,000,000 for validation, 4,075,665 against 4,100,000 for test — all inside the 2%
 tolerance that three-significant-figure rounding requires.
+## Measured model results
+
+Every baseline and the two-tower are scored by the same harness on the same frozen cohorts, with
+exact full-catalogue ranking (no sampled negatives). One held-out target per user, ties broken by
+ascending item code, already-seen items excluded from the candidate set. Numbers come from
+`results/evaluation_electronics_0core.json`.
+
+HR@20, left: all test users (n=11,585, includes 57% with no train history and 41% whose target is an
+item unseen at training time). Right: warm users only (n=20,000, at least two train interactions and
+a target that existed at training time) — the cohort where collaborative models are comparable.
+
+| Source | HR@20 (warm) | HR@20 (all) | Served (all) | Coverage@50 (warm) | Figure |
+|---|---|---|---|---|---|
+| `popularity` | 0.0069 | 0.006733 | 1.0 | 0.000043 | `results/evaluation_electronics_0core.json#/cohorts/warm_users/sources/popularity/ranking/hr@20` |
+| `popularity_recent` | **0.02395** | 0.016055 | 1.0 | 0.000041 | `results/evaluation_electronics_0core.json#/cohorts/warm_users/sources/popularity_recent/ranking/hr@20` |
+| `cooccurrence` | 0.00295 | 0.001985 | 1.0 | 0.339083 | `results/evaluation_electronics_0core.json#/cohorts/warm_users/sources/cooccurrence/ranking/hr@20` |
+| `als` | 0.00525 | 0.00587 | 0.914631 | 0.001101 | `results/evaluation_electronics_0core.json#/cohorts/warm_users/sources/als/ranking/hr@20` |
+| `two_tower` | 0.00025 | 0.000604 | 1.0 | 0.492985 | `results/evaluation_electronics_0core.json#/cohorts/warm_users/sources/two_tower/ranking/hr@20` |
+| `two_tower_no_logq` | 0.00005 | 0.000604 | 1.0 | 0.511973 | `results/evaluation_electronics_0core.json#/cohorts/warm_users/sources/two_tower_no_logq/ranking/hr@20` |
+
+The Figure column carries a machine-checked pointer into the result file for the warm-cohort
+HR@20, so CI fails if this table drifts. The remaining columns are supporting context read from
+the same file.
+
+Paired bootstrap over 1,000 resamples, against `popularity_recent`, warm cohort, HR@20:
+`als` -0.0187 (CI -0.0208, -0.0166), `two_tower` -0.0237 (CI -0.0259, -0.0215). Every difference
+excludes zero, so **nothing learned here beats recency-weighted popularity on this corpus**, which is
+the result worth stating plainly rather than burying.
+
+### The two-tower does not work yet
+
+The two-tower underperforms every baseline by roughly an order of magnitude, and the diagnosis
+(`scripts/diagnose_two_tower.py`, results in `results/two_tower_diagnosis_electronics_0core.json`)
+shows why it is not simply undertrained: on a 400,000-user subsample the training loss falls from
+9.82 to 1.63 while HR@20 does not move at all (0.0055 at both 1 and 6 epochs). The sampled-softmax
+objective is being minimised without improving the global ranking, which points at the negative
+sampling budget — 4,096 in-batch negatives against a 1.33M-item catalogue — rather than at the
+architecture or the number of epochs.
+
+What is *not* established, and would be the next thing to measure: whether a larger negative budget,
+a sequence encoder in the user tower, or an item-side text tower closes the gap. Phase 3 deliberately
+records the negative result and the diagnosis rather than tuning until one configuration wins.
+
+Two defects were found by this measurement and are fixed, with regression tests:
+
+- `gini` returned 0.889 for a uniform distribution (wrong discrete formula).
+- `exact_rank` counted ties against a *filtered* score vector, misaligning values with item codes, so
+  any source with masked items produced wrong ranks.

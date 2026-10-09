@@ -6,6 +6,7 @@ requires-python = ">=3.12,<3.13"
 dependencies = [
     "duckdb==1.5.6",
     "implicit==0.7.3",
+    "lightgbm==4.7.0",
     "pyarrow==25.0.0",
     "pydantic==2.13.1",
     "pydantic-settings==2.13.1",

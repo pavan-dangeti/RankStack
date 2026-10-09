@@ -25,7 +25,7 @@ DOCUMENTS = (REPO_ROOT / "README.md", REPO_ROOT / "docs" / "design.md")
 
 #: `results/<name>.json#/a/b` as it appears inside a Markdown code span.
 REFERENCE = re.compile(
-    r"results/(?P<name>[a-z0-9][a-z0-9._-]*)\.json#(?P<pointer>/[A-Za-z0-9_/.\[\]-]*)"
+    r"results/(?P<name>[a-z0-9][a-z0-9._-]*)\.json#(?P<pointer>/[A-Za-z0-9_/.\[\]@-]*)"
 )
 #: A number as written in a table cell: optional thousands separators, optional decimals.
 NUMBER = re.compile(r"^[0-9][0-9,_]*(?:\.[0-9]+)?$")

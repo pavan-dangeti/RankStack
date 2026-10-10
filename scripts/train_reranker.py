@@ -55,16 +55,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--validation-users", type=int, default=DEFAULT_VALIDATION_USERS)
     parser.add_argument("--candidates", type=int, default=DEFAULT_CANDIDATES_PER_SOURCE)
     parser.add_argument("--trees", type=int, default=400)
-    parser.add_argument(
-        "--truncation",
-        type=int,
-        default=300,
-        help=(
-            "lambdarank_truncation_level. The default 30 is below the average position of the "
-            "held-out item in a ~290-candidate list, which leaves the positive outside the window "
-            "the gradient is computed over."
-        ),
-    )
+    parser.add_argument("--truncation", type=int, default=300)
     parser.add_argument(
         "--reuse-dataset",
         action="store_true",

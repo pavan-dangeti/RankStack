@@ -5,16 +5,20 @@ description = "Two-stage recommendation system with time-respecting evaluation"
 requires-python = ">=3.12,<3.13"
 dependencies = [
     "duckdb==1.5.6",
+    "fastapi==0.143.0",
     "implicit==0.7.3",
     "lightgbm==4.7.0",
+    "prometheus-client==0.26.0",
     "pyarrow==25.0.0",
     "pydantic==2.13.1",
     "pydantic-settings==2.13.1",
     "torch==2.14.1",
+    "uvicorn==0.54.0",
 ]
 
 [dependency-groups]
 dev = [
+    "httpx2==2.13.1",
     "hypothesis==6.151.1",
     "mypy==1.19.1",
     "pytest==9.0.1",

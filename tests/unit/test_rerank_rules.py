@@ -100,6 +100,34 @@ def test_code_lookup_resolves_known_ids_and_rejects_unknown_ones() -> None:
     assert lookup.codes_for(np.array(["a", "c", "zz"])).tolist() == [0, 2, -1]
 
 
+def test_code_lookup_returns_codes_not_sorted_positions() -> None:
+    """The returned value is the encoding code, not the id's rank in sorted order.
+
+    Codes are assigned by descending interaction count, so id order and code order are unrelated.
+    The identity mapping above cannot catch a lookup that confuses the two, which is why this one
+    exists: returning sorted positions scatters every item's features onto a different item.
+    """
+    id_to_code = {"b0aaaaaaaaaa": 7, "a1bbbbbbbbbb": 2, "c2cccccccccc": 9}
+    lookup = CodeLookup(id_to_code)
+
+    resolved = lookup.codes_for(np.array(list(id_to_code)))
+    assert resolved.tolist() == [7, 2, 9]
+    assert lookup.codes_for(np.array(["c2cccccccccc"])).tolist() == [9]
+
+
+def test_code_lookup_scatters_onto_the_right_slots() -> None:
+    """The end-to-end effect: a row lands on its own code, not on a neighbour's."""
+    id_to_code = {"item-0": 7, "item-1": 2, "item-2": 9, "item-3": 4, "item-4": 0}
+    lookup = CodeLookup(id_to_code)
+    values = np.array(list(id_to_code))
+
+    landed = np.full(max(id_to_code.values()) + 1, -1)
+    for value, code in zip(values, lookup.codes_for(values), strict=True):
+        landed[code] = int(str(value).removeprefix("item-"))
+
+    assert landed.tolist() == [4, -1, 1, -1, 3, -1, -1, 0, -1, 2]
+
+
 def test_within_user_rank_resets_per_user_and_ignores_missing_scores() -> None:
     scores = np.array([0.1, 0.9, np.nan, 0.5], dtype=np.float32)
     users = np.array([1, 1, 1, 2])

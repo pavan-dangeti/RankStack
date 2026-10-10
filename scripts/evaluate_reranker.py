@@ -230,7 +230,8 @@ def evaluate(corpus: Corpus, args: argparse.Namespace) -> int:
     connection.close()
 
     payload["elapsed_seconds"] = round(time.perf_counter() - started, 1)
-    out = settings.results_root / f"two_stage_{corpus.name}.json"
+    suffix = "" if not args.no_rules else "_model_only"
+    out = settings.results_root / f"two_stage{suffix}_{corpus.name}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
     print_table(payload)

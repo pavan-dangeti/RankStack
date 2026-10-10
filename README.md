@@ -123,3 +123,49 @@ Two defects were found by this measurement and are fixed, with regression tests:
 - `gini` returned 0.889 for a uniform distribution (wrong discrete formula).
 - `exact_rank` counted ties against a *filtered* score vector, misaligning values with item codes, so
   any source with masked items produced wrong ranks.
+
+### Stage 2: re-ranking
+
+Stage 2 takes a candidate list from `popularity_recent` and item-to-item co-occurrence, scores it
+with LambdaMART over 18 point-in-time features, then applies the seen filter, a freshness bonus, a
+category cap and MMR. It is scored by the same harness, on the same frozen cohorts, as every
+retriever — a stage-2 number measured any other way would not be comparable.
+
+| Cohort | Candidate ceiling | Stage 1 HR@20 | Stage 2 HR@20 | Paired difference (CI) |
+|---|---|---|---|---|
+| warm users | 0.0818 | 0.02395 | 0.00665 | -0.01730 (-0.01960, -0.01505) |
+| all test users | 0.0888 | 0.016055 | 0.005179 | -0.01088 (-0.01329, -0.00820) |
+
+**The candidate ceiling is the important number.** Stage 1 puts the held-out item somewhere in a
+~300-item list for 8.2% of warm users, and stage 2 cannot rank what stage 1 never returned. Stage 1
+already converts 2.4% of that 8.2%. There was real headroom, and stage 2 gave it all back.
+
+### Stage 2 does not work either, and the diagnosis is specific
+
+Re-ranking hurts, measurably: -0.0173 HR@20 on the warm cohort, bootstrap probability 0.000 that
+stage 2 beats stage 1. Probing 2,000 users directly, restricted to those whose target is in the
+candidate list, the ranker moved the target **up 57 times and down 106 times**, and the median
+position of a correct item fell from 134 to 181. The harness is not penalising stage 2; the ranker
+genuinely demotes the right item.
+
+Three measurements explain it, each checked rather than assumed:
+
+1. **The training label is much easier than the evaluation label.** At training time the target is
+   the user's most recent *train* item and candidate recall is 0.579. At evaluation it is the most
+   recent *test* item and the ceiling is 0.082, a seven-fold drop. The ranker is fitted to promote
+   items that a train-window retriever already finds easy.
+2. **The dominant feature is anti-correlated with the target under a temporal holdout.**
+   `category_affinity` takes 39% of the split gain: how much of the user's history sits in the
+   candidate's category. A user's later purchase is more often a new category than a repeat, so the
+   strongest feature the model found systematically demotes the item it is judged on.
+3. **A truncation-window hypothesis was tested and rejected.** `lambdarank_truncation_level`
+   defaults to 30 while the positive sits around position 150, so widening it to 300 should have
+   helped. It did not: 0.00665 against 0.00675. The setting stays configurable because 30 is a real
+   constraint on this list length, but it is not the explanation, and the commit message that claimed
+   otherwise was wrong.
+
+The likely cause is a train/serve objective mismatch: LambdaMART is fitted to reorder a list that
+contains its positive 58% of the time, then asked to find that positive in a list where it appears
+8% of the time, six months later. What to test next, none of it done here: a binary or
+`rank_xendcg` objective over sampled negatives, or training the ranker on a candidate construction
+matched to evaluation-time retrieval difficulty.

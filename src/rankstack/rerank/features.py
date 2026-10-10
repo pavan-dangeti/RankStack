@@ -79,19 +79,25 @@ class CodeLookup:
     def __init__(self, id_to_code: dict[str, int]) -> None:
         """Precompute the sorted key table used to resolve ids to codes."""
         ids = np.asarray(list(id_to_code), dtype=str)
+        codes = np.fromiter(id_to_code.values(), dtype=np.int64, count=len(id_to_code))
         keys, inverse = np.unique(ids, return_inverse=True)
         if not np.array_equal(keys[inverse], ids):
             msg = "encoding ids are not unique"
             raise ValueError(msg)
         self._keys = keys
-        self._inverse = inverse
+        # `inverse` gives each id's position in `keys`, which is a sorted index and NOT the encoding
+        # code: codes are assigned by descending interaction count, so the two orders differ. The
+        # real codes have to be scattered into sorted order, otherwise every caller silently gets
+        # some other item's features.
+        self._codes = np.empty(keys.size, dtype=np.int64)
+        self._codes[inverse] = codes
 
     def codes_for(self, values: np.ndarray) -> np.ndarray:
         """Return codes for an array of ids, with -1 where the id is unknown."""
         values = np.asarray(values, dtype=str)
         clipped = np.clip(np.searchsorted(self._keys, values), 0, self._keys.size - 1)
         known = self._keys[clipped] == values
-        return np.where(known, self._inverse[clipped], -1).astype(np.int64)
+        return np.where(known, self._codes[clipped], -1).astype(np.int64)
 
 
 @dataclass(frozen=True, slots=True)

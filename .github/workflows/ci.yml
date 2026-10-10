@@ -124,3 +124,26 @@ jobs:
       - name: Image runs the pipeline entry point
         run: |
           docker run --rm rankstack-pipeline:ci scripts/build_dataset.py --help
+
+  serve-image:
+    name: build-serve-image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build the serving image
+        run: docker build -f infra/docker/Dockerfile.serve -t rankstack-serve:ci .
+      - name: The entry point is importable without artefacts mounted
+        # Loading happens lazily behind `app`, so an import must not need 683 MB of model. This
+        # catches the most common serving-image breakage: an import that touches the index.
+        run: |
+          docker run --rm --entrypoint uv rankstack-serve:ci \
+            run python -c "import rankstack.serving.app as a; print(a.MAX_K if hasattr(a,'MAX_K') else 'router-only import ok')"
+      - uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: rankstack-serve:ci
+          scan-type: image
+          severity: CRITICAL,HIGH
+          ignore-unfixed: true
+          exit-code: "1"
+        env:
+          TRIVY_DB_REPOSITORY: ghcr.io/aquasecurity/trivy-db:2

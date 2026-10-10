@@ -7,6 +7,7 @@ held-out item through a self-count, that the rules are applied, and that the cei
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import TYPE_CHECKING
 
 import duckdb
@@ -132,18 +133,46 @@ def test_stage_two_reports_the_retrieval_ceiling(stage_two: TwoStageSource) -> N
 
 
 def test_rules_change_the_order_the_ranker_produced(stage_two: TwoStageSource) -> None:
-    """The rules must actually fire, otherwise `--no-rules` would be measuring nothing."""
+    """The rules must actually fire, otherwise `--no-rules` would be measuring nothing.
+
+    MMR with lambda 0 ignores relevance entirely and selects purely for dissimilarity, so it
+    cannot coincide with the model's own ordering. That makes this a test of the wiring rather
+    than of the tuning: the shipped weights are deliberately mild and need no help here.
+    """
+    context = stage_two._context
+    diverse = replace(context, rules=replace(context.rules, mmr_lambda=0.0))
     plain = TwoStageSource(
         stage_two._ranker,
         stage_two._candidates,
-        stage_two._context,
+        diverse,
+        similarity=stage_two._similarity,
         use_rules=False,
     )
-    differences = 0
-    for user in list(stage_two._candidates)[:20]:
-        if not np.array_equal(plain.rank(user), stage_two.rank(user)):
-            differences += 1
+    ruled = TwoStageSource(
+        stage_two._ranker,
+        stage_two._candidates,
+        diverse,
+        similarity=stage_two._similarity,
+        use_rules=True,
+    )
+
+    differences = sum(
+        not np.array_equal(plain.rank(user), ruled.rank(user)) for user in stage_two._candidates
+    )
     assert differences > 0, "the rules never changed an ordering"
+
+
+def test_rules_are_a_no_op_when_disabled(stage_two: TwoStageSource) -> None:
+    """`use_rules=False` reproduces the ranker's own order, which is what `--no-rules` measures."""
+    plain = TwoStageSource(
+        stage_two._ranker, stage_two._candidates, stage_two._context, use_rules=False
+    )
+    user = next(iter(stage_two._candidates))
+    entry = stage_two._candidates[user]
+    scores = plain._model_scores(user, entry)
+    expected = entry.items[np.argsort(-scores, kind="stable")]
+
+    assert np.array_equal(plain.rank(user), expected)
 
 
 def test_stage_two_runs_through_the_shared_harness(

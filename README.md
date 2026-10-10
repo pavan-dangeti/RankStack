@@ -6,15 +6,17 @@ it. Retrieval narrows a ~1.6M-item catalogue to a few hundred candidates, a lear
 them, and business rules enforce diversity and freshness. Evaluation is time-respecting: every
 split, feature and metric is defined against a global timeline, and leakage is tested automatically.
 
-**Status: Phase 1 — data foundation.** The system design is written up
-([`docs/design.md`](docs/design.md)) and the data pipeline is implemented and tested: verified
-download, schema validation that fails the build, the global-timeline split, point-in-time feature
-snapshots, and a leakage suite with a negative control. Retrieval, ranking and serving land in later
-phases; nothing here recommends anything yet.
+**Status: Phase 5 — serving.** The service answers, and every answer is explained. Two of the three
+learned components lost their measurements and are documented as such rather than quietly dropped:
+the two-tower retrieval model (HR@20 0.00025) and the LambdaMART re-ranker (-0.0173 against its own
+stage 1). What the service actually ships is the retriever that won, fused with a personalised
+source, over a degradation ladder where every failure mode returns a working list instead of an
+error.
 
 - [Design document](docs/design.md) — requirements, SLOs, architecture, alternatives, risks, threat model
 - [Architecture decisions](docs/adr/) — the decisions worth arguing about, and what was rejected
 - [Data contracts](docs/schemas.md) — the Parquet schemas every later phase reads
+- [Serving runbook](docs/runbook.md) — operating the API, every degradation and its alert
 - Data: Amazon Reviews 2023 (McAuley Lab), Electronics. Terms analysis and mitigations in
   `docs/design.md` §4.3.
 
@@ -140,6 +142,13 @@ retriever — a stage-2 number measured any other way would not be comparable.
 ~300-item list for 8.2% of warm users, and stage 2 cannot rank what stage 1 never returned. Stage 1
 already converts 2.4% of that 8.2%. There was real headroom, and stage 2 gave it all back.
 
+> **These numbers predate a bug fix and are being re-measured.** `load_item_features` resolved item
+> ids through `CodeLookup`, which returned an id's position in sorted order rather than its encoding
+> code. Every per-item feature was therefore attached to the wrong item. The stage-2 result below was
+> produced on scrambled features and should be read as provisional until the re-run lands. The
+> *direction* of the result is not in doubt — stage 2 lost by a wide margin — but the exact figures
+> are not the ones this code now produces.
+
 ### Stage 2 does not work either, and the diagnosis is specific
 
 Re-ranking hurts, measurably: -0.0173 HR@20 on the warm cohort, bootstrap probability 0.000 that
@@ -169,3 +178,64 @@ contains its positive 58% of the time, then asked to find that positive in a lis
 8% of the time, six months later. What to test next, none of it done here: a binary or
 `rank_xendcg` objective over sampled negatives, or training the ranker on a candidate construction
 matched to evaluation-time retrieval difficulty.
+
+## Serving
+
+`GET /recommend?user_id=<id>&k=<1..50>` returns a ranked list with a template-based explanation per
+item, the artefact checksums that produced it, and the request id. It always answers **HTTP 200 with
+a non-empty list**: unknown users, a corrupt index and a missing feature store each degrade to a
+weaker but working model, and every degradation is a counted metric rather than a silent fallback.
+
+```bash
+uv run python scripts/build_serving_manifest.py          # hash artefacts; the loader verifies
+uv run python -m uvicorn rankstack.serving.app:app        # http://localhost:8000
+uv run pytest tests/unit/test_serving.py -q               # every degradation row, injected
+```
+
+Artefacts are hashed at load time and a mismatch refuses to start the process. A serving process
+that cannot vouch for its model does not answer. Operations, alerts and the full degradation table
+are in [`docs/runbook.md`](docs/runbook.md).
+
+### What the service serves, and what that costs
+
+Serving the best-scoring retriever alone turned out to serve **the same list to everyone**.
+`popularity_recent` is a global ranking: across 2,000 warm users it returned **3 distinct top
+items**. A recommender that does that is not personalising.
+
+So the request path serves reciprocal-rank fusion of `popularity_recent` with item-item
+co-occurrence (`scripts/measure_fusion.py`, `results/fusion_electronics_0core.json`):
+
+| Served source | HR@20 | HR@10 | Distinct top-1 over 2,000 users | Figure |
+|---|---|---|---|---|
+| `popularity_recent` | 0.02000 | 0.01450 | 3 | results/fusion_electronics_0core.json#/sources/popularity_recent/ranking/hr@20 |
+| `cooccurrence` | 0.00150 | 0.00050 | 1,911 | results/fusion_electronics_0core.json#/sources/cooccurrence/ranking/hr@20 |
+| **fused (shipped)** | **0.01500** | **0.00900** | **18** | results/fusion_electronics_0core.json#/sources/fused/ranking/hr@20 |
+
+Fusion gives up 25% of HR@20 (paired difference -0.005, 95% CI [-0.0095, -0.0010]) and buys six
+times the personalisation. The trade is taken deliberately and published rather than discovered by
+a user.
+
+| Measure | Distinct top-1 items over 2,000 warm users | Figure |
+|---|---|---|
+| `popularity_recent` alone, if it were the only source | 3 | results/fusion_electronics_0core.json#/personalisation/distinct_top_1_global |
+| **fused (shipped)** | **18** | results/fusion_electronics_0core.json#/personalisation/distinct_top_1_fused |
+
+### Measured latency
+
+400 requests at concurrency 8, k=20, single process (`scripts/load_test.py`,
+`results/load_test_electronics_0core.json`):
+
+| Path | p50 | p95 | p99 | Target | Figure |
+|---|---|---|---|---|---|
+| Warm user | 25.1 ms | 33.0 ms | 59.7 ms | 60 / 150 / 300 ms | results/load_test_electronics_0core.json#/latency/0/p50_ms |
+| Cold start | 24.1 ms | 29.7 ms | 30.8 ms | p95 ≤ 250 ms | results/load_test_electronics_0core.json#/latency/1/p50_ms |
+| Degraded (index raising) | 8.7 ms | 13.9 ms | 15.8 ms | p95 ≤ 20 ms | results/load_test_electronics_0core.json#/latency/2/p50_ms |
+
+All five SLOs met, 310 req/s in one process. Every row above is re-read from the result file
+by CI, so this table cannot drift from what the code produces.
+
+| Quantity | Value | Source |
+|---|---|---|
+| Catalogue size served | 1,334,914 | results/load_test_electronics_0core.json#/catalogue_items |
+| Artefact load time | 9.37 s | results/load_test_electronics_0core.json#/artifact_load_seconds |
+| Throughput, one process | 310.4 req/s | results/load_test_electronics_0core.json#/throughput_requests_per_second_single_process |

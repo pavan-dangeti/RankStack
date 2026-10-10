@@ -1,0 +1,490 @@
+{
+  "cohort": "warm_users",
+  "cohort_size": 2000,
+  "command": "uv run python scripts/measure_fusion.py --cohort-size 2000",
+  "corpus": "electronics_0core",
+  "elapsed_seconds": 55.8,
+  "fusion_depth": 500,
+  "paired_fused_vs_popularity_recent": {
+    "hr": {
+      "hr@10": {
+        "bootstrap_probability_alternative_wins": 0.003,
+        "ci_high": -0.0015,
+        "ci_low": -0.0095,
+        "difference": -0.0055,
+        "measurable": true,
+        "metric": "hr@10",
+        "n": 2000,
+        "resamples": 1000
+      },
+      "hr@20": {
+        "bootstrap_probability_alternative_wins": 0.01,
+        "ci_high": -0.000988,
+        "ci_low": -0.0095,
+        "difference": -0.005,
+        "measurable": true,
+        "metric": "hr@20",
+        "n": 2000,
+        "resamples": 1000
+      },
+      "hr@50": {
+        "bootstrap_probability_alternative_wins": 0.0,
+        "ci_high": -0.0035,
+        "ci_low": -0.012512,
+        "difference": -0.008,
+        "measurable": true,
+        "metric": "hr@50",
+        "n": 2000,
+        "resamples": 1000
+      }
+    },
+    "mrr": {
+      "mrr@10": {
+        "bootstrap_probability_alternative_wins": 0.27,
+        "ci_high": 0.000979,
+        "ci_low": -0.00159,
+        "difference": -0.000374,
+        "measurable": false,
+        "metric": "mrr@10",
+        "n": 2000,
+        "resamples": 1000
+      },
+      "mrr@20": {
+        "bootstrap_probability_alternative_wins": 0.248,
+        "ci_high": 0.000944,
+        "ci_low": -0.001558,
+        "difference": -0.000397,
+        "measurable": false,
+        "metric": "mrr@20",
+        "n": 2000,
+        "resamples": 1000
+      },
+      "mrr@50": {
+        "bootstrap_probability_alternative_wins": 0.192,
+        "ci_high": 0.000759,
+        "ci_low": -0.00162,
+        "difference": -0.000531,
+        "measurable": false,
+        "metric": "mrr@50",
+        "n": 2000,
+        "resamples": 1000
+      }
+    },
+    "ndcg": {
+      "ndcg@10": {
+        "bootstrap_probability_alternative_wins": 0.048,
+        "ci_high": 0.000268,
+        "ci_low": -0.003354,
+        "difference": -0.001538,
+        "measurable": false,
+        "metric": "ndcg@10",
+        "n": 2000,
+        "resamples": 1000
+      },
+      "ndcg@20": {
+        "bootstrap_probability_alternative_wins": 0.039,
+        "ci_high": 0.000165,
+        "ci_low": -0.003229,
+        "difference": -0.001484,
+        "measurable": false,
+        "metric": "ndcg@20",
+        "n": 2000,
+        "resamples": 1000
+      },
+      "ndcg@50": {
+        "bootstrap_probability_alternative_wins": 0.003,
+        "ci_high": -0.000686,
+        "ci_low": -0.003593,
+        "difference": -0.002144,
+        "measurable": true,
+        "metric": "ndcg@50",
+        "n": 2000,
+        "resamples": 1000
+      }
+    },
+    "recall": {
+      "recall@10": {
+        "bootstrap_probability_alternative_wins": 0.0,
+        "ci_high": 0.0,
+        "ci_low": 0.0,
+        "difference": 0.0,
+        "measurable": false,
+        "metric": "recall@10",
+        "n": 2000,
+        "resamples": 1000
+      },
+      "recall@20": {
+        "bootstrap_probability_alternative_wins": 0.0,
+        "ci_high": 0.0,
+        "ci_low": 0.0,
+        "difference": 0.0,
+        "measurable": false,
+        "metric": "recall@20",
+        "n": 2000,
+        "resamples": 1000
+      },
+      "recall@50": {
+        "bootstrap_probability_alternative_wins": 0.0,
+        "ci_high": 0.0,
+        "ci_low": 0.0,
+        "difference": 0.0,
+        "measurable": false,
+        "metric": "recall@50",
+        "n": 2000,
+        "resamples": 1000
+      }
+    },
+    "served_fraction": {
+      "alternative": 1.0,
+      "baseline": 1.0
+    }
+  },
+  "personalisation": {
+    "distinct_top_1_fused": 18,
+    "distinct_top_1_global": 3,
+    "note": "A global popularity ranking returns one top item to every user. Fusion is the only reason the served list varies between users at all.",
+    "users": 2000
+  },
+  "rrf_k": 60,
+  "sources": {
+    "cooccurrence": {
+      "beyond_list": {
+        "catalogue_gini": 0.870636,
+        "coverage_at_50": 0.05791,
+        "mean_user_depth": 6.1795,
+        "new_item_share_at_50": 0.0,
+        "novelty_at_50": 13.421171,
+        "popularity_bias_at_50": 0.935747,
+        "recommended_gini": 0.935747
+      },
+      "cohort": "warm_users",
+      "elapsed_seconds": 8.7,
+      "ranking": {
+        "hr@10": 0.0005,
+        "hr@20": 0.0015,
+        "hr@50": 0.006,
+        "ks": [
+          10,
+          20,
+          50
+        ],
+        "mean_rank_when_served": 136578.5575,
+        "mrr@10": 0.00025,
+        "mrr@20": 0.000327,
+        "mrr@50": 0.00047,
+        "ndcg@10": 0.000315,
+        "ndcg@20": 0.000577,
+        "ndcg@50": 0.001471,
+        "recall@10": 1.0,
+        "recall@20": 1.0,
+        "recall@50": 1.0,
+        "served": 2000,
+        "served_fraction": 1.0,
+        "users": 2000
+      },
+      "segments": {
+        "heavy_user": {
+          "hr@10": 0.0,
+          "hr@20": 0.0,
+          "hr@50": 0.0,
+          "mrr@10": 0.0,
+          "mrr@20": 0.0,
+          "mrr@50": 0.0,
+          "n": 89,
+          "ndcg@10": 0.0,
+          "ndcg@20": 0.0,
+          "ndcg@50": 0.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall@50": 1.0,
+          "served": 89
+        },
+        "light_user": {
+          "hr@10": 0.0,
+          "hr@20": 0.001183,
+          "hr@50": 0.004731,
+          "mrr@10": 0.0,
+          "mrr@20": 9.1e-05,
+          "mrr@50": 0.000214,
+          "n": 1691,
+          "ndcg@10": 0.0,
+          "ndcg@20": 0.00031,
+          "ndcg@50": 0.001032,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall@50": 1.0,
+          "served": 1691
+        },
+        "long_tail_target": {
+          "hr@10": 0.0,
+          "hr@20": 0.0,
+          "hr@50": 0.0,
+          "mrr@10": 0.0,
+          "mrr@20": 0.0,
+          "mrr@50": 0.0,
+          "n": 162,
+          "ndcg@10": 0.0,
+          "ndcg@20": 0.0,
+          "ndcg@50": 0.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall@50": 1.0,
+          "served": 162
+        },
+        "new_user": {
+          "n": 0
+        },
+        "popular_target": {
+          "hr@10": 0.000849,
+          "hr@20": 0.002547,
+          "hr@50": 0.009338,
+          "mrr@10": 0.000424,
+          "mrr@20": 0.000555,
+          "mrr@50": 0.000774,
+          "n": 1178,
+          "ndcg@10": 0.000536,
+          "ndcg@20": 0.00098,
+          "ndcg@50": 0.002334,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall@50": 1.0,
+          "served": 1178
+        },
+        "segment_sizes": {
+          "heavy_user": 89,
+          "light_user": 1691,
+          "long_tail_target": 162,
+          "new_user": 0,
+          "popular_target": 1178
+        }
+      },
+      "source": "x"
+    },
+    "fused": {
+      "beyond_list": {
+        "catalogue_gini": 0.870636,
+        "coverage_at_50": 0.024262,
+        "mean_user_depth": 6.1795,
+        "new_item_share_at_50": 0.0,
+        "novelty_at_50": 10.151908,
+        "popularity_bias_at_50": 0.651572,
+        "recommended_gini": 0.651572
+      },
+      "cohort": "warm_users",
+      "elapsed_seconds": 25.8,
+      "ranking": {
+        "hr@10": 0.009,
+        "hr@20": 0.015,
+        "hr@50": 0.0295,
+        "ks": [
+          10,
+          20,
+          50
+        ],
+        "mean_rank_when_served": 136371.9875,
+        "mrr@10": 0.003578,
+        "mrr@20": 0.003946,
+        "mrr@50": 0.00439,
+        "ndcg@10": 0.004885,
+        "ndcg@20": 0.006342,
+        "ndcg@50": 0.009189,
+        "recall@10": 1.0,
+        "recall@20": 1.0,
+        "recall@50": 1.0,
+        "served": 2000,
+        "served_fraction": 1.0,
+        "users": 2000
+      },
+      "segments": {
+        "heavy_user": {
+          "hr@10": 0.0,
+          "hr@20": 0.0,
+          "hr@50": 0.0,
+          "mrr@10": 0.0,
+          "mrr@20": 0.0,
+          "mrr@50": 0.0,
+          "n": 89,
+          "ndcg@10": 0.0,
+          "ndcg@20": 0.0,
+          "ndcg@50": 0.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall@50": 1.0,
+          "served": 89
+        },
+        "light_user": {
+          "hr@10": 0.008279,
+          "hr@20": 0.015376,
+          "hr@50": 0.031934,
+          "mrr@10": 0.003345,
+          "mrr@20": 0.00378,
+          "mrr@50": 0.004286,
+          "n": 1691,
+          "ndcg@10": 0.004523,
+          "ndcg@20": 0.006245,
+          "ndcg@50": 0.009493,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall@50": 1.0,
+          "served": 1691
+        },
+        "long_tail_target": {
+          "hr@10": 0.0,
+          "hr@20": 0.0,
+          "hr@50": 0.0,
+          "mrr@10": 0.0,
+          "mrr@20": 0.0,
+          "mrr@50": 0.0,
+          "n": 162,
+          "ndcg@10": 0.0,
+          "ndcg@20": 0.0,
+          "ndcg@50": 0.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall@50": 1.0,
+          "served": 162
+        },
+        "new_user": {
+          "n": 0
+        },
+        "popular_target": {
+          "hr@10": 0.01528,
+          "hr@20": 0.025467,
+          "hr@50": 0.050085,
+          "mrr@10": 0.006074,
+          "mrr@20": 0.006699,
+          "mrr@50": 0.007454,
+          "n": 1178,
+          "ndcg@10": 0.008294,
+          "ndcg@20": 0.010768,
+          "ndcg@50": 0.015601,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall@50": 1.0,
+          "served": 1178
+        },
+        "segment_sizes": {
+          "heavy_user": 89,
+          "light_user": 1691,
+          "long_tail_target": 162,
+          "new_user": 0,
+          "popular_target": 1178
+        }
+      },
+      "source": "x"
+    },
+    "popularity_recent": {
+      "beyond_list": {
+        "catalogue_gini": 0.870636,
+        "coverage_at_50": 4e-05,
+        "mean_user_depth": 6.1795,
+        "new_item_share_at_50": 0.0,
+        "novelty_at_50": 7.997067,
+        "popularity_bias_at_50": 0.539722,
+        "recommended_gini": 0.539722
+      },
+      "cohort": "warm_users",
+      "elapsed_seconds": 11.3,
+      "ranking": {
+        "hr@10": 0.0145,
+        "hr@20": 0.02,
+        "hr@50": 0.0375,
+        "ks": [
+          10,
+          20,
+          50
+        ],
+        "mean_rank_when_served": 48615.514,
+        "mrr@10": 0.003952,
+        "mrr@20": 0.004343,
+        "mrr@50": 0.004921,
+        "ndcg@10": 0.006424,
+        "ndcg@20": 0.007826,
+        "ndcg@50": 0.011333,
+        "recall@10": 1.0,
+        "recall@20": 1.0,
+        "recall@50": 1.0,
+        "served": 2000,
+        "served_fraction": 1.0,
+        "users": 2000
+      },
+      "segments": {
+        "heavy_user": {
+          "hr@10": 0.0,
+          "hr@20": 0.0,
+          "hr@50": 0.0,
+          "mrr@10": 0.0,
+          "mrr@20": 0.0,
+          "mrr@50": 0.0,
+          "n": 89,
+          "ndcg@10": 0.0,
+          "ndcg@20": 0.0,
+          "ndcg@50": 0.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall@50": 1.0,
+          "served": 89
+        },
+        "light_user": {
+          "hr@10": 0.015967,
+          "hr@20": 0.021881,
+          "hr@50": 0.040213,
+          "mrr@10": 0.004329,
+          "mrr@20": 0.004737,
+          "mrr@50": 0.005339,
+          "n": 1691,
+          "ndcg@10": 0.007047,
+          "ndcg@20": 0.00854,
+          "ndcg@50": 0.012206,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall@50": 1.0,
+          "served": 1691
+        },
+        "long_tail_target": {
+          "hr@10": 0.0,
+          "hr@20": 0.0,
+          "hr@50": 0.0,
+          "mrr@10": 0.0,
+          "mrr@20": 0.0,
+          "mrr@50": 0.0,
+          "n": 162,
+          "ndcg@10": 0.0,
+          "ndcg@20": 0.0,
+          "ndcg@50": 0.0,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall@50": 1.0,
+          "served": 162
+        },
+        "new_user": {
+          "n": 0
+        },
+        "popular_target": {
+          "hr@10": 0.024618,
+          "hr@20": 0.033956,
+          "hr@50": 0.063667,
+          "mrr@10": 0.00671,
+          "mrr@20": 0.007373,
+          "mrr@50": 0.008355,
+          "n": 1178,
+          "ndcg@10": 0.010906,
+          "ndcg@20": 0.013286,
+          "ndcg@50": 0.019241,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall@50": 1.0,
+          "served": 1178
+        },
+        "segment_sizes": {
+          "heavy_user": 89,
+          "light_user": 1691,
+          "long_tail_target": 162,
+          "new_user": 0,
+          "popular_target": 1178
+        }
+      },
+      "source": "x"
+    }
+  }
+}

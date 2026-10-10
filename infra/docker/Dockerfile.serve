@@ -1,0 +1,61 @@
+# Serving image: the recommendation API only.
+#
+# Separate from the pipeline image because the two have opposite needs. The pipeline image carries
+# torch and every training dependency and is 3.58 GB; this one carries the request path and its
+# artefacts, and nothing else. A serving image that can retrain a model is a serving image with a
+# training attack surface.
+#
+# Artefacts are never baked in. They are mounted at runtime and verified against
+# serving_manifest.json before the first request is served, so a tampered or half-written model
+# stops startup rather than reaching a user.
+
+FROM python:3.12-slim-bookworm AS base
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    UV_LINK_MODE=copy \
+    UV_COMPILE_BYTECODE=1 \
+    UV_NO_SYNC=1 \
+    UV_PROJECT_ENVIRONMENT=/opt/venv \
+    PATH="/opt/venv/bin:$PATH"
+
+RUN apt-get update \
+    && apt-get install --no-install-recommends -y ca-certificates curl \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY --from=ghcr.io/astral-sh/uv:0.9.7 /uv /usr/local/bin/uv
+
+WORKDIR /app
+
+# uv.lock pins a CPU-only torch for linux, so the CPU index marker below matters on every linux
+# resolve. Dropping it pulls the CUDA build and roughly 2 GB of wheels nobody runs here.
+COPY pyproject.toml uv.lock README.md ./
+RUN --mount=from=ghcr.io/astral-sh/uv:0.9.7,source=/uv,target=/uv \
+    uv sync --locked --no-install-project --no-dev
+
+COPY src ./src
+RUN uv sync --locked --no-editable --no-dev \
+    && rm -rf /root/.cache/uv
+
+RUN mkdir -p /data /artifacts \
+    && useradd --create-home --uid 10001 rankstack \
+    && chown -R rankstack:rankstack /data /artifacts /app
+USER rankstack
+
+ENV RANKSTACK_DATA_ROOT=/data \
+    RANKSTACK_ARTIFACT_ROOT=/artifacts \
+    PORT=8000
+
+EXPOSE 8000
+
+# One worker on purpose. The served index is a single in-process copy of a 683 MB artefact set, so
+# a second worker buys memory, not throughput. Scale with processes or replicas, not with threads
+# inside one process: numpy scoring already holds the GIL.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \
+    CMD curl --fail --silent "http://127.0.0.1:${PORT}/healthz" || exit 1
+
+ENTRYPOINT ["uv", "run", "uvicorn"]
+# `rankstack.serving.app:app` is resolved through the module's lazy `__getattr__`, so artefacts load
+# on first use rather than at import. Loading at import would put 683 MB behind every `import` of
+# this module, including a test that only wants the router.
+CMD ["rankstack.serving.app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]

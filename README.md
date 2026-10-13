@@ -133,29 +133,40 @@ with LambdaMART over 18 point-in-time features, then applies the seen filter, a 
 category cap and MMR. It is scored by the same harness, on the same frozen cohorts, as every
 retriever — a stage-2 number measured any other way would not be comparable.
 
-| Cohort | Candidate ceiling | Stage 1 HR@20 | Stage 2 HR@20 | Paired difference (CI) |
-|---|---|---|---|---|
-| warm users | 0.0818 | 0.02395 | 0.00665 | -0.01730 (-0.01960, -0.01505) |
-| all test users | 0.0888 | 0.016055 | 0.005179 | -0.01088 (-0.01329, -0.00820) |
+> **These figures were re-measured after a bug fix, and they are the ones this code now produces.**
+> The first run of this experiment resolved item ids through `CodeLookup`, which returned an id's
+> position in *sorted* order rather than its encoding code. The encoding assigns codes by descending
+> interaction count, so the two orders never coincided and every per-item feature was attached to the
+> wrong item. Re-ranking is still worse than stage 1 on both cohorts, but the gap is smaller than the
+> broken run reported — dramatically so on `all test users`.
+
+| Cohort | Stage 2 HR@20 | Stage 1 HR@20 | Candidate ceiling | Paired difference | 95% CI | Figure |
+|---|---|---|---|---|---|---|
+| warm users | 0.00915 | 0.02395 | 0.0818 | -0.0148 | (-0.0172, -0.0125) | `results/two_stage_electronics_0core.json#/cohorts/warm_users/stage_2/ranking/hr@20` |
+| all test users | 0.011998 | 0.01605 | 0.0888 | -0.004057 | (-0.00682, -0.00138) | `results/two_stage_electronics_0core.json#/cohorts/all_test_users/stage_2/ranking/hr@20` |
 
 **The candidate ceiling is the important number.** Stage 1 puts the held-out item somewhere in a
 ~300-item list for 8.2% of warm users, and stage 2 cannot rank what stage 1 never returned. Stage 1
 already converts 2.4% of that 8.2%. There was real headroom, and stage 2 gave it all back.
 
-> **These numbers predate a bug fix and are being re-measured.** `load_item_features` resolved item
-> ids through `CodeLookup`, which returned an id's position in sorted order rather than its encoding
-> code. Every per-item feature was therefore attached to the wrong item. The stage-2 result below was
-> produced on scrambled features and should be read as provisional until the re-run lands. The
-> *direction* of the result is not in doubt — stage 2 lost by a wide margin — but the exact figures
-> are not the ones this code now produces.
-
 ### Stage 2 does not work either, and the diagnosis is specific
 
-Re-ranking hurts, measurably: -0.0173 HR@20 on the warm cohort, bootstrap probability 0.000 that
-stage 2 beats stage 1. Probing 2,000 users directly, restricted to those whose target is in the
-candidate list, the ranker moved the target **up 57 times and down 106 times**, and the median
-position of a correct item fell from 134 to 181. The harness is not penalising stage 2; the ranker
-genuinely demotes the right item.
+Re-ranking hurts, measurably: -0.0148 HR@20 on the warm cohort, bootstrap probability 0.000 that
+stage 2 beats stage 1. Probing users whose target *was* in the candidate list, the ranker moved the
+target **up 539 times and down 1,091 times**, and the median position of a correct item fell from
+128 to 172. The harness is not penalising stage 2; the ranker genuinely demotes the right item. The
+probe is now recorded in the result file rather than run by hand, because a published number with
+no committed script behind it is a number nobody can check.
+
+| Cohort | Moved down | Moved up | Unchanged | Median position before | Median position after | Figure |
+|---|---|---|---|---|---|---|
+| warm users | 1,091 | 539 | 5 | 128 | 172 | `results/two_stage_electronics_0core.json#/cohorts/warm_users/target_movement_probe/moved_down` |
+| all test users | 591 | 290 | 1 | 142 | 177 | `results/two_stage_electronics_0core.json#/cohorts/all_test_users/target_movement_probe/moved_down` |
+
+The `all test users` cohort tells a softer story: stage 2 reaches 0.01200 against stage 1's
+0.01605, a paired difference of -0.00406 with a confidence interval that excludes zero. Stage 2 is
+badly wrong for users with train history and merely mediocre for the cold and long-tail users who
+dominate that cohort. If one cohort had to be served, that is the one to serve.
 
 Three measurements explain it, each checked rather than assumed:
 
@@ -164,14 +175,27 @@ Three measurements explain it, each checked rather than assumed:
    recent *test* item and the ceiling is 0.082, a seven-fold drop. The ranker is fitted to promote
    items that a train-window retriever already finds easy.
 2. **The dominant feature is anti-correlated with the target under a temporal holdout.**
-   `category_affinity` takes 39% of the split gain: how much of the user's history sits in the
+   `category_affinity` takes 40.3% of the split gain: how much of the user's history sits in the
    candidate's category. A user's later purchase is more often a new category than a repeat, so the
-   strongest feature the model found systematically demotes the item it is judged on.
-3. **A truncation-window hypothesis was tested and rejected.** `lambdarank_truncation_level`
-   defaults to 30 while the positive sits around position 150, so widening it to 300 should have
-   helped. It did not: 0.00665 against 0.00675. The setting stays configurable because 30 is a real
-   constraint on this list length, but it is not the explanation, and the commit message that claimed
-   otherwise was wrong.
+   strongest feature the model found systematically demotes the item it is judged on. Fixing the
+   lookup did not weaken this: it remained the dominant feature with correctly-attributed data.
+3. **A truncation-window hypothesis was tested and rejected.** `lambdarank_truncation_level` defaults
+   to 30 while the positive sits around position 150, so widening it to 300 should have helped. It did
+   not. Both configurations were run over the identical candidate matrix and cohort, so this is one
+   variable:
+
+| `lambdarank_truncation_level` | Warm users | all test users | Figure |
+|---|---|---|---|
+| 30 (LightGBM default) | 0.00955 | 0.01243 | results/two_stage_truncation30_electronics_0core.json/cohorts/warm_users/stage_2/ranking/hr@20 |
+| 300 (shipped) | 0.00915 | 0.011998 | results/two_stage_electronics_0core.json#/cohorts/warm_users/stage_2/ranking/hr@20 |
+
+   The gap is 0.0004 in the *wrong* direction — the narrower window is nominally better — which is
+   two orders of magnitude smaller than the 0.0148 gap to stage 1 and, without a paired test between
+   the two rankers, indistinguishable from noise. No winner is claimed. The setting stays
+   configurable because 30 is a real constraint on this list length, but it is not the explanation,
+   and the commit message that originally claimed otherwise was wrong. The original comparison
+   (0.00665 against 0.00675) came from the pre-fix run and was discarded with it; the conclusion
+   survived the fix, the numbers did not.
 
 The likely cause is a train/serve objective mismatch: LambdaMART is fitted to reorder a list that
 contains its positive 58% of the time, then asked to find that positive in a list where it appears

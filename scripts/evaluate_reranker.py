@@ -57,6 +57,12 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--candidates", type=int, default=DEFAULT_CANDIDATES)
     parser.add_argument("--resamples", type=int, default=1_000)
     parser.add_argument(
+        "--probe-users",
+        type=int,
+        default=2_000,
+        help="Users to probe for target movement; each needs a full candidate list.",
+    )
+    parser.add_argument(
         "--no-rules",
         action="store_true",
         help="Score LambdaMART alone, isolating it from the post-ranking rules.",
@@ -127,6 +133,57 @@ def build_candidates(
         )
         del agreement
     return entries
+
+
+def probe_target_movement(
+    entries: dict[int, CandidateSet],
+    two_stage: TwoStageSource,
+    users: np.ndarray,
+    limit: int,
+) -> dict[str, float]:
+    """Count whether re-ranking moved each user's target up or down within the candidate list.
+
+    Only users whose target stage 1 actually returned are counted. For everyone else the question is
+    meaningless: the item was not in the list to be moved. Positions are 0-based, so "up" is a
+    smaller index.
+    """
+    positions_before: list[float] = []
+    positions_after: list[float] = []
+    moved_up = 0
+    moved_down = 0
+    unchanged = 0
+
+    for raw_user in users:
+        entry = entries.get(int(raw_user))
+        if entry is None or entry.target is None or entry.target < 0:
+            continue
+        hits = np.flatnonzero(entry.items == entry.target)
+        if hits.size == 0:
+            continue
+        if len(positions_before) >= limit:
+            break
+
+        before = int(hits[0])
+        after = int(np.flatnonzero(two_stage.rank(int(raw_user)) == entry.target)[0])
+        positions_before.append(before)
+        positions_after.append(after)
+        if after < before:
+            moved_up += 1
+        elif after > before:
+            moved_down += 1
+        else:
+            unchanged += 1
+
+    considered = moved_up + moved_down + unchanged
+    return {
+        "users_with_target_in_list": considered,
+        "moved_up": moved_up,
+        "moved_down": moved_down,
+        "unchanged": unchanged,
+        "median_position_before": float(np.median(positions_before)) if positions_before else -1.0,
+        "median_position_after": float(np.median(positions_after)) if positions_after else -1.0,
+        "net_movement": moved_up - moved_down,
+    }
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -226,6 +283,9 @@ def evaluate(corpus: Corpus, args: argparse.Namespace) -> int:
             "paired_two_stage_vs_stage_1": compare_sources(
                 stage_two, stage_one, resamples=args.resamples, seed=settings.seed
             ),
+            "target_movement_probe": probe_target_movement(
+                entries, two_stage, users, args.probe_users
+            ),
         }
     connection.close()
 
@@ -257,6 +317,14 @@ def print_table(payload: dict[str, object]) -> None:
             print(
                 f"  {label:>20s} {ranking['served_fraction']:>7.3f} {ranking['hr@10']:>8.5f}"
                 f" {ranking['hr@20']:>8.5f} {ranking['hr@50']:>8.5f}"
+            )
+        probe = cohort.get("target_movement_probe")
+        if probe and probe["users_with_target_in_list"]:
+            print(
+                f"  probe: of {probe['users_with_target_in_list']} users whose target was in the"
+                f" list, re-ranking moved it up {probe['moved_up']}x and down"
+                f" {probe['moved_down']}x; median position"
+                f" {probe['median_position_before']:.0f} -> {probe['median_position_after']:.0f}"
             )
 
 

@@ -1,0 +1,803 @@
+{
+  "candidates_per_source": 120,
+  "cohorts": {
+    "all_test_users": {
+      "candidate_ceiling": {
+        "mean_candidates": 292.9970282317979,
+        "recall_at_100": 0.0887815750371471,
+        "recall_at_20": 0.0887815750371471,
+        "recall_at_200": 0.0887815750371471,
+        "recall_at_50": 0.0887815750371471,
+        "recall_full_list": 0.0887815750371471
+      },
+      "definition": {
+        "filter": "WITH last AS ( SELECT user_id, arg_max(parent_asin, timestamp) AS target FROM test GROUP BY user_id ), known AS (SELECT user_id, parent_asin FROM train) SELECT last.user_id, last.target FROM last JOIN known USING (user_id)",
+        "name": "all_test_users",
+        "population_size": 5252068,
+        "seed": 20261008,
+        "size": 11585
+      },
+      "paired_two_stage_vs_stage_1": {
+        "hr": {
+          "hr@10": {
+            "bootstrap_probability_alternative_wins": 0.0,
+            "ci_high": -0.001813,
+            "ci_low": -0.006562,
+            "difference": -0.00423,
+            "measurable": true,
+            "metric": "hr@10",
+            "n": 11585,
+            "resamples": 1000
+          },
+          "hr@20": {
+            "bootstrap_probability_alternative_wins": 0.001,
+            "ci_high": -0.001381,
+            "ci_low": -0.006821,
+            "difference": -0.004057,
+            "measurable": true,
+            "metric": "hr@20",
+            "n": 11585,
+            "resamples": 1000
+          },
+          "hr@50": {
+            "bootstrap_probability_alternative_wins": 0.0,
+            "ci_high": -0.009927,
+            "ci_low": -0.016573,
+            "difference": -0.013293,
+            "measurable": true,
+            "metric": "hr@50",
+            "n": 11585,
+            "resamples": 1000
+          }
+        },
+        "mrr": {
+          "mrr@10": {
+            "bootstrap_probability_alternative_wins": 0.099,
+            "ci_high": 0.000325,
+            "ci_low": -0.001512,
+            "difference": -0.000586,
+            "measurable": false,
+            "metric": "mrr@10",
+            "n": 11585,
+            "resamples": 1000
+          },
+          "mrr@20": {
+            "bootstrap_probability_alternative_wins": 0.086,
+            "ci_high": 0.000272,
+            "ci_low": -0.001548,
+            "difference": -0.000621,
+            "measurable": false,
+            "metric": "mrr@20",
+            "n": 11585,
+            "resamples": 1000
+          },
+          "mrr@50": {
+            "bootstrap_probability_alternative_wins": 0.017,
+            "ci_high": -7.9e-05,
+            "ci_low": -0.001832,
+            "difference": -0.000954,
+            "measurable": true,
+            "metric": "mrr@50",
+            "n": 11585,
+            "resamples": 1000
+          }
+        },
+        "ndcg": {
+          "ndcg@10": {
+            "bootstrap_probability_alternative_wins": 0.009,
+            "ci_high": -0.00023,
+            "ci_low": -0.002592,
+            "difference": -0.001431,
+            "measurable": true,
+            "metric": "ndcg@10",
+            "n": 11585,
+            "resamples": 1000
+          },
+          "ndcg@20": {
+            "bootstrap_probability_alternative_wins": 0.01,
+            "ci_high": -0.000275,
+            "ci_low": -0.002629,
+            "difference": -0.001444,
+            "measurable": true,
+            "metric": "ndcg@20",
+            "n": 11585,
+            "resamples": 1000
+          },
+          "ndcg@50": {
+            "bootstrap_probability_alternative_wins": 0.0,
+            "ci_high": -0.002129,
+            "ci_low": -0.00455,
+            "difference": -0.003347,
+            "measurable": true,
+            "metric": "ndcg@50",
+            "n": 11585,
+            "resamples": 1000
+          }
+        },
+        "recall": {
+          "recall@10": {
+            "bootstrap_probability_alternative_wins": 0.0,
+            "ci_high": -0.919465,
+            "ci_low": -0.928787,
+            "difference": -0.923867,
+            "measurable": true,
+            "metric": "recall@10",
+            "n": 11585,
+            "resamples": 1000
+          },
+          "recall@20": {
+            "bootstrap_probability_alternative_wins": 0.0,
+            "ci_high": -0.919465,
+            "ci_low": -0.928787,
+            "difference": -0.923867,
+            "measurable": true,
+            "metric": "recall@20",
+            "n": 11585,
+            "resamples": 1000
+          },
+          "recall@50": {
+            "bootstrap_probability_alternative_wins": 0.0,
+            "ci_high": -0.919465,
+            "ci_low": -0.928787,
+            "difference": -0.923867,
+            "measurable": true,
+            "metric": "recall@50",
+            "n": 11585,
+            "resamples": 1000
+          }
+        },
+        "served_fraction": {
+          "alternative": 1.0,
+          "baseline": 1.0
+        }
+      },
+      "stage_1_popularity_recent": {
+        "beyond_list": {
+          "catalogue_gini": 0.870636,
+          "coverage_at_50": 4e-05,
+          "mean_user_depth": 13.5823,
+          "new_item_share_at_50": 0.0,
+          "novelty_at_50": 7.99615,
+          "popularity_bias_at_50": 0.539688,
+          "recommended_gini": 0.539688
+        },
+        "cohort": "all_test_users",
+        "elapsed_seconds": 81.6,
+        "ranking": {
+          "hr@10": 0.011567,
+          "hr@20": 0.016055,
+          "hr@50": 0.031679,
+          "ks": [
+            10,
+            20,
+            50
+          ],
+          "mean_rank_when_served": 56274.43487268019,
+          "mrr@10": 0.00311,
+          "mrr@20": 0.003436,
+          "mrr@50": 0.003964,
+          "ndcg@10": 0.005091,
+          "ndcg@20": 0.006242,
+          "ndcg@50": 0.009398,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall@50": 1.0,
+          "served": 11585,
+          "served_fraction": 1.0,
+          "users": 11585
+        },
+        "segments": {
+          "heavy_user": {
+            "hr@10": 0.0,
+            "hr@20": 0.0,
+            "hr@50": 0.0,
+            "mrr@10": 0.0,
+            "mrr@20": 0.0,
+            "mrr@50": 0.0,
+            "n": 2553,
+            "ndcg@10": 0.0,
+            "ndcg@20": 0.0,
+            "ndcg@50": 0.0,
+            "recall@10": 1.0,
+            "recall@20": 1.0,
+            "recall@50": 1.0,
+            "served": 2553
+          },
+          "light_user": {
+            "hr@10": 0.016882,
+            "hr@20": 0.021731,
+            "hr@50": 0.040589,
+            "mrr@10": 0.004562,
+            "mrr@20": 0.004879,
+            "mrr@50": 0.005516,
+            "n": 5568,
+            "ndcg@10": 0.007419,
+            "ndcg@20": 0.008622,
+            "ndcg@50": 0.012422,
+            "recall@10": 1.0,
+            "recall@20": 1.0,
+            "recall@50": 1.0,
+            "served": 5568
+          },
+          "long_tail_target": {
+            "hr@10": 0.0,
+            "hr@20": 0.0,
+            "hr@50": 0.0,
+            "mrr@10": 0.0,
+            "mrr@20": 0.0,
+            "mrr@50": 0.0,
+            "n": 1054,
+            "ndcg@10": 0.0,
+            "ndcg@20": 0.0,
+            "ndcg@50": 0.0,
+            "recall@10": 1.0,
+            "recall@20": 1.0,
+            "recall@50": 1.0,
+            "served": 1054
+          },
+          "new_user": {
+            "n": 0
+          },
+          "popular_target": {
+            "hr@10": 0.019808,
+            "hr@20": 0.027494,
+            "hr@50": 0.05425,
+            "mrr@10": 0.005326,
+            "mrr@20": 0.005884,
+            "mrr@50": 0.006789,
+            "n": 6765,
+            "ndcg@10": 0.008718,
+            "ndcg@20": 0.01069,
+            "ndcg@50": 0.016093,
+            "recall@10": 1.0,
+            "recall@20": 1.0,
+            "recall@50": 1.0,
+            "served": 6765
+          },
+          "segment_sizes": {
+            "heavy_user": 2553,
+            "light_user": 5568,
+            "long_tail_target": 1054,
+            "new_user": 0,
+            "popular_target": 6765
+          }
+        },
+        "source": "two_stage"
+      },
+      "stage_2": {
+        "beyond_list": {
+          "catalogue_gini": 0.870636,
+          "coverage_at_50": 0.041113,
+          "mean_user_depth": 13.5823,
+          "new_item_share_at_50": 0.0,
+          "novelty_at_50": 10.661169,
+          "popularity_bias_at_50": 0.770042,
+          "recommended_gini": 0.770042
+        },
+        "cohort": "all_test_users",
+        "elapsed_seconds": 62.1,
+        "ranking": {
+          "hr@10": 0.007337,
+          "hr@20": 0.011998,
+          "hr@50": 0.018386,
+          "ks": [
+            10,
+            20,
+            50
+          ],
+          "mean_rank_when_served": 158.6235827664399,
+          "mrr@10": 0.002524,
+          "mrr@20": 0.002815,
+          "mrr@50": 0.00301,
+          "ndcg@10": 0.003659,
+          "ndcg@20": 0.004798,
+          "ndcg@50": 0.006051,
+          "recall@10": 0.076133,
+          "recall@20": 0.076133,
+          "recall@50": 0.076133,
+          "served": 11585,
+          "served_fraction": 1.0,
+          "users": 11585
+        },
+        "segments": {
+          "heavy_user": {
+            "hr@10": 0.0,
+            "hr@20": 0.0,
+            "hr@50": 0.0,
+            "mrr@10": 0.0,
+            "mrr@20": 0.0,
+            "mrr@50": 0.0,
+            "n": 2553,
+            "ndcg@10": 0.0,
+            "ndcg@20": 0.0,
+            "ndcg@50": 0.0,
+            "recall@10": 0.030161,
+            "recall@20": 0.030161,
+            "recall@50": 0.030161,
+            "served": 77
+          },
+          "light_user": {
+            "hr@10": 0.007364,
+            "hr@20": 0.007902,
+            "hr@50": 0.012392,
+            "mrr@10": 0.001626,
+            "mrr@20": 0.001659,
+            "mrr@50": 0.001813,
+            "n": 5568,
+            "ndcg@10": 0.002939,
+            "ndcg@20": 0.00307,
+            "ndcg@50": 0.00398,
+            "recall@10": 0.087464,
+            "recall@20": 0.087464,
+            "recall@50": 0.087464,
+            "served": 487
+          },
+          "long_tail_target": {
+            "hr@10": 0.0,
+            "hr@20": 0.0,
+            "hr@50": 0.0,
+            "mrr@10": 0.0,
+            "mrr@20": 0.0,
+            "mrr@50": 0.0,
+            "n": 1054,
+            "ndcg@10": 0.0,
+            "ndcg@20": 0.0,
+            "ndcg@50": 0.0,
+            "recall@10": 0.0,
+            "recall@20": 0.0,
+            "recall@50": 0.0,
+            "served": 0
+          },
+          "new_user": {
+            "n": 0
+          },
+          "popular_target": {
+            "hr@10": 0.012565,
+            "hr@20": 0.020547,
+            "hr@50": 0.02986,
+            "mrr@10": 0.004323,
+            "mrr@20": 0.00482,
+            "mrr@50": 0.00512,
+            "n": 6765,
+            "ndcg@10": 0.006266,
+            "ndcg@20": 0.008216,
+            "ndcg@50": 0.010071,
+            "recall@10": 0.128751,
+            "recall@20": 0.128751,
+            "recall@50": 0.128751,
+            "served": 871
+          },
+          "segment_sizes": {
+            "heavy_user": 2553,
+            "light_user": 5568,
+            "long_tail_target": 1054,
+            "new_user": 0,
+            "popular_target": 6765
+          }
+        },
+        "source": "two_stage"
+      },
+      "target_movement_probe": {
+        "median_position_after": 164.0,
+        "median_position_before": 142.0,
+        "moved_down": 551,
+        "moved_up": 325,
+        "net_movement": -226,
+        "unchanged": 6,
+        "users_with_target_in_list": 882
+      }
+    },
+    "warm_users": {
+      "candidate_ceiling": {
+        "mean_candidates": 307.4417,
+        "recall_at_100": 0.08175,
+        "recall_at_20": 0.08175,
+        "recall_at_200": 0.08175,
+        "recall_at_50": 0.08175,
+        "recall_full_list": 0.08175
+      },
+      "definition": {
+        "filter": "WITH depths AS ( SELECT user_id, count(*) AS n FROM train GROUP BY user_id ), eligible AS (SELECT user_id FROM depths WHERE n >= 2), last AS ( SELECT user_id, arg_max(parent_asin, timestamp) AS target FROM test GROUP BY user_id ), known_items AS (SELECT DISTINCT parent_asin FROM train) SELECT last.user_id, last.target FROM last JOIN eligible USING (user_id) JOIN known_items ON known_items.parent_asin = last.target",
+        "name": "warm_users",
+        "population_size": 446931,
+        "seed": 20261008,
+        "size": 20000
+      },
+      "paired_two_stage_vs_stage_1": {
+        "hr": {
+          "hr@10": {
+            "bootstrap_probability_alternative_wins": 0.0,
+            "ci_high": -0.0068,
+            "ci_low": -0.0104,
+            "difference": -0.00865,
+            "measurable": true,
+            "metric": "hr@10",
+            "n": 20000,
+            "resamples": 1000
+          },
+          "hr@20": {
+            "bootstrap_probability_alternative_wins": 0.0,
+            "ci_high": -0.012499,
+            "ci_low": -0.0172,
+            "difference": -0.0148,
+            "measurable": true,
+            "metric": "hr@20",
+            "n": 20000,
+            "resamples": 1000
+          },
+          "hr@50": {
+            "bootstrap_probability_alternative_wins": 0.0,
+            "ci_high": -0.021949,
+            "ci_low": -0.0275,
+            "difference": -0.0248,
+            "measurable": true,
+            "metric": "hr@50",
+            "n": 20000,
+            "resamples": 1000
+          }
+        },
+        "mrr": {
+          "mrr@10": {
+            "bootstrap_probability_alternative_wins": 0.0,
+            "ci_high": -0.001238,
+            "ci_low": -0.002583,
+            "difference": -0.00193,
+            "measurable": true,
+            "metric": "mrr@10",
+            "n": 20000,
+            "resamples": 1000
+          },
+          "mrr@20": {
+            "bootstrap_probability_alternative_wins": 0.0,
+            "ci_high": -0.001652,
+            "ci_low": -0.002994,
+            "difference": -0.00234,
+            "measurable": true,
+            "metric": "mrr@20",
+            "n": 20000,
+            "resamples": 1000
+          },
+          "mrr@50": {
+            "bootstrap_probability_alternative_wins": 0.0,
+            "ci_high": -0.002011,
+            "ci_low": -0.003346,
+            "difference": -0.002688,
+            "measurable": true,
+            "metric": "mrr@50",
+            "n": 20000,
+            "resamples": 1000
+          }
+        },
+        "ndcg": {
+          "ndcg@10": {
+            "bootstrap_probability_alternative_wins": 0.0,
+            "ci_high": -0.002575,
+            "ci_low": -0.004363,
+            "difference": -0.003501,
+            "measurable": true,
+            "metric": "ndcg@10",
+            "n": 20000,
+            "resamples": 1000
+          },
+          "ndcg@20": {
+            "bootstrap_probability_alternative_wins": 0.0,
+            "ci_high": -0.004059,
+            "ci_low": -0.006013,
+            "difference": -0.005035,
+            "measurable": true,
+            "metric": "ndcg@20",
+            "n": 20000,
+            "resamples": 1000
+          },
+          "ndcg@50": {
+            "bootstrap_probability_alternative_wins": 0.0,
+            "ci_high": -0.006062,
+            "ci_low": -0.008087,
+            "difference": -0.007066,
+            "measurable": true,
+            "metric": "ndcg@50",
+            "n": 20000,
+            "resamples": 1000
+          }
+        },
+        "recall": {
+          "recall@10": {
+            "bootstrap_probability_alternative_wins": 0.0,
+            "ci_high": -0.914549,
+            "ci_low": -0.922051,
+            "difference": -0.91825,
+            "measurable": true,
+            "metric": "recall@10",
+            "n": 20000,
+            "resamples": 1000
+          },
+          "recall@20": {
+            "bootstrap_probability_alternative_wins": 0.0,
+            "ci_high": -0.914549,
+            "ci_low": -0.922051,
+            "difference": -0.91825,
+            "measurable": true,
+            "metric": "recall@20",
+            "n": 20000,
+            "resamples": 1000
+          },
+          "recall@50": {
+            "bootstrap_probability_alternative_wins": 0.0,
+            "ci_high": -0.914549,
+            "ci_low": -0.922051,
+            "difference": -0.91825,
+            "measurable": true,
+            "metric": "recall@50",
+            "n": 20000,
+            "resamples": 1000
+          }
+        },
+        "served_fraction": {
+          "alternative": 1.0,
+          "baseline": 1.0
+        }
+      },
+      "stage_1_popularity_recent": {
+        "beyond_list": {
+          "catalogue_gini": 0.870636,
+          "coverage_at_50": 4.1e-05,
+          "mean_user_depth": 6.3407,
+          "new_item_share_at_50": 0.0,
+          "novelty_at_50": 7.997753,
+          "popularity_bias_at_50": 0.53966,
+          "recommended_gini": 0.53966
+        },
+        "cohort": "warm_users",
+        "elapsed_seconds": 142.3,
+        "ranking": {
+          "hr@10": 0.0147,
+          "hr@20": 0.02395,
+          "hr@50": 0.0397,
+          "ks": [
+            10,
+            20,
+            50
+          ],
+          "mean_rank_when_served": 47198.3642,
+          "mrr@10": 0.004033,
+          "mrr@20": 0.004659,
+          "mrr@50": 0.005193,
+          "ndcg@10": 0.006527,
+          "ndcg@20": 0.008846,
+          "ndcg@50": 0.012024,
+          "recall@10": 1.0,
+          "recall@20": 1.0,
+          "recall@50": 1.0,
+          "served": 20000,
+          "served_fraction": 1.0,
+          "users": 20000
+        },
+        "segments": {
+          "heavy_user": {
+            "hr@10": 0.008662,
+            "hr@20": 0.013474,
+            "hr@50": 0.020212,
+            "mrr@10": 0.002442,
+            "mrr@20": 0.002778,
+            "mrr@50": 0.002996,
+            "n": 1039,
+            "ndcg@10": 0.003884,
+            "ndcg@20": 0.005104,
+            "ndcg@50": 0.00645,
+            "recall@10": 1.0,
+            "recall@20": 1.0,
+            "recall@50": 1.0,
+            "served": 1039
+          },
+          "light_user": {
+            "hr@10": 0.015762,
+            "hr@20": 0.025689,
+            "hr@50": 0.043316,
+            "mrr@10": 0.004298,
+            "mrr@20": 0.004967,
+            "mrr@50": 0.005565,
+            "n": 16622,
+            "ndcg@10": 0.006973,
+            "ndcg@20": 0.009459,
+            "ndcg@50": 0.013015,
+            "recall@10": 1.0,
+            "recall@20": 1.0,
+            "recall@50": 1.0,
+            "served": 16622
+          },
+          "long_tail_target": {
+            "hr@10": 0.0,
+            "hr@20": 0.0,
+            "hr@50": 0.0,
+            "mrr@10": 0.0,
+            "mrr@20": 0.0,
+            "mrr@50": 0.0,
+            "n": 1746,
+            "ndcg@10": 0.0,
+            "ndcg@20": 0.0,
+            "ndcg@50": 0.0,
+            "recall@10": 1.0,
+            "recall@20": 1.0,
+            "recall@50": 1.0,
+            "served": 1746
+          },
+          "new_user": {
+            "n": 0
+          },
+          "popular_target": {
+            "hr@10": 0.024689,
+            "hr@20": 0.040225,
+            "hr@50": 0.066678,
+            "mrr@10": 0.006774,
+            "mrr@20": 0.007824,
+            "mrr@50": 0.008723,
+            "n": 11908,
+            "ndcg@10": 0.010962,
+            "ndcg@20": 0.014857,
+            "ndcg@50": 0.020195,
+            "recall@10": 1.0,
+            "recall@20": 1.0,
+            "recall@50": 1.0,
+            "served": 11908
+          },
+          "segment_sizes": {
+            "heavy_user": 1039,
+            "light_user": 16622,
+            "long_tail_target": 1746,
+            "new_user": 0,
+            "popular_target": 11908
+          }
+        },
+        "source": "two_stage"
+      },
+      "stage_2": {
+        "beyond_list": {
+          "catalogue_gini": 0.870636,
+          "coverage_at_50": 0.179153,
+          "mean_user_depth": 6.3407,
+          "new_item_share_at_50": 0.0,
+          "novelty_at_50": 10.89406,
+          "popularity_bias_at_50": 0.790453,
+          "recommended_gini": 0.790453
+        },
+        "cohort": "warm_users",
+        "elapsed_seconds": 110.3,
+        "ranking": {
+          "hr@10": 0.00605,
+          "hr@20": 0.00915,
+          "hr@50": 0.0149,
+          "ks": [
+            10,
+            20,
+            50
+          ],
+          "mean_rank_when_served": 161.19266055045873,
+          "mrr@10": 0.002103,
+          "mrr@20": 0.002319,
+          "mrr@50": 0.002506,
+          "ndcg@10": 0.003026,
+          "ndcg@20": 0.003811,
+          "ndcg@50": 0.004958,
+          "recall@10": 0.08175,
+          "recall@20": 0.08175,
+          "recall@50": 0.08175,
+          "served": 20000,
+          "served_fraction": 1.0,
+          "users": 20000
+        },
+        "segments": {
+          "heavy_user": {
+            "hr@10": 0.002887,
+            "hr@20": 0.005775,
+            "hr@50": 0.012512,
+            "mrr@10": 0.00049,
+            "mrr@20": 0.000675,
+            "mrr@50": 0.000913,
+            "n": 1039,
+            "ndcg@10": 0.001036,
+            "ndcg@20": 0.001748,
+            "ndcg@50": 0.003124,
+            "recall@10": 0.047161,
+            "recall@20": 0.047161,
+            "recall@50": 0.047161,
+            "served": 49
+          },
+          "light_user": {
+            "hr@10": 0.006076,
+            "hr@20": 0.008844,
+            "hr@50": 0.014318,
+            "mrr@10": 0.002141,
+            "mrr@20": 0.00234,
+            "mrr@50": 0.002514,
+            "n": 16622,
+            "ndcg@10": 0.003061,
+            "ndcg@20": 0.003769,
+            "ndcg@50": 0.004854,
+            "recall@10": 0.087113,
+            "recall@20": 0.087113,
+            "recall@50": 0.087113,
+            "served": 1448
+          },
+          "long_tail_target": {
+            "hr@10": 0.0,
+            "hr@20": 0.000573,
+            "hr@50": 0.000573,
+            "mrr@10": 0.0,
+            "mrr@20": 3.8e-05,
+            "mrr@50": 3.8e-05,
+            "n": 1746,
+            "ndcg@10": 0.0,
+            "ndcg@20": 0.000143,
+            "ndcg@50": 0.000143,
+            "recall@10": 0.001145,
+            "recall@20": 0.001145,
+            "recall@50": 0.001145,
+            "served": 2
+          },
+          "new_user": {
+            "n": 0
+          },
+          "popular_target": {
+            "hr@10": 0.009825,
+            "hr@20": 0.014864,
+            "hr@50": 0.024269,
+            "mrr@10": 0.003455,
+            "mrr@20": 0.003807,
+            "mrr@50": 0.004115,
+            "n": 11908,
+            "ndcg@10": 0.004946,
+            "ndcg@20": 0.006223,
+            "ndcg@50": 0.008103,
+            "recall@10": 0.136295,
+            "recall@20": 0.136295,
+            "recall@50": 0.136295,
+            "served": 1623
+          },
+          "segment_sizes": {
+            "heavy_user": 1039,
+            "light_user": 16622,
+            "long_tail_target": 1746,
+            "new_user": 0,
+            "popular_target": 11908
+          }
+        },
+        "source": "two_stage"
+      },
+      "target_movement_probe": {
+        "median_position_after": 172.0,
+        "median_position_before": 128.0,
+        "moved_down": 1048,
+        "moved_up": 581,
+        "net_movement": -467,
+        "unchanged": 6,
+        "users_with_target_in_list": 1635
+      }
+    }
+  },
+  "command": "uv run python scripts/evaluate_reranker.py --corpus electronics_0core --candidates 120 --cohort-size 20000 --resamples 1000 --no-rules",
+  "corpus": "electronics_0core",
+  "elapsed_seconds": 1144.4,
+  "feature_importance": {
+    "candidate_position": 0.065179,
+    "category_affinity": 0.402689,
+    "item_days_since_first": 0.035549,
+    "item_days_since_last": 0.003807,
+    "log_item_interactions": 0.005934,
+    "log_price": 0.040335,
+    "log_user_depth": 0.028712,
+    "price_affinity": 0.083396,
+    "price_missing": 0.000248,
+    "price_percentile": 0.008232,
+    "rank_popularity_recent": 0.023017,
+    "score_als": 0.0,
+    "score_cooccurrence": 0.225393,
+    "score_margin_to_best": 0.020675,
+    "score_popularity": 0.043075,
+    "score_popularity_recent": 0.013757,
+    "score_two_tower": 0.0,
+    "source_count": 0.0
+  },
+  "metric_note": "stage 2 ranks only what stage 1 returned; the candidate ceiling is reported alongside",
+  "note": "Ablation: identical candidate matrix, cohort and trained ranker as two_stage_electronics_0core.json; only the post-ranking rules (freshness bonus, category cap, MMR) are disabled.",
+  "rules_enabled": false
+}

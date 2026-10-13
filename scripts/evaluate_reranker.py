@@ -45,6 +45,7 @@ if TYPE_CHECKING:
 _logger = get_logger(__name__)
 
 DEFAULT_COHORT_SIZE = 20_000
+DEFAULT_PROBE_USERS = 2_000
 DEFAULT_CANDIDATES = 120
 
 
@@ -59,7 +60,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--probe-users",
         type=int,
-        default=2_000,
+        default=DEFAULT_PROBE_USERS,
         help="Users to probe for target movement; each needs a full candidate list.",
     )
     parser.add_argument(
@@ -186,6 +187,26 @@ def probe_target_movement(
     }
 
 
+def _command(args: argparse.Namespace) -> str:
+    """Return the command that reproduces this file, flags included.
+
+    Hand-written command strings go stale the moment a flag is added: an earlier version
+    recorded the no-rules ablation without `--no-rules`, so the file claimed a command that
+    produced something else. Building it from argv means the recorded command is the command.
+    """
+    flags = [
+        f"--corpus {args.corpus}",
+        f"--candidates {args.candidates}",
+        f"--cohort-size {args.cohort_size}",
+        f"--resamples {args.resamples}",
+    ]
+    if args.no_rules:
+        flags.append("--no-rules")
+    if args.probe_users != DEFAULT_PROBE_USERS:
+        flags.append(f"--probe-users {args.probe_users}")
+    return "uv run python scripts/evaluate_reranker.py " + " ".join(flags)
+
+
 def main(argv: list[str] | None = None) -> int:
     """Evaluate stage 2 against its stage-1 retriever and write the result file."""
     args = parse_args(argv)
@@ -233,7 +254,7 @@ def evaluate(corpus: Corpus, args: argparse.Namespace) -> int:
     cohorts: dict[str, object] = {}
     payload: dict[str, object] = {
         "corpus": corpus.name,
-        "command": f"uv run python scripts/evaluate_reranker.py --corpus {corpus.name}",
+        "command": _command(args),
         "candidates_per_source": args.candidates,
         "rules_enabled": not args.no_rules,
         "metric_note": (

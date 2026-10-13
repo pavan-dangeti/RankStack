@@ -774,7 +774,7 @@
       }
     }
   },
-  "command": "uv run python scripts/evaluate_reranker.py --corpus electronics_0core",
+  "command": "uv run python scripts/evaluate_reranker.py --corpus electronics_0core --candidates 120 --cohort-size 20000 --resamples 1000",
   "corpus": "electronics_0core",
   "elapsed_seconds": 1332.2,
   "feature_importance": {

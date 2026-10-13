@@ -187,7 +187,7 @@ Three measurements explain it, each checked rather than assumed:
 | `lambdarank_truncation_level` | Warm users | all test users | Figure |
 |---|---|---|---|
 | 30 (LightGBM default) | 0.00955 | 0.01243 | results/two_stage_truncation30_electronics_0core.json/cohorts/warm_users/stage_2/ranking/hr@20 |
-| 300 (shipped) | 0.00915 | 0.011998 | results/two_stage_electronics_0core.json#/cohorts/warm_users/stage_2/ranking/hr@20 |
+| 300 (shipped) | 0.00915 | 0.011998 | `results/two_stage_electronics_0core.json#/cohorts/warm_users/stage_2/ranking/hr@20` |
 
    The gap is 0.0004 in the *wrong* direction — the narrower window is nominally better — which is
    two orders of magnitude smaller than the 0.0148 gap to stage 1 and, without a paired test between
@@ -196,6 +196,28 @@ Three measurements explain it, each checked rather than assumed:
    and the commit message that originally claimed otherwise was wrong. The original comparison
    (0.00665 against 0.00675) came from the pre-fix run and was discarded with it; the conclusion
    survived the fix, the numbers did not.
+
+4. **The hand-written rule layer is unmeasurable at its shipped weights.** Scoring LambdaMART alone
+   with `--no-rules` changes *no* hit rate at all — not warm, not cold, at k=10, 20 or 50. The rules do
+   reorder the list, but only past rank 50, where HR cannot see it:
+
+| Metric | With rules | Model only | Figure |
+|---|---|---|---|
+| Warm users, HR@20 | 0.00915 | 0.00915 | `results/two_stage_model_only_electronics_0core.json#/cohorts/warm_users/stage_2/ranking/hr@20` |
+| Warm users, mean rank when served | 161.18470948 | 161.19266055 | `results/two_stage_electronics_0core.json#/cohorts/warm_users/stage_2/ranking/mean_rank_when_served` |
+| Warm users, targets moved down | 1,091 | 1,048 | `results/two_stage_electronics_0core.json#/cohorts/warm_users/target_movement_probe/moved_down` |
+| all test users, HR@20 | 0.011998 | 0.011998 | `results/two_stage_model_only_electronics_0core.json#/cohorts/all_test_users/stage_2/ranking/hr@20` |
+| all test users, targets moved down | 591 | 551 | `results/two_stage_electronics_0core.json#/cohorts/all_test_users/target_movement_probe/moved_down` |
+
+   The two things that do move both move *against* the rules: MRR and NDCG are fractionally lower
+   with them (0.002317 against 0.002319), and the rules push the target down more often than not
+   having them (1,091 against 1,048). The one metric that favours them, mean rank when served, moves
+   by 0.008 on a scale of roughly 200, which is noise.
+
+   The honest reading is that `category_cap`, `freshness_weight` and `mmr_lambda` are three tuning
+   knobs buying nothing measurable on this corpus, and that the problem is upstream of them. They are
+   left in place rather than deleted because the shipped default was not changed on the strength of a
+   sixth-decimal difference, but they should be treated as unproven rather than as a feature.
 
 The likely cause is a train/serve objective mismatch: LambdaMART is fitted to reorder a list that
 contains its positive 58% of the time, then asked to find that positive in a list where it appears

@@ -22,12 +22,11 @@ from rankstack.data.corpus import CORPORA, DEFAULT_CORPUS, get_corpus
 from rankstack.data.encode import build_cohort, load_encoding
 from rankstack.eval.harness import CohortHistory, EvalConfig, evaluate_source
 from rankstack.logging import configure_logging, get_logger
-from rankstack.retrieval.two_tower import (
+from rankstack.retrieval.two_tower import item_log_popularity, train_two_tower
+from rankstack.retrieval.two_tower_model import (
     DEFAULT_MIN_USER_HISTORY,
     DEFAULT_TEMPERATURE,
     TwoTowerConfig,
-    item_log_popularity,
-    train_two_tower,
 )
 
 _logger = get_logger(__name__)

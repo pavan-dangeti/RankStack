@@ -16,13 +16,8 @@ import pytest
 from rankstack.data.encode import build_cohort
 from rankstack.eval.harness import EvalConfig, compare_sources, evaluate_source
 from rankstack.retrieval.base import exact_rank, top_k
-from rankstack.retrieval.two_tower import (
-    TwoTowerConfig,
-    item_log_popularity,
-    pad_histories,
-    train_two_tower,
-    write_model,
-)
+from rankstack.retrieval.two_tower import item_log_popularity, pad_histories, train_two_tower
+from rankstack.retrieval.two_tower_model import TwoTowerConfig, write_model
 from tests.conftest import Trained, history_for, popularity_counts
 
 pytestmark = pytest.mark.integration

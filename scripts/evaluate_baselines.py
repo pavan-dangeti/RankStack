@@ -26,7 +26,7 @@ from rankstack.logging import configure_logging, get_logger
 from rankstack.retrieval.als import AlsModel
 from rankstack.retrieval.cooccurrence import CooccurrenceModel
 from rankstack.retrieval.popularity import PopularityModel
-from rankstack.retrieval.two_tower import load_model
+from rankstack.retrieval.two_tower_model import load_model
 
 if TYPE_CHECKING:
     from pathlib import Path

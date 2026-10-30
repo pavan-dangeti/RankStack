@@ -8,12 +8,14 @@ import torch
 
 from rankstack.retrieval.two_tower import (
     TwoTower,
-    TwoTowerConfig,
-    TwoTowerModel,
     item_log_popularity,
-    load_model,
     recency_weights,
     train_two_tower,
+)
+from rankstack.retrieval.two_tower_model import (
+    TwoTowerConfig,
+    TwoTowerModel,
+    load_model,
     write_model,
 )
 

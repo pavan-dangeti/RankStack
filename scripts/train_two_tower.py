@@ -19,12 +19,8 @@ from rankstack.config import settings
 from rankstack.data.corpus import CORPORA, DEFAULT_CORPUS, get_corpus
 from rankstack.data.encode import load_encoding
 from rankstack.logging import configure_logging, get_logger
-from rankstack.retrieval.two_tower import (
-    TwoTowerConfig,
-    item_log_popularity,
-    train_two_tower,
-    write_model,
-)
+from rankstack.retrieval.two_tower import item_log_popularity, train_two_tower
+from rankstack.retrieval.two_tower_model import TwoTowerConfig, write_model
 
 _logger = get_logger(__name__)
 

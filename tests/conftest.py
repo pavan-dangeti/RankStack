@@ -43,7 +43,7 @@ if TYPE_CHECKING:
     from rankstack.retrieval.als import AlsModel
     from rankstack.retrieval.cooccurrence import CooccurrenceModel
     from rankstack.retrieval.popularity import PopularityModel
-    from rankstack.retrieval.two_tower import TwoTowerModel
+    from rankstack.retrieval.two_tower_model import TwoTowerModel
 
 SEED = 20261008
 ITEMS = 40

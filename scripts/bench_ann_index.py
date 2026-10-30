@@ -23,10 +23,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import platform
 import sys
 import tempfile
 import time
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -226,10 +228,12 @@ def _build_ivfpq(
     nprobe_values: tuple[int, ...],
 ) -> list[Measurement]:
     """Train one IVF-PQ index and sweep how many lists it probes."""
+    started = time.perf_counter()
     quantizer = faiss.IndexFlatIP(vectors.shape[1])
     index = faiss.IndexIVFPQ(quantizer, vectors.shape[1], nlist, m, 8, faiss.METRIC_INNER_PRODUCT)
+    # Training the coarse quantiser and the PQ codebooks is part of every rebuild, so it is part of
+    # the build time; timing only `add` understated it.
     index.train(vectors)
-    started = time.perf_counter()
     index.add(vectors)
     build_seconds = time.perf_counter() - started
 
@@ -375,6 +379,14 @@ def main(argv: list[str] | None = None) -> int:
             "ivfpq": chosen_ivfpq.as_dict() if chosen_ivfpq else None,
         },
         "elapsed_seconds": round(time.perf_counter() - started, 1),
+        "environment": {
+            "date": datetime.now(UTC).date().isoformat(),
+            "platform": platform.platform(),
+            "processor": platform.processor() or "unknown",
+            "python": platform.python_version(),
+            "faiss": faiss.__version__,
+            "faiss_threads": faiss.omp_get_max_threads(),
+        },
     }
     out = settings.results_root / f"ann_index_{corpus.name}.json"
     out.parent.mkdir(parents=True, exist_ok=True)

@@ -48,6 +48,14 @@ class PopularityModel:
     def score(self, user_code: int, seen: np.ndarray) -> np.ndarray:
         """Return the same global score vector for every user, with seen items masked out."""
         del user_code
+        return self.global_scores(seen)
+
+    def global_scores(self, seen: np.ndarray) -> np.ndarray:
+        """Score without a user at all, for callers that have no user code to give.
+
+        Taking no user argument is the point: an unknown user cannot be scored as some real
+        user's code by accident if there is no code to pass.
+        """
         return np.where(seen, -np.inf, self.scores).astype(np.float32)
 
     def write(self, path: Path) -> Path:

@@ -128,6 +128,72 @@ def test_unknown_user_degrades_to_cold_start(artifacts: ServingArtifacts) -> Non
     assert all(item.item_id for item in response.items)
 
 
+@pytest.fixture
+def distinct_recent(artifacts: ServingArtifacts) -> ServingArtifacts:
+    """Give `popularity_recent` an order of its own, with no ties.
+
+    The shared fixture uses one model for both popularity sources, which would let a cold-start
+    list pass as "popularity-only" whichever of the two it came from.
+    """
+    order = np.random.default_rng(7).permutation(artifacts.n_items)
+    recent = replace(artifacts.popularity_recent, scores=(order + 1).astype(np.float32))
+    return replace(artifacts, popularity_recent=recent)
+
+
+def _unknown_user_items(artifacts: ServingArtifacts, k: int) -> list[tuple[str, float]]:
+    response = Recommender(artifacts=artifacts).recommend("no-such-user", k=k)
+    assert response.fallback_used == "cold_start"
+    return [(item.item_id, item.score) for item in response.items]
+
+
+def test_unknown_user_list_is_the_popularity_only_list(distinct_recent: ServingArtifacts) -> None:
+    """Ids, order and scores all equal the recency-weighted global ranking, untouched by fusion."""
+    k = min(MAX_K, distinct_recent.n_items)
+    scores = distinct_recent.popularity_recent.global_scores(
+        np.zeros(distinct_recent.n_items, dtype=bool)
+    )
+    codes = np.argsort(-scores, kind="stable")[:k]
+    expected = [(distinct_recent.encoding.item_codes[int(c)], float(scores[c])) for c in codes]
+
+    assert _unknown_user_items(distinct_recent, k) == expected
+
+
+def test_unknown_user_list_has_no_cooccurrence_contribution(
+    distinct_recent: ServingArtifacts,
+) -> None:
+    """Loading co-occurrence must not change a cold-start list at all."""
+    k = min(MAX_K, distinct_recent.n_items)
+    without = replace(distinct_recent, cooccurrence=None)
+
+    assert _unknown_user_items(distinct_recent, k) == _unknown_user_items(without, k)
+
+
+def test_unknown_user_list_does_not_depend_on_any_real_users_history(
+    distinct_recent: ServingArtifacts,
+) -> None:
+    """Rewriting every real user's history leaves the cold-start list unchanged.
+
+    The check that a known user's list *does* change proves the rewrite reaches the scorer; without
+    it, an ineffective rewrite would make the cold-start assertion pass vacuously.
+    """
+    assert distinct_recent.cooccurrence is not None
+    remap = np.random.default_rng(11).permutation(distinct_recent.n_items)
+    codes = remap[distinct_recent.history_codes].astype(distinct_recent.history_codes.dtype)
+    rewritten = replace(
+        distinct_recent,
+        cooccurrence=replace(distinct_recent.cooccurrence, history_codes=codes),
+        history_codes=codes,
+    )
+    k = min(MAX_K, distinct_recent.n_items)
+    known = distinct_recent.encoding.user_codes[0]
+
+    def known_items(artifacts: ServingArtifacts) -> list[str]:
+        return [item.item_id for item in Recommender(artifacts=artifacts).recommend(known, k).items]
+
+    assert known_items(rewritten) != known_items(distinct_recent)
+    assert _unknown_user_items(rewritten, k) == _unknown_user_items(distinct_recent, k)
+
+
 def test_broken_index_degrades_to_popularity(artifacts: ServingArtifacts) -> None:
     """A retriever that raises falls back to global popularity rather than erroring."""
     response = Recommender(artifacts=artifacts, source=_Exploding).recommend(
@@ -295,6 +361,16 @@ def test_http_surface_returns_200_for_unknown_and_known_users(
         body = response.json()
         assert len(body["items"]) == 3
         assert response.headers["X-Request-Id"] == body["request_id"]
+
+
+def test_http_surface_rejects_out_of_range_k(artifacts: ServingArtifacts) -> None:
+    """HTTP callers get 422 outside 1..MAX_K, which is what the runbook documents."""
+    client = TestClient(create_app(artifacts))
+    user = artifacts.encoding.user_codes[0]
+
+    for k in (0, MAX_K + 1):
+        assert client.get("/recommend", params={"user_id": user, "k": k}).status_code == 422
+    assert client.get("/recommend", params={"user_id": user, "k": MAX_K}).status_code == 200
 
 
 def test_http_surface_reports_health_and_metrics(artifacts: ServingArtifacts) -> None:

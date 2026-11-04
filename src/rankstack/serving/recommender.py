@@ -215,14 +215,19 @@ class Recommender:
         self, user_code: int | None, k: int
     ) -> tuple[tuple[RecommendedItem, ...], int, str | None]:
         """Produce ranked items, falling back to popularity if the primary retriever throws."""
-        seen = (
-            self.artifacts.seen_mask(user_code)
-            if user_code is not None
-            else np.zeros(self.artifacts.n_items, dtype=bool)
-        )
-        source = self.source() if self.source is not None else self.artifacts.served_source()
+        if user_code is None:
+            seen = np.zeros(self.artifacts.n_items, dtype=bool)
+        else:
+            seen = self.artifacts.seen_mask(user_code)
+            source = self.source() if self.source is not None else self.artifacts.served_source()
         try:
-            scores = source.score(user_code or 0, seen)
+            if user_code is None:
+                # An unknown user has no history, so only the global ranking applies. Scoring them
+                # through the fused source would need a user code, and any code is a real user's:
+                # every anonymous visitor would be served that one customer's personal list.
+                scores = self.artifacts.popularity_recent.global_scores(seen)
+            else:
+                scores = source.score(user_code, seen)
         except Exception:
             _logger.exception("serving.primary_retriever_failed")
             self.metrics.fallbacks.labels(reason="index").inc()

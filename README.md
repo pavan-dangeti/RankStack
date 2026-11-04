@@ -395,15 +395,16 @@ a user.
 
 | Path | p50 | p95 | p99 | Target | Figure |
 |---|---|---|---|---|---|
-| Warm user | 25.1 ms | 33.0 ms | 59.7 ms | 60 / 150 / 300 ms | results/load_test_electronics_0core.json#/latency/0/p50_ms |
-| Cold start | 24.1 ms | 29.7 ms | 30.8 ms | p95 ≤ 250 ms | results/load_test_electronics_0core.json#/latency/1/p50_ms |
-| Degraded (index raising) | 8.7 ms | 13.9 ms | 15.8 ms | p95 ≤ 20 ms | results/load_test_electronics_0core.json#/latency/2/p50_ms |
+| Warm user | 26.1 ms | 33.4 ms | 63.3 ms | 60 / 150 / 300 ms | results/load_test_electronics_0core.json#/latency/0/p50_ms |
+| Cold start | 8.9 ms | 12.3 ms | 12.5 ms | p95 ≤ 250 ms | results/load_test_electronics_0core.json#/latency/1/p50_ms |
+| Degraded (index raising) | 9.8 ms | 13.5 ms | 14.3 ms | p95 ≤ 20 ms | results/load_test_electronics_0core.json#/latency/2/p50_ms |
 
-All five SLOs met, 310 req/s in one process. Every row above is re-read from the result file
-by CI, so this table cannot drift from what the code produces.
+All five SLOs met in one process. CI re-reads each row's p50 from the result file. A cold-start
+request scores the global ranking alone, with no fusion, which is why it is now cheaper than a warm
+one.
 
 | Quantity | Value | Source |
 |---|---|---|
 | Catalogue size served | 1,334,914 | results/load_test_electronics_0core.json#/catalogue_items |
-| Artefact load time | 9.37 s | results/load_test_electronics_0core.json#/artifact_load_seconds |
-| Throughput, one process | 310.4 req/s | results/load_test_electronics_0core.json#/throughput_requests_per_second_single_process |
+| Artefact load time | 8.66 s | results/load_test_electronics_0core.json#/artifact_load_seconds |
+| Throughput, one process | 317.5 req/s | results/load_test_electronics_0core.json#/throughput_requests_per_second_single_process |

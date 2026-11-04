@@ -6,12 +6,19 @@ it. Retrieval narrows a ~1.6M-item catalogue to a few hundred candidates, a lear
 them, and business rules enforce diversity and freshness. Evaluation is time-respecting: every
 split, feature and metric is defined against a global timeline, and leakage is tested automatically.
 
-**Status: Phase 5 — serving.** The service answers, and every answer is explained. Two of the three
-learned components lost their measurements and are documented as such rather than quietly dropped:
-the two-tower retrieval model (HR@20 0.00025) and the LambdaMART re-ranker (-0.0173 against its own
-stage 1). What the service actually ships is the retriever that won, fused with a personalised
-source, over a degradation ladder where every failure mode returns a working list instead of an
-error.
+**Status: Phases 0–5 complete, plus the stage-1 ANN index benchmark.** The service answers, and
+every answer is explained. Two of the three learned components lost their measurements and are
+documented as such rather than quietly dropped. The two-tower retrieval model reaches warm-user HR@20
+0.00025 (`results/evaluation_electronics_0core.json#/cohorts/warm_users/sources/two_tower/ranking/hr@20`).
+The LambdaMART re-ranker changes warm-user HR@20 by
+-0.0148 (`results/two_stage_electronics_0core.json#/cohorts/warm_users/paired_two_stage_vs_stage_1/hr/hr@20/difference`)
+against its own stage 1, with a 95% CI from
+-0.0172 (`results/two_stage_electronics_0core.json#/cohorts/warm_users/paired_two_stage_vs_stage_1/hr/hr@20/ci_low`)
+to -0.0125 (`results/two_stage_electronics_0core.json#/cohorts/warm_users/paired_two_stage_vs_stage_1/hr/hr@20/ci_high`).
+The ANN benchmark found no approximate index that reaches the 0.95 recall@200 target, so exact search
+is the stage-1 index for ALS. What the service actually ships is the retriever that won, fused with a
+personalised source for known users; unknown users get the global ranking alone. Every failure mode
+on the degradation ladder returns a working list instead of an error.
 
 - [Design document](docs/design.md) — requirements, SLOs, architecture, alternatives, risks, threat model
 - [Architecture decisions](docs/adr/) — the decisions worth arguing about, and what was rejected

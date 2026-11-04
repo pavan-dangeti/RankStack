@@ -6,17 +6,18 @@ every quality number from a committed result file; the commands that produced th
 
 ## What is actually being served
 
-The request path serves **reciprocal-rank fusion of `popularity_recent` and item-item
-co-occurrence**, over a 1,334,914-item catalogue.
+For a known user, the request path serves **reciprocal-rank fusion of `popularity_recent` and
+item-item co-occurrence**, over a 1,334,914-item catalogue. An unknown user has no history for
+co-occurrence to use, so they get `popularity_recent` alone: the same list for every unknown user.
 
 That is not the most accurate configuration available and it is deliberate. Measured on the warm
 cohort (`results/fusion_electronics_0core.json`):
 
-| Source | HR@20 | Distinct top-1 items across 2,000 users |
-|---|---|---|
-| `popularity_recent` alone | 0.0200 | 3 |
-| `cooccurrence` alone | 0.0015 | 1,911 |
-| **fused (shipped)** | **0.0150** | **18** |
+| Source | HR@20 | Distinct top-1 items across 2,000 users | Figure |
+|---|---|---|---|
+| `popularity_recent` alone | 0.0200 | 3 | results/fusion_electronics_0core.json#/sources/popularity_recent/ranking/hr@20 |
+| `cooccurrence` alone | 0.0015 | 1,911 | results/fusion_electronics_0core.json#/sources/cooccurrence/ranking/hr@20 |
+| **fused (shipped)** | **0.0150** | **18** | results/fusion_electronics_0core.json#/sources/fused/ranking/hr@20 |
 
 `popularity_recent` is the strongest single retriever on this corpus, and it is also a *global*
 ranking: it returned only 3 distinct top items across 2,000 warm users. Serving it alone would hand
@@ -47,15 +48,33 @@ First load takes about 9 s on the development machine and 683 MB resident (1.6M 
 For a 512 MB free tier, build the catalogue with `with_titles=False`; responses then carry
 `title: null` and nothing else changes.
 
+A known user, with four train-window purchases (a charger and three sets of headphones):
+
 ```bash
-curl 'http://localhost:8000/recommend?user_id=AE2222C2STTMXNUHXTVDF5&k=5'
+curl -s 'http://localhost:8000/recommend?user_id=AE222N3VUKMF3GO6D4LHTELE7UWA&k=5' | python3 -m json.tool
 ```
+
+The response has `"fallback_used": null`. For this user the fused list holds globally trending items
+reordered where co-occurrence links them to the user's history, so its order differs from the
+cold-start list below even where the items are the same.
+
+An unknown user takes the cold-start path:
+
+```bash
+curl -s 'http://localhost:8000/recommend?user_id=NO_SUCH_USER&k=5' | python3 -m json.tool
+```
+
+The response has `"fallback_used": "cold_start"`, and the list is exactly the top of
+`popularity_recent`, the same for every unknown user. If two different unknown ids ever return
+different lists, or a cold-start list contains an item that is not globally trending, the cold-start
+path is reading someone's history: treat it as a privacy incident.
 
 ## The contract
 
 `GET /recommend?user_id=<id>&k=<1..50>` always returns **HTTP 200 with a non-empty list**. Unknown
 users, a corrupt index and a missing feature store all degrade; none of them produce a 404, a 500
-or an empty page. `k` is clamped to 1..50 rather than rejected.
+or an empty page. Out-of-range `k` (below 1 or above 50) is rejected with **HTTP 422**: that is a
+malformed request from the caller, not a degradation, so it is not answered with a list.
 
 Every response carries `request_id`, `model_version`, `index_version` (the artefact checksum) and
 `fallback_used`. Explanations come from a fixed template set keyed on the dominating signal; no text
@@ -72,13 +91,14 @@ is generated at request time (ADR-0003), so every explanation is traceable to a 
 From `results/load_test_electronics_0core.json`, 400 requests at concurrency 8, k=20, single
 process on the development machine:
 
-| Path | Target | Measured p50 | p95 | p99 |
-|---|---|---|---|---|
-| Warm user | 60 / 150 / 300 ms | 25.1 ms | 33.0 ms | 59.7 ms |
-| Cold start | p95 ≤ 250 ms | 24.1 ms | 29.7 ms | 30.8 ms |
-| Degraded (index raising) | p95 ≤ 20 ms | 8.7 ms | 13.9 ms | 15.8 ms |
+| Path | Target | Measured p50 | p95 | p99 | Figure |
+|---|---|---|---|---|---|
+| Warm user | 60 / 150 / 300 ms | 26.1 ms | 33.4 ms | 63.3 ms | results/load_test_electronics_0core.json#/latency/0/p50_ms |
+| Cold start | p95 ≤ 250 ms | 8.9 ms | 12.3 ms | 12.5 ms | results/load_test_electronics_0core.json#/latency/1/p50_ms |
+| Degraded (index raising) | p95 ≤ 20 ms | 9.8 ms | 13.5 ms | 14.3 ms | results/load_test_electronics_0core.json#/latency/2/p50_ms |
 
-Throughput 310 req/s in one process. All five SLOs in the design document are met.
+Throughput 317.5 req/s (`results/load_test_electronics_0core.json#/throughput_requests_per_second_single_process`)
+in one process. All five SLOs in the design document are met.
 
 This measures `Recommender.recommend`, the path the ASGI layer calls directly, not the HTTP
 round trip. The design allocates 10 ms separately for serialisation, logging and tracing.
@@ -91,7 +111,7 @@ uv run python scripts/load_test.py --requests 400 --concurrency 8
 
 | Symptom in metrics | Cause | What happens | Action |
 |---|---|---|---|
-| `fallback_total{reason="cold_start"}` climbing | Users unseen at training time | Global ranking, personalised as far as the catalogue allows | Expected: 57% of test users have no train history. Investigate only if it jumps past that. |
+| `fallback_total{reason="cold_start"}` climbing | Users unseen at training time | `popularity_recent` alone, the same list for every unknown user | Expected: 57% of test users have no train history. Investigate only if it jumps past that. |
 | `fallback_total{reason="index"}` non-zero | Served source raised | Falls back to global popularity | Check artefact disk and the manifest. If it persists, redeploy. |
 | `fallback_total{reason="retriever"}` non-zero | Ranking itself raised | Global popularity | A bug. Check logs for `serving.retrieval_failed`. |
 | Process exits at startup, `does not match the serving manifest` | Artefact changed after hashing | Refuses to start | Rebuild the manifest and redeploy **together**. Never hash separately from deploying. |

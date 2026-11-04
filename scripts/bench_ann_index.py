@@ -13,8 +13,15 @@ that shows what an index can and cannot recover from badly spread vectors.
 workload the index would serve, and recall is measured against exact top-k from a brute-force
 inner-product search over the same vectors, the score both models rank by. Only trained items are
 indexed: the two-tower scores untrained items `-inf` and ALS leaves them as zero rows, so an exact
-top-k containing them would be a target serving discards. Seen items are not masked; that is a
-serving rule, not a property of the index.
+top-k containing them would be a target serving discards. Seen items are not masked, although
+serving drops them; `query_diagnostics.seen_items_in_exact_top_k` records how many land in the
+exact top-k and so how far recall could move. From the next phase on, the recall definition
+excludes them.
+
+**Query diagnostics.** `query_diagnostics.self_match` (two-tower only) records how many queries are
+one-item histories, whose user vector is that item's embedding, so their exact top-1 is the item
+itself at score 1.0. `ivf_list_sizes` records how evenly each IVF quantiser spread the items, the
+evidence for how much of IVF's recall loss is routing.
 
 **Strict and tie-aware recall.** Strict recall counts an item only if it is in the exact top-k by
 id. When many items score within a hair of the k-th best, an index can return an equally good item
@@ -87,6 +94,8 @@ SHORT_K = 10
 #: Absolute score slack for a tie. It is only comparable across vector sets whose scores are of
 #: similar scale, which `neighbour_contrast` records so a reader can check.
 TIE_TOLERANCE = 1e-3
+#: A top-1 score this close to 1.0 on unit vectors means the query is, in effect, that item.
+SELF_MATCH_SCORE = 0.9999
 VECTOR_SETS = ("als", "two_tower")
 FAMILIES = ("flat", "hnsw", "ivfflat", "ivfpq")
 #: Every latency figure is one query per `search` call, the shape of a single API request.
@@ -189,6 +198,11 @@ class VectorSet:
     queries: np.ndarray
     items_untrained_excluded: int
     query_definition: str
+    #: Each query user's train-window items, as positions in `items`; untrained items are dropped
+    #: because they are not indexed.
+    histories: tuple[np.ndarray, ...]
+    #: Share of all servable users, not just the sample, whose history is a single item.
+    single_item_history_share: float
 
 
 @dataclass(frozen=True, slots=True)
@@ -434,10 +448,8 @@ def _build_hnsw(
     return _sweep(built, ("ef_search", "efSearch"), HNSW_EF_SEARCH, vectors, truth)
 
 
-def _build_ivf(
-    space: IndexSpace, vectors: VectorSet, truth: GroundTruth, nlist: int, pq_m: int | None
-) -> list[Measurement]:
-    """Train one IVF index, flat or product-quantised, and sweep how many lists it probes.
+def _train_ivf(space: IndexSpace, nlist: int, pq_m: int | None) -> Built:
+    """Train and fill one IVF index, flat or product-quantised.
 
     Training the coarse quantiser (and the PQ codebooks) is part of every rebuild, so it is part
     of the build time; timing only `add` understated it.
@@ -464,8 +476,74 @@ def _build_ivf(
             {"nlist": nlist, "m": pq_m},
         )
     )
-    built = Built(index, family, params, time.perf_counter() - started, queries)
-    return _sweep(built, ("nprobe", "nprobe"), IVF_NPROBE, vectors, truth)
+    return Built(index, family, params, time.perf_counter() - started, queries)
+
+
+def _ivf_list_sizes(built: Built) -> dict[str, Any]:
+    """Summarise how evenly the coarse quantiser spread items over the inverted lists.
+
+    Probing `nprobe` lists only covers `nprobe / nlist` of the catalogue when lists are even. When
+    one list holds most items and many are empty, routing decides little: a query either lands in
+    the giant list or finds few candidates, which is the routing loss IVF-Flat measures.
+    """
+    ivf = faiss.extract_index_ivf(built.index)
+    sizes = np.array([ivf.get_list_size(i) for i in range(ivf.nlist)], dtype=np.int64)
+    return {
+        "family": built.family,
+        **built.params,
+        "items": int(sizes.sum()),
+        "empty_lists": int((sizes == 0).sum()),
+        "largest_list_items": int(sizes.max()),
+        "largest_list_share": round(float(sizes.max() / sizes.sum()), 4),
+        "ten_largest_lists_share": round(float(np.sort(sizes)[-10:].sum() / sizes.sum()), 4),
+    }
+
+
+def _seen_in_truth(truth: GroundTruth, vectors: VectorSet) -> dict[str, float]:
+    """Count the query users' own train-window items inside the exact top-k.
+
+    Serving drops seen items, so each one in the ground truth is a target the index is scored on
+    that would never be shown. Removing them changes recall@k for a query by at most the count
+    over k, so `max / k` bounds how far the published recall@k could move.
+    """
+    counts = np.array(
+        [np.isin(ids, seen).sum() for ids, seen in zip(truth.ids, vectors.histories, strict=True)]
+    )
+    top_k = truth.ids.shape[1]
+    return {
+        "mean": round(float(counts.mean()), 2),
+        "max": int(counts.max()),
+        "max_recall_shift_at_top_k": round(float(counts.max() / top_k), 4),
+    }
+
+
+def _self_match(truth: GroundTruth, vectors: VectorSet) -> dict[str, Any]:
+    """Explain a rank-1 score of 1.0: queries that are, in effect, one of the indexed items.
+
+    A user-tower vector is a normalised recency-weighted mean of history embeddings, so a user
+    with one history item is that item's (unit) embedding and its exact top-1 is itself. The
+    neighbour contrast is split by history length to show whether those users drive the crowding.
+    """
+    lengths = np.array([seen.size for seen in vectors.histories])
+    top1 = truth.ids[:, 0]
+    top1_seen = np.array([t in seen for t, seen in zip(top1, vectors.histories, strict=True)])
+    exact = truth.scores[:, 0] >= SELF_MATCH_SCORE
+    groups = {"one_item_history": lengths == 1, "two_or_more_items": lengths > 1}
+    return {
+        "score_threshold": SELF_MATCH_SCORE,
+        "queries": int(lengths.size),
+        "one_item_history_queries": int((lengths == 1).sum()),
+        "one_item_history_share_all_servable_users": round(vectors.single_item_history_share, 4),
+        "top1_at_threshold": int(exact.sum()),
+        "top1_at_threshold_in_own_history": int((exact & top1_seen).sum()),
+        "top1_at_threshold_with_one_item_history": int((exact & (lengths == 1)).sum()),
+        "top1_in_own_history": int(top1_seen.sum()),
+        "neighbour_contrast_by_history": {
+            name: {"queries": int(mask.sum()), **_neighbour_contrast(truth.scores[mask])}
+            for name, mask in groups.items()
+            if mask.any()
+        },
+    }
 
 
 def _choose(points: list[Measurement], target: float) -> Measurement | None:
@@ -493,7 +571,8 @@ def _load_two_tower(root: Path, rng: np.random.Generator, queries: int) -> Vecto
         if model.trained_items is None
         else np.asarray(model.trained_items, dtype=bool)
     )
-    servable = np.flatnonzero(np.diff(model.history_indptr) >= 1)
+    depths = np.diff(model.history_indptr)
+    servable = np.flatnonzero(depths >= 1)
     user_codes = rng.choice(servable, size=queries, replace=False)
     return VectorSet(
         name="two_tower",
@@ -501,7 +580,15 @@ def _load_two_tower(root: Path, rng: np.random.Generator, queries: int) -> Vecto
         queries=np.ascontiguousarray(model.user_vectors(user_codes)),
         items_untrained_excluded=int((~trained).sum()),
         query_definition="user-tower vectors (recency-weighted mean pool) of servable users",
+        histories=_index_positions(trained, [model.history(int(u)) for u in user_codes]),
+        single_item_history_share=float((depths[servable] == 1).mean()),
     )
+
+
+def _index_positions(trained: np.ndarray, histories: list[np.ndarray]) -> tuple[np.ndarray, ...]:
+    """Map item codes to row positions among the trained (indexed) items, dropping the rest."""
+    position = np.cumsum(trained) - 1
+    return tuple(position[codes[trained[codes]]] for codes in histories)
 
 
 def _load_als(root: Path, rng: np.random.Generator, queries: int) -> VectorSet:
@@ -510,12 +597,15 @@ def _load_als(root: Path, rng: np.random.Generator, queries: int) -> VectorSet:
     trained = np.any(model.item_factors != 0, axis=1)
     servable = np.flatnonzero(np.any(model.user_factors != 0, axis=1))
     user_codes = rng.choice(servable, size=queries, replace=False)
+    depths = np.diff(model.history_indptr)[servable]
     return VectorSet(
         name="als",
         items=np.ascontiguousarray(model.item_factors[trained], dtype=np.float32),
         queries=np.ascontiguousarray(model.user_factors[user_codes], dtype=np.float32),
         items_untrained_excluded=int((~trained).sum()),
         query_definition="fitted ALS user factors of users ALS trained (non-zero factor rows)",
+        histories=_index_positions(trained, [model.history(int(u)) for u in user_codes]),
+        single_item_history_share=float((depths == 1).mean()),
     )
 
 
@@ -564,6 +654,14 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="Build on the original vectors with the inner-product metric (the ablation).",
     )
+    parser.add_argument(
+        "--diagnostics-only",
+        action="store_true",
+        help=(
+            "Recompute the query diagnostics and IVF list sizes for the same seeded sample and add "
+            "them to the existing result file, without re-running the latency sweep."
+        ),
+    )
     return parser.parse_args(argv)
 
 
@@ -604,14 +702,32 @@ def main(argv: list[str] | None = None) -> int:
     pq_m = IVF_PQ_M if not args.quick else (16,)
     nlists = IVF_NLIST if not args.quick else (1024,)
 
-    points = _build_flat(vectors, truth)
-    for m in m_values:
-        for efc in efc_values:
-            points.extend(_build_hnsw(space, vectors, truth, m, efc))
+    diagnostics: dict[str, Any] = {
+        "query_diagnostics": {
+            "seen_items_in_exact_top_k": _seen_in_truth(truth, vectors),
+            # The 1.0 threshold only means "the query is an item" for unit vectors.
+            "self_match": _self_match(truth, vectors) if vectors.name == "two_tower" else None,
+        },
+        "ivf_list_sizes": [],
+    }
+    out = settings.results_root / (
+        f"ann_index_{corpus.name}_{vectors.name}{'_raw_ip' if args.raw_inner_product else ''}.json"
+    )
+
+    points = [] if args.diagnostics_only else _build_flat(vectors, truth)
+    if not args.diagnostics_only:
+        for m in m_values:
+            for efc in efc_values:
+                points.extend(_build_hnsw(space, vectors, truth, m, efc))
     for nlist in nlists:
-        points.extend(_build_ivf(space, vectors, truth, nlist, None))
-        for m in pq_m:
-            points.extend(_build_ivf(space, vectors, truth, nlist, m))
+        for m in (None, *pq_m):
+            built = _train_ivf(space, nlist, m)
+            diagnostics["ivf_list_sizes"].append(_ivf_list_sizes(built))
+            if not args.diagnostics_only:
+                points.extend(_sweep(built, ("nprobe", "nprobe"), IVF_NPROBE, vectors, truth))
+
+    if args.diagnostics_only:
+        return _add_diagnostics(out, contrast, diagnostics)
 
     curves = {
         family: Curve(family, [p for p in points if p.family == family]) for family in FAMILIES
@@ -642,6 +758,7 @@ def main(argv: list[str] | None = None) -> int:
         "float32_bytes": int(vectors.items.nbytes),
         "exact_search_seconds": round(exact_seconds, 1),
         "neighbour_contrast": contrast,
+        **diagnostics,
         "recall_target": args.recall_target,
         "curves": {family: c.as_list() for family, c in curves.items()},
         "chosen": {
@@ -667,11 +784,37 @@ def main(argv: list[str] | None = None) -> int:
             "faiss_threads": faiss.omp_get_max_threads(),
         },
     }
-    suffix = "_raw_ip" if args.raw_inner_product else ""
-    out = settings.results_root / f"ann_index_{corpus.name}_{vectors.name}{suffix}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
     _print(payload, out)
+    return 0
+
+
+def _add_diagnostics(out: Path, contrast: dict[str, float], diagnostics: dict[str, Any]) -> int:
+    """Merge diagnostics into an existing result file measured on the same query sample.
+
+    The recomputed neighbour contrast must equal the stored one: it is a function of the seeded
+    sample and the vectors, so a mismatch means the file came from a different sample or model and
+    the diagnostics would describe queries the sweep never ran.
+    """
+    if not out.exists():
+        print(f"error: no result file at {out}; run the sweep first", file=sys.stderr)
+        return 1
+    payload = json.loads(out.read_text())
+    if payload["neighbour_contrast"] != contrast:
+        print(f"error: {out} was measured on a different query sample", file=sys.stderr)
+        return 1
+    payload.update(diagnostics)
+    payload["diagnostics_note"] = (
+        "Added after the sweep. ivf_list_sizes come from rebuilding each IVF index with the "
+        "sweep's builder on the same vectors; FAISS k-means runs with its fixed default seed."
+    )
+    payload["diagnostics_command"] = " ".join(
+        ["uv run python scripts/bench_ann_index.py", *sys.argv[1:]]
+    )
+    out.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+    print(json.dumps(diagnostics, indent=2))
+    print(f"  wrote {out}")
     return 0
 
 

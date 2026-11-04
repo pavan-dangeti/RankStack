@@ -16,16 +16,23 @@ from scripts.bench_ann_index import (
     TIE_TOLERANCE,
     Footprint,
     GroundTruth,
+    IndexSpace,
     Measurement,
     Recalls,
+    VectorSet,
     _best,
     _choose,
     _footprint,
+    _index_positions,
+    _ivf_list_sizes,
     _measure_recalls,
     _mips_to_l2,
     _neighbour_contrast,
     _pad_columns,
     _percentile,
+    _seen_in_truth,
+    _self_match,
+    _train_ivf,
 )
 
 
@@ -212,3 +219,65 @@ def test_pad_columns_rounds_width_up_and_changes_no_distance() -> None:
     assert np.array_equal(padded[:, :33], vectors)
     assert not padded[:, 33:].any()
     assert _pad_columns(padded, 32).shape == (2, 64)
+
+
+def _with_histories(histories: list[list[int]]) -> VectorSet:
+    empty = np.zeros((1, 1), dtype=np.float32)
+    return VectorSet(
+        name="two_tower",
+        items=empty,
+        queries=empty,
+        items_untrained_excluded=0,
+        query_definition="",
+        histories=tuple(np.array(h, dtype=np.int64) for h in histories),
+        single_item_history_share=0.5,
+    )
+
+
+def test_index_positions_follow_the_trained_rows_and_drop_untrained_items() -> None:
+    """History codes must be translated to the row numbers the index and ground truth use."""
+    trained = np.array([True, False, True, True, False])
+
+    (positions,) = _index_positions(trained, [np.array([3, 1, 0, 4])])
+    assert positions.tolist() == [2, 0]
+
+
+def test_seen_in_truth_counts_history_items_and_bounds_the_recall_shift() -> None:
+    """The bound is the worst query's seen count over k: what removing them could move recall by."""
+    truth = GroundTruth(
+        ids=np.array([[0, 1, 2, 3], [4, 5, 6, 7]]), scores=np.zeros((2, 4), dtype=np.float32)
+    )
+
+    seen = _seen_in_truth(truth, _with_histories([[1, 3, 9], [8]]))
+    assert seen == {"mean": 1.0, "max": 2, "max_recall_shift_at_top_k": 0.5}
+
+
+def test_self_match_attributes_perfect_top1_scores_to_one_item_histories() -> None:
+    """A score-1.0 top-1 that is the user's only history item is the query matching itself."""
+    truth = GroundTruth(
+        ids=np.array([[5, 1, 2], [7, 1, 2], [9, 1, 2]]),
+        scores=np.array([[1.0, 0.5, 0.4], [0.7, 0.5, 0.4], [0.6, 0.5, 0.4]], dtype=np.float32),
+    )
+
+    match = _self_match(truth, _with_histories([[5], [7, 3], [4, 8]]))
+    assert match["one_item_history_queries"] == 1
+    assert match["top1_at_threshold"] == 1
+    assert match["top1_at_threshold_in_own_history"] == 1
+    assert match["top1_at_threshold_with_one_item_history"] == 1
+    assert match["top1_in_own_history"] == 2
+    groups = match["neighbour_contrast_by_history"]
+    assert groups["one_item_history"]["queries"] == 1
+    assert groups["two_or_more_items"]["median_score_rank_1"] == 0.65
+
+
+def test_ivf_list_sizes_report_empty_lists_and_the_largest_share() -> None:
+    """Every indexed item is in exactly one list, and an unused list is counted as empty."""
+    _skip_if_faiss_cannot_run()
+    rng = np.random.default_rng(0)
+    centres = np.array([[10.0, 0.0], [-10.0, 0.0]], dtype=np.float32)
+    items = (centres[rng.integers(0, 2, 2000)] + rng.standard_normal((2000, 2))).astype(np.float32)
+    built = _train_ivf(IndexSpace("mips_l2", items, items[:1], faiss.METRIC_L2), 4, None)
+    sizes = _ivf_list_sizes(built)
+    assert sizes["items"] == 2000
+    assert 0 <= sizes["empty_lists"] < 4
+    assert sizes["largest_list_share"] == round(sizes["largest_list_items"] / 2000, 4)

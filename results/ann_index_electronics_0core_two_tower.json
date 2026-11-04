@@ -1,0 +1,1921 @@
+{
+  "chosen": {
+    "flat": {
+      "build_seconds": 0.1,
+      "faiss_threads": 1,
+      "family": "flat",
+      "index_bytes": 681692717,
+      "index_mib": 650.1,
+      "latency_batch_size": 1,
+      "memory_bytes": 681984000,
+      "memory_mib": 650.4,
+      "p50_ms": 14.5027,
+      "p95_ms": 16.4412,
+      "p99_ms": 17.2022,
+      "params": {
+        "threads": 1
+      },
+      "recall_at_10": 1.0,
+      "recall_at_top_k": 1.0,
+      "tie_aware_recall_at_10": 1.0
+    },
+    "hnsw": null,
+    "ivfflat": null,
+    "ivfpq": null,
+    "rule": "Lowest p99 latency among configurations reaching recall_at_top_k >= 0.95; null when none does."
+  },
+  "command": "uv run python scripts/bench_ann_index.py --vectors two_tower --queries 200",
+  "corpus": "electronics_0core",
+  "curves": {
+    "flat": [
+      {
+        "build_seconds": 0.1,
+        "faiss_threads": 1,
+        "family": "flat",
+        "index_bytes": 681692717,
+        "index_mib": 650.1,
+        "latency_batch_size": 1,
+        "memory_bytes": 681984000,
+        "memory_mib": 650.4,
+        "p50_ms": 14.5027,
+        "p95_ms": 16.4412,
+        "p99_ms": 17.2022,
+        "params": {
+          "threads": 1
+        },
+        "recall_at_10": 1.0,
+        "recall_at_top_k": 1.0,
+        "tie_aware_recall_at_10": 1.0
+      },
+      {
+        "build_seconds": 0.1,
+        "faiss_threads": 10,
+        "family": "flat",
+        "index_bytes": 681692717,
+        "index_mib": 650.1,
+        "latency_batch_size": 1,
+        "memory_bytes": 681984000,
+        "memory_mib": 650.4,
+        "p50_ms": 8.9556,
+        "p95_ms": 22.3455,
+        "p99_ms": 22.741,
+        "params": {
+          "threads": 10
+        },
+        "recall_at_10": 1.0,
+        "recall_at_top_k": 1.0,
+        "tie_aware_recall_at_10": 1.0
+      }
+    ],
+    "hnsw": [
+      {
+        "build_seconds": 141.3,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 879111786,
+        "index_mib": 838.4,
+        "latency_batch_size": 1,
+        "memory_bytes": 879624192,
+        "memory_mib": 838.9,
+        "p50_ms": 0.2562,
+        "p95_ms": 0.4086,
+        "p99_ms": 0.4903,
+        "params": {
+          "M": 16,
+          "ef_construction": 100,
+          "ef_search": 32
+        },
+        "recall_at_10": 0.0825,
+        "recall_at_top_k": 0.03255,
+        "tie_aware_recall_at_10": 0.0855
+      },
+      {
+        "build_seconds": 141.3,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 879111786,
+        "index_mib": 838.4,
+        "latency_batch_size": 1,
+        "memory_bytes": 879624192,
+        "memory_mib": 838.9,
+        "p50_ms": 0.2939,
+        "p95_ms": 0.4058,
+        "p99_ms": 0.4453,
+        "params": {
+          "M": 16,
+          "ef_construction": 100,
+          "ef_search": 64
+        },
+        "recall_at_10": 0.1085,
+        "recall_at_top_k": 0.0463,
+        "tie_aware_recall_at_10": 0.1115
+      },
+      {
+        "build_seconds": 259.3,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 879111786,
+        "index_mib": 838.4,
+        "latency_batch_size": 1,
+        "memory_bytes": 879624192,
+        "memory_mib": 838.9,
+        "p50_ms": 0.2585,
+        "p95_ms": 0.3706,
+        "p99_ms": 0.4587,
+        "params": {
+          "M": 16,
+          "ef_construction": 200,
+          "ef_search": 32
+        },
+        "recall_at_10": 0.111,
+        "recall_at_top_k": 0.05235,
+        "tie_aware_recall_at_10": 0.1135
+      },
+      {
+        "build_seconds": 464.2,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 879111786,
+        "index_mib": 838.4,
+        "latency_batch_size": 1,
+        "memory_bytes": 879640576,
+        "memory_mib": 838.9,
+        "p50_ms": 0.2945,
+        "p95_ms": 1.6697,
+        "p99_ms": 2.2325,
+        "params": {
+          "M": 16,
+          "ef_construction": 400,
+          "ef_search": 32
+        },
+        "recall_at_10": 0.1685,
+        "recall_at_top_k": 0.065625,
+        "tie_aware_recall_at_10": 0.1745
+      },
+      {
+        "build_seconds": 141.3,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 879111786,
+        "index_mib": 838.4,
+        "latency_batch_size": 1,
+        "memory_bytes": 879624192,
+        "memory_mib": 838.9,
+        "p50_ms": 0.5034,
+        "p95_ms": 0.6635,
+        "p99_ms": 0.7603,
+        "params": {
+          "M": 16,
+          "ef_construction": 100,
+          "ef_search": 128
+        },
+        "recall_at_10": 0.1535,
+        "recall_at_top_k": 0.070225,
+        "tie_aware_recall_at_10": 0.157
+      },
+      {
+        "build_seconds": 259.3,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 879111786,
+        "index_mib": 838.4,
+        "latency_batch_size": 1,
+        "memory_bytes": 879624192,
+        "memory_mib": 838.9,
+        "p50_ms": 0.3054,
+        "p95_ms": 0.4043,
+        "p99_ms": 0.467,
+        "params": {
+          "M": 16,
+          "ef_construction": 200,
+          "ef_search": 64
+        },
+        "recall_at_10": 0.158,
+        "recall_at_top_k": 0.076925,
+        "tie_aware_recall_at_10": 0.163
+      },
+      {
+        "build_seconds": 464.2,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 879111786,
+        "index_mib": 838.4,
+        "latency_batch_size": 1,
+        "memory_bytes": 879640576,
+        "memory_mib": 838.9,
+        "p50_ms": 0.23,
+        "p95_ms": 0.3399,
+        "p99_ms": 0.4037,
+        "params": {
+          "M": 16,
+          "ef_construction": 400,
+          "ef_search": 64
+        },
+        "recall_at_10": 0.2245,
+        "recall_at_top_k": 0.0925,
+        "tie_aware_recall_at_10": 0.2325
+      },
+      {
+        "build_seconds": 199.4,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1049368274,
+        "index_mib": 1000.8,
+        "latency_batch_size": 1,
+        "memory_bytes": 1049853952,
+        "memory_mib": 1001.2,
+        "p50_ms": 0.2543,
+        "p95_ms": 0.3652,
+        "p99_ms": 0.4109,
+        "params": {
+          "M": 32,
+          "ef_construction": 100,
+          "ef_search": 32
+        },
+        "recall_at_10": 0.2005,
+        "recall_at_top_k": 0.09515,
+        "tie_aware_recall_at_10": 0.208
+      },
+      {
+        "build_seconds": 259.3,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 879111786,
+        "index_mib": 838.4,
+        "latency_batch_size": 1,
+        "memory_bytes": 879624192,
+        "memory_mib": 838.9,
+        "p50_ms": 0.4977,
+        "p95_ms": 0.6442,
+        "p99_ms": 0.7092,
+        "params": {
+          "M": 16,
+          "ef_construction": 200,
+          "ef_search": 128
+        },
+        "recall_at_10": 0.2175,
+        "recall_at_top_k": 0.106575,
+        "tie_aware_recall_at_10": 0.225
+      },
+      {
+        "build_seconds": 141.3,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 879111786,
+        "index_mib": 838.4,
+        "latency_batch_size": 1,
+        "memory_bytes": 879624192,
+        "memory_mib": 838.9,
+        "p50_ms": 0.8828,
+        "p95_ms": 1.3447,
+        "p99_ms": 1.5012,
+        "params": {
+          "M": 16,
+          "ef_construction": 100,
+          "ef_search": 256
+        },
+        "recall_at_10": 0.215,
+        "recall_at_top_k": 0.11005,
+        "tie_aware_recall_at_10": 0.221
+      },
+      {
+        "build_seconds": 199.4,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1049368274,
+        "index_mib": 1000.8,
+        "latency_batch_size": 1,
+        "memory_bytes": 1049853952,
+        "memory_mib": 1001.2,
+        "p50_ms": 0.4039,
+        "p95_ms": 0.5557,
+        "p99_ms": 0.5986,
+        "params": {
+          "M": 32,
+          "ef_construction": 100,
+          "ef_search": 64
+        },
+        "recall_at_10": 0.253,
+        "recall_at_top_k": 0.12145,
+        "tie_aware_recall_at_10": 0.262
+      },
+      {
+        "build_seconds": 464.2,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 879111786,
+        "index_mib": 838.4,
+        "latency_batch_size": 1,
+        "memory_bytes": 879640576,
+        "memory_mib": 838.9,
+        "p50_ms": 0.3569,
+        "p95_ms": 0.4892,
+        "p99_ms": 0.5335,
+        "params": {
+          "M": 16,
+          "ef_construction": 400,
+          "ef_search": 128
+        },
+        "recall_at_10": 0.315,
+        "recall_at_top_k": 0.139925,
+        "tie_aware_recall_at_10": 0.3255
+      },
+      {
+        "build_seconds": 259.3,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 879111786,
+        "index_mib": 838.4,
+        "latency_batch_size": 1,
+        "memory_bytes": 879624192,
+        "memory_mib": 838.9,
+        "p50_ms": 0.8611,
+        "p95_ms": 1.0545,
+        "p99_ms": 1.1573,
+        "params": {
+          "M": 16,
+          "ef_construction": 200,
+          "ef_search": 256
+        },
+        "recall_at_10": 0.291,
+        "recall_at_top_k": 0.155825,
+        "tie_aware_recall_at_10": 0.3025
+      },
+      {
+        "build_seconds": 199.4,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1049368274,
+        "index_mib": 1000.8,
+        "latency_batch_size": 1,
+        "memory_bytes": 1049853952,
+        "memory_mib": 1001.2,
+        "p50_ms": 0.7034,
+        "p95_ms": 0.9107,
+        "p99_ms": 1.036,
+        "params": {
+          "M": 32,
+          "ef_construction": 100,
+          "ef_search": 128
+        },
+        "recall_at_10": 0.3075,
+        "recall_at_top_k": 0.161175,
+        "tie_aware_recall_at_10": 0.3185
+      },
+      {
+        "build_seconds": 370.8,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1049368274,
+        "index_mib": 1000.8,
+        "latency_batch_size": 1,
+        "memory_bytes": 1049853952,
+        "memory_mib": 1001.2,
+        "p50_ms": 0.273,
+        "p95_ms": 0.4108,
+        "p99_ms": 0.4457,
+        "params": {
+          "M": 32,
+          "ef_construction": 200,
+          "ef_search": 32
+        },
+        "recall_at_10": 0.3065,
+        "recall_at_top_k": 0.162,
+        "tie_aware_recall_at_10": 0.3185
+      },
+      {
+        "build_seconds": 141.3,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 879111786,
+        "index_mib": 838.4,
+        "latency_batch_size": 1,
+        "memory_bytes": 879624192,
+        "memory_mib": 838.9,
+        "p50_ms": 1.6502,
+        "p95_ms": 1.9204,
+        "p99_ms": 2.0365,
+        "params": {
+          "M": 16,
+          "ef_construction": 100,
+          "ef_search": 512
+        },
+        "recall_at_10": 0.316,
+        "recall_at_top_k": 0.176625,
+        "tie_aware_recall_at_10": 0.3255
+      },
+      {
+        "build_seconds": 464.2,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 879111786,
+        "index_mib": 838.4,
+        "latency_batch_size": 1,
+        "memory_bytes": 879640576,
+        "memory_mib": 838.9,
+        "p50_ms": 0.6066,
+        "p95_ms": 0.7432,
+        "p99_ms": 0.8255,
+        "params": {
+          "M": 16,
+          "ef_construction": 400,
+          "ef_search": 256
+        },
+        "recall_at_10": 0.3975,
+        "recall_at_top_k": 0.19145,
+        "tie_aware_recall_at_10": 0.4095
+      },
+      {
+        "build_seconds": 370.8,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1049368274,
+        "index_mib": 1000.8,
+        "latency_batch_size": 1,
+        "memory_bytes": 1049853952,
+        "memory_mib": 1001.2,
+        "p50_ms": 0.4248,
+        "p95_ms": 0.576,
+        "p99_ms": 0.7009,
+        "params": {
+          "M": 32,
+          "ef_construction": 200,
+          "ef_search": 64
+        },
+        "recall_at_10": 0.3705,
+        "recall_at_top_k": 0.198725,
+        "tie_aware_recall_at_10": 0.3835
+      },
+      {
+        "build_seconds": 380.8,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1390127686,
+        "index_mib": 1325.7,
+        "latency_batch_size": 1,
+        "memory_bytes": 1366638592,
+        "memory_mib": 1303.3,
+        "p50_ms": 0.3643,
+        "p95_ms": 0.8358,
+        "p99_ms": 1.7817,
+        "params": {
+          "M": 64,
+          "ef_construction": 100,
+          "ef_search": 32
+        },
+        "recall_at_10": 0.377,
+        "recall_at_top_k": 0.2153,
+        "tie_aware_recall_at_10": 0.3895
+      },
+      {
+        "build_seconds": 693.4,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1049368274,
+        "index_mib": 1000.8,
+        "latency_batch_size": 1,
+        "memory_bytes": 1049853952,
+        "memory_mib": 1001.2,
+        "p50_ms": 0.2816,
+        "p95_ms": 0.5183,
+        "p99_ms": 0.8114,
+        "params": {
+          "M": 32,
+          "ef_construction": 400,
+          "ef_search": 32
+        },
+        "recall_at_10": 0.4355,
+        "recall_at_top_k": 0.2167,
+        "tie_aware_recall_at_10": 0.452
+      },
+      {
+        "build_seconds": 259.3,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 879111786,
+        "index_mib": 838.4,
+        "latency_batch_size": 1,
+        "memory_bytes": 879624192,
+        "memory_mib": 838.9,
+        "p50_ms": 1.6287,
+        "p95_ms": 1.8607,
+        "p99_ms": 1.9232,
+        "params": {
+          "M": 16,
+          "ef_construction": 200,
+          "ef_search": 512
+        },
+        "recall_at_10": 0.3885,
+        "recall_at_top_k": 0.225125,
+        "tie_aware_recall_at_10": 0.4025
+      },
+      {
+        "build_seconds": 199.4,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1049368274,
+        "index_mib": 1000.8,
+        "latency_batch_size": 1,
+        "memory_bytes": 1049853952,
+        "memory_mib": 1001.2,
+        "p50_ms": 1.2185,
+        "p95_ms": 1.4688,
+        "p99_ms": 1.599,
+        "params": {
+          "M": 32,
+          "ef_construction": 100,
+          "ef_search": 256
+        },
+        "recall_at_10": 0.411,
+        "recall_at_top_k": 0.233375,
+        "tie_aware_recall_at_10": 0.4265
+      },
+      {
+        "build_seconds": 370.8,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1049368274,
+        "index_mib": 1000.8,
+        "latency_batch_size": 1,
+        "memory_bytes": 1049853952,
+        "memory_mib": 1001.2,
+        "p50_ms": 0.7111,
+        "p95_ms": 0.9122,
+        "p99_ms": 1.0223,
+        "params": {
+          "M": 32,
+          "ef_construction": 200,
+          "ef_search": 128
+        },
+        "recall_at_10": 0.448,
+        "recall_at_top_k": 0.2449,
+        "tie_aware_recall_at_10": 0.4615
+      },
+      {
+        "build_seconds": 380.8,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1390127686,
+        "index_mib": 1325.7,
+        "latency_batch_size": 1,
+        "memory_bytes": 1366638592,
+        "memory_mib": 1303.3,
+        "p50_ms": 0.5301,
+        "p95_ms": 0.6761,
+        "p99_ms": 0.7254,
+        "params": {
+          "M": 64,
+          "ef_construction": 100,
+          "ef_search": 64
+        },
+        "recall_at_10": 0.432,
+        "recall_at_top_k": 0.25395,
+        "tie_aware_recall_at_10": 0.447
+      },
+      {
+        "build_seconds": 693.4,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1049368274,
+        "index_mib": 1000.8,
+        "latency_batch_size": 1,
+        "memory_bytes": 1049853952,
+        "memory_mib": 1001.2,
+        "p50_ms": 0.4158,
+        "p95_ms": 0.5585,
+        "p99_ms": 0.662,
+        "params": {
+          "M": 32,
+          "ef_construction": 400,
+          "ef_search": 64
+        },
+        "recall_at_10": 0.4955,
+        "recall_at_top_k": 0.260375,
+        "tie_aware_recall_at_10": 0.5145
+      },
+      {
+        "build_seconds": 464.2,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 879111786,
+        "index_mib": 838.4,
+        "latency_batch_size": 1,
+        "memory_bytes": 879640576,
+        "memory_mib": 838.9,
+        "p50_ms": 1.1421,
+        "p95_ms": 1.262,
+        "p99_ms": 1.2917,
+        "params": {
+          "M": 16,
+          "ef_construction": 400,
+          "ef_search": 512
+        },
+        "recall_at_10": 0.4925,
+        "recall_at_top_k": 0.264375,
+        "tie_aware_recall_at_10": 0.5065
+      },
+      {
+        "build_seconds": 141.3,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 879111786,
+        "index_mib": 838.4,
+        "latency_batch_size": 1,
+        "memory_bytes": 879624192,
+        "memory_mib": 838.9,
+        "p50_ms": 3.2358,
+        "p95_ms": 3.6692,
+        "p99_ms": 3.789,
+        "params": {
+          "M": 16,
+          "ef_construction": 100,
+          "ef_search": 1024
+        },
+        "recall_at_10": 0.4595,
+        "recall_at_top_k": 0.278275,
+        "tie_aware_recall_at_10": 0.473
+      },
+      {
+        "build_seconds": 693.4,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1049368274,
+        "index_mib": 1000.8,
+        "latency_batch_size": 1,
+        "memory_bytes": 1049853952,
+        "memory_mib": 1001.2,
+        "p50_ms": 0.7189,
+        "p95_ms": 0.8551,
+        "p99_ms": 0.952,
+        "params": {
+          "M": 32,
+          "ef_construction": 400,
+          "ef_search": 128
+        },
+        "recall_at_10": 0.565,
+        "recall_at_top_k": 0.3111,
+        "tie_aware_recall_at_10": 0.584
+      },
+      {
+        "build_seconds": 370.8,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1049368274,
+        "index_mib": 1000.8,
+        "latency_batch_size": 1,
+        "memory_bytes": 1049853952,
+        "memory_mib": 1001.2,
+        "p50_ms": 1.3105,
+        "p95_ms": 1.5037,
+        "p99_ms": 1.5745,
+        "params": {
+          "M": 32,
+          "ef_construction": 200,
+          "ef_search": 256
+        },
+        "recall_at_10": 0.5395,
+        "recall_at_top_k": 0.3179,
+        "tie_aware_recall_at_10": 0.557
+      },
+      {
+        "build_seconds": 719.0,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1390127686,
+        "index_mib": 1325.7,
+        "latency_batch_size": 1,
+        "memory_bytes": 1390624768,
+        "memory_mib": 1326.2,
+        "p50_ms": 0.3218,
+        "p95_ms": 0.7054,
+        "p99_ms": 1.0299,
+        "params": {
+          "M": 64,
+          "ef_construction": 200,
+          "ef_search": 32
+        },
+        "recall_at_10": 0.5325,
+        "recall_at_top_k": 0.3184,
+        "tie_aware_recall_at_10": 0.5545
+      },
+      {
+        "build_seconds": 380.8,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1390127686,
+        "index_mib": 1325.7,
+        "latency_batch_size": 1,
+        "memory_bytes": 1366638592,
+        "memory_mib": 1303.3,
+        "p50_ms": 0.9828,
+        "p95_ms": 1.1487,
+        "p99_ms": 1.2105,
+        "params": {
+          "M": 64,
+          "ef_construction": 100,
+          "ef_search": 128
+        },
+        "recall_at_10": 0.531,
+        "recall_at_top_k": 0.32265,
+        "tie_aware_recall_at_10": 0.5495
+      },
+      {
+        "build_seconds": 259.3,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 879111786,
+        "index_mib": 838.4,
+        "latency_batch_size": 1,
+        "memory_bytes": 879624192,
+        "memory_mib": 838.9,
+        "p50_ms": 3.2127,
+        "p95_ms": 3.564,
+        "p99_ms": 3.7303,
+        "params": {
+          "M": 16,
+          "ef_construction": 200,
+          "ef_search": 1024
+        },
+        "recall_at_10": 0.5065,
+        "recall_at_top_k": 0.336175,
+        "tie_aware_recall_at_10": 0.528
+      },
+      {
+        "build_seconds": 199.4,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1049368274,
+        "index_mib": 1000.8,
+        "latency_batch_size": 1,
+        "memory_bytes": 1049853952,
+        "memory_mib": 1001.2,
+        "p50_ms": 1.9785,
+        "p95_ms": 2.1697,
+        "p99_ms": 2.2325,
+        "params": {
+          "M": 32,
+          "ef_construction": 100,
+          "ef_search": 512
+        },
+        "recall_at_10": 0.5495,
+        "recall_at_top_k": 0.3529,
+        "tie_aware_recall_at_10": 0.5735
+      },
+      {
+        "build_seconds": 719.0,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1390127686,
+        "index_mib": 1325.7,
+        "latency_batch_size": 1,
+        "memory_bytes": 1390624768,
+        "memory_mib": 1326.2,
+        "p50_ms": 0.5233,
+        "p95_ms": 0.653,
+        "p99_ms": 0.7321,
+        "params": {
+          "M": 64,
+          "ef_construction": 200,
+          "ef_search": 64
+        },
+        "recall_at_10": 0.5835,
+        "recall_at_top_k": 0.368825,
+        "tie_aware_recall_at_10": 0.6075
+      },
+      {
+        "build_seconds": 464.2,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 879111786,
+        "index_mib": 838.4,
+        "latency_batch_size": 1,
+        "memory_bytes": 879640576,
+        "memory_mib": 838.9,
+        "p50_ms": 2.385,
+        "p95_ms": 2.5179,
+        "p99_ms": 2.5629,
+        "params": {
+          "M": 16,
+          "ef_construction": 400,
+          "ef_search": 1024
+        },
+        "recall_at_10": 0.6185,
+        "recall_at_top_k": 0.382625,
+        "tie_aware_recall_at_10": 0.637
+      },
+      {
+        "build_seconds": 693.4,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1049368274,
+        "index_mib": 1000.8,
+        "latency_batch_size": 1,
+        "memory_bytes": 1049853952,
+        "memory_mib": 1001.2,
+        "p50_ms": 1.2945,
+        "p95_ms": 1.4498,
+        "p99_ms": 1.606,
+        "params": {
+          "M": 32,
+          "ef_construction": 400,
+          "ef_search": 256
+        },
+        "recall_at_10": 0.6445,
+        "recall_at_top_k": 0.3855,
+        "tie_aware_recall_at_10": 0.6665
+      },
+      {
+        "build_seconds": 1431.1,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1390127686,
+        "index_mib": 1325.7,
+        "latency_batch_size": 1,
+        "memory_bytes": 1380909056,
+        "memory_mib": 1316.9,
+        "p50_ms": 0.4383,
+        "p95_ms": 2.2051,
+        "p99_ms": 5.2875,
+        "params": {
+          "M": 64,
+          "ef_construction": 400,
+          "ef_search": 32
+        },
+        "recall_at_10": 0.666,
+        "recall_at_top_k": 0.422,
+        "tie_aware_recall_at_10": 0.689
+      },
+      {
+        "build_seconds": 719.0,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1390127686,
+        "index_mib": 1325.7,
+        "latency_batch_size": 1,
+        "memory_bytes": 1390624768,
+        "memory_mib": 1326.2,
+        "p50_ms": 0.971,
+        "p95_ms": 1.1013,
+        "p99_ms": 1.165,
+        "params": {
+          "M": 64,
+          "ef_construction": 200,
+          "ef_search": 128
+        },
+        "recall_at_10": 0.6605,
+        "recall_at_top_k": 0.4314,
+        "tie_aware_recall_at_10": 0.6875
+      },
+      {
+        "build_seconds": 380.8,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1390127686,
+        "index_mib": 1325.7,
+        "latency_batch_size": 1,
+        "memory_bytes": 1366638592,
+        "memory_mib": 1303.3,
+        "p50_ms": 1.7864,
+        "p95_ms": 1.9568,
+        "p99_ms": 2.053,
+        "params": {
+          "M": 64,
+          "ef_construction": 100,
+          "ef_search": 256
+        },
+        "recall_at_10": 0.671,
+        "recall_at_top_k": 0.439225,
+        "tie_aware_recall_at_10": 0.693
+      },
+      {
+        "build_seconds": 370.8,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1049368274,
+        "index_mib": 1000.8,
+        "latency_batch_size": 1,
+        "memory_bytes": 1049853952,
+        "memory_mib": 1001.2,
+        "p50_ms": 2.0976,
+        "p95_ms": 2.3763,
+        "p99_ms": 2.561,
+        "params": {
+          "M": 32,
+          "ef_construction": 200,
+          "ef_search": 512
+        },
+        "recall_at_10": 0.6535,
+        "recall_at_top_k": 0.441775,
+        "tie_aware_recall_at_10": 0.681
+      },
+      {
+        "build_seconds": 1431.1,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1390127686,
+        "index_mib": 1325.7,
+        "latency_batch_size": 1,
+        "memory_bytes": 1380909056,
+        "memory_mib": 1316.9,
+        "p50_ms": 0.6034,
+        "p95_ms": 0.7607,
+        "p99_ms": 0.8217,
+        "params": {
+          "M": 64,
+          "ef_construction": 400,
+          "ef_search": 64
+        },
+        "recall_at_10": 0.7185,
+        "recall_at_top_k": 0.481675,
+        "tie_aware_recall_at_10": 0.7425
+      },
+      {
+        "build_seconds": 693.4,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1049368274,
+        "index_mib": 1000.8,
+        "latency_batch_size": 1,
+        "memory_bytes": 1049853952,
+        "memory_mib": 1001.2,
+        "p50_ms": 2.113,
+        "p95_ms": 2.3751,
+        "p99_ms": 2.5482,
+        "params": {
+          "M": 32,
+          "ef_construction": 400,
+          "ef_search": 512
+        },
+        "recall_at_10": 0.755,
+        "recall_at_top_k": 0.503225,
+        "tie_aware_recall_at_10": 0.7815
+      },
+      {
+        "build_seconds": 199.4,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1049368274,
+        "index_mib": 1000.8,
+        "latency_batch_size": 1,
+        "memory_bytes": 1049853952,
+        "memory_mib": 1001.2,
+        "p50_ms": 3.8539,
+        "p95_ms": 4.0188,
+        "p99_ms": 4.0858,
+        "params": {
+          "M": 32,
+          "ef_construction": 100,
+          "ef_search": 1024
+        },
+        "recall_at_10": 0.704,
+        "recall_at_top_k": 0.520725,
+        "tie_aware_recall_at_10": 0.7345
+      },
+      {
+        "build_seconds": 719.0,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1390127686,
+        "index_mib": 1325.7,
+        "latency_batch_size": 1,
+        "memory_bytes": 1390624768,
+        "memory_mib": 1326.2,
+        "p50_ms": 1.9632,
+        "p95_ms": 2.234,
+        "p99_ms": 2.3133,
+        "params": {
+          "M": 64,
+          "ef_construction": 200,
+          "ef_search": 256
+        },
+        "recall_at_10": 0.7535,
+        "recall_at_top_k": 0.5369,
+        "tie_aware_recall_at_10": 0.7785
+      },
+      {
+        "build_seconds": 1431.1,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1390127686,
+        "index_mib": 1325.7,
+        "latency_batch_size": 1,
+        "memory_bytes": 1380909056,
+        "memory_mib": 1316.9,
+        "p50_ms": 1.0693,
+        "p95_ms": 1.1884,
+        "p99_ms": 1.5219,
+        "params": {
+          "M": 64,
+          "ef_construction": 400,
+          "ef_search": 128
+        },
+        "recall_at_10": 0.7805,
+        "recall_at_top_k": 0.55515,
+        "tie_aware_recall_at_10": 0.805
+      },
+      {
+        "build_seconds": 380.8,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1390127686,
+        "index_mib": 1325.7,
+        "latency_batch_size": 1,
+        "memory_bytes": 1366638592,
+        "memory_mib": 1303.3,
+        "p50_ms": 3.4068,
+        "p95_ms": 3.5678,
+        "p99_ms": 3.7142,
+        "params": {
+          "M": 64,
+          "ef_construction": 100,
+          "ef_search": 512
+        },
+        "recall_at_10": 0.803,
+        "recall_at_top_k": 0.6032,
+        "tie_aware_recall_at_10": 0.8275
+      },
+      {
+        "build_seconds": 370.8,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1049368274,
+        "index_mib": 1000.8,
+        "latency_batch_size": 1,
+        "memory_bytes": 1049853952,
+        "memory_mib": 1001.2,
+        "p50_ms": 3.901,
+        "p95_ms": 4.0286,
+        "p99_ms": 4.0678,
+        "params": {
+          "M": 32,
+          "ef_construction": 200,
+          "ef_search": 1024
+        },
+        "recall_at_10": 0.7885,
+        "recall_at_top_k": 0.6154,
+        "tie_aware_recall_at_10": 0.8195
+      },
+      {
+        "build_seconds": 1431.1,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1390127686,
+        "index_mib": 1325.7,
+        "latency_batch_size": 1,
+        "memory_bytes": 1380909056,
+        "memory_mib": 1316.9,
+        "p50_ms": 1.9035,
+        "p95_ms": 2.0906,
+        "p99_ms": 2.1789,
+        "params": {
+          "M": 64,
+          "ef_construction": 400,
+          "ef_search": 256
+        },
+        "recall_at_10": 0.8595,
+        "recall_at_top_k": 0.651325,
+        "tie_aware_recall_at_10": 0.883
+      },
+      {
+        "build_seconds": 693.4,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1049368274,
+        "index_mib": 1000.8,
+        "latency_batch_size": 1,
+        "memory_bytes": 1049853952,
+        "memory_mib": 1001.2,
+        "p50_ms": 3.937,
+        "p95_ms": 4.1415,
+        "p99_ms": 4.2257,
+        "params": {
+          "M": 32,
+          "ef_construction": 400,
+          "ef_search": 1024
+        },
+        "recall_at_10": 0.8665,
+        "recall_at_top_k": 0.6677,
+        "tie_aware_recall_at_10": 0.8915
+      },
+      {
+        "build_seconds": 719.0,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1390127686,
+        "index_mib": 1325.7,
+        "latency_batch_size": 1,
+        "memory_bytes": 1390624768,
+        "memory_mib": 1326.2,
+        "p50_ms": 3.7198,
+        "p95_ms": 4.2693,
+        "p99_ms": 4.3958,
+        "params": {
+          "M": 64,
+          "ef_construction": 200,
+          "ef_search": 512
+        },
+        "recall_at_10": 0.873,
+        "recall_at_top_k": 0.69015,
+        "tie_aware_recall_at_10": 0.8975
+      },
+      {
+        "build_seconds": 1431.1,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1390127686,
+        "index_mib": 1325.7,
+        "latency_batch_size": 1,
+        "memory_bytes": 1380909056,
+        "memory_mib": 1316.9,
+        "p50_ms": 4.2511,
+        "p95_ms": 4.5265,
+        "p99_ms": 4.8083,
+        "params": {
+          "M": 64,
+          "ef_construction": 400,
+          "ef_search": 512
+        },
+        "recall_at_10": 0.9315,
+        "recall_at_top_k": 0.775575,
+        "tie_aware_recall_at_10": 0.9475
+      },
+      {
+        "build_seconds": 380.8,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1390127686,
+        "index_mib": 1325.7,
+        "latency_batch_size": 1,
+        "memory_bytes": 1366638592,
+        "memory_mib": 1303.3,
+        "p50_ms": 8.3888,
+        "p95_ms": 8.826,
+        "p99_ms": 8.9988,
+        "params": {
+          "M": 64,
+          "ef_construction": 100,
+          "ef_search": 1024
+        },
+        "recall_at_10": 0.9335,
+        "recall_at_top_k": 0.786475,
+        "tie_aware_recall_at_10": 0.9475
+      },
+      {
+        "build_seconds": 719.0,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1390127686,
+        "index_mib": 1325.7,
+        "latency_batch_size": 1,
+        "memory_bytes": 1390624768,
+        "memory_mib": 1326.2,
+        "p50_ms": 9.2785,
+        "p95_ms": 9.8385,
+        "p99_ms": 9.9594,
+        "params": {
+          "M": 64,
+          "ef_construction": 200,
+          "ef_search": 1024
+        },
+        "recall_at_10": 0.956,
+        "recall_at_top_k": 0.8494,
+        "tie_aware_recall_at_10": 0.968
+      },
+      {
+        "build_seconds": 1431.1,
+        "faiss_threads": 10,
+        "family": "hnsw",
+        "index_bytes": 1390127686,
+        "index_mib": 1325.7,
+        "latency_batch_size": 1,
+        "memory_bytes": 1380909056,
+        "memory_mib": 1316.9,
+        "p50_ms": 9.0251,
+        "p95_ms": 9.5983,
+        "p99_ms": 9.7837,
+        "params": {
+          "M": 64,
+          "ef_construction": 400,
+          "ef_search": 1024
+        },
+        "recall_at_10": 0.982,
+        "recall_at_top_k": 0.902425,
+        "tie_aware_recall_at_10": 0.9855
+      }
+    ],
+    "ivfflat": [
+      {
+        "build_seconds": 39.8,
+        "faiss_threads": 10,
+        "family": "ivfflat",
+        "index_bytes": 699816287,
+        "index_mib": 667.4,
+        "latency_batch_size": 1,
+        "memory_bytes": 737738752,
+        "memory_mib": 703.6,
+        "p50_ms": 0.0451,
+        "p95_ms": 0.0478,
+        "p99_ms": 0.0568,
+        "params": {
+          "nlist": 4096,
+          "nprobe": 1
+        },
+        "recall_at_10": 0.084,
+        "recall_at_top_k": 0.012325,
+        "tie_aware_recall_at_10": 0.084
+      },
+      {
+        "build_seconds": 4.3,
+        "faiss_threads": 10,
+        "family": "ivfflat",
+        "index_bytes": 698206559,
+        "index_mib": 665.9,
+        "latency_batch_size": 1,
+        "memory_bytes": 711327744,
+        "memory_mib": 678.4,
+        "p50_ms": 0.0483,
+        "p95_ms": 0.0554,
+        "p99_ms": 0.0706,
+        "params": {
+          "nlist": 1024,
+          "nprobe": 1
+        },
+        "recall_at_10": 0.088,
+        "recall_at_top_k": 0.01885,
+        "tie_aware_recall_at_10": 0.0895
+      },
+      {
+        "build_seconds": 39.8,
+        "faiss_threads": 10,
+        "family": "ivfflat",
+        "index_bytes": 699816287,
+        "index_mib": 667.4,
+        "latency_batch_size": 1,
+        "memory_bytes": 737738752,
+        "memory_mib": 703.6,
+        "p50_ms": 0.0703,
+        "p95_ms": 0.0795,
+        "p99_ms": 0.1399,
+        "params": {
+          "nlist": 4096,
+          "nprobe": 4
+        },
+        "recall_at_10": 0.115,
+        "recall_at_top_k": 0.028625,
+        "tie_aware_recall_at_10": 0.1155
+      },
+      {
+        "build_seconds": 4.3,
+        "faiss_threads": 10,
+        "family": "ivfflat",
+        "index_bytes": 698206559,
+        "index_mib": 665.9,
+        "latency_batch_size": 1,
+        "memory_bytes": 711327744,
+        "memory_mib": 678.4,
+        "p50_ms": 0.1003,
+        "p95_ms": 0.1126,
+        "p99_ms": 0.1855,
+        "params": {
+          "nlist": 1024,
+          "nprobe": 4
+        },
+        "recall_at_10": 0.1345,
+        "recall_at_top_k": 0.048875,
+        "tie_aware_recall_at_10": 0.14
+      },
+      {
+        "build_seconds": 39.8,
+        "faiss_threads": 10,
+        "family": "ivfflat",
+        "index_bytes": 699816287,
+        "index_mib": 667.4,
+        "latency_batch_size": 1,
+        "memory_bytes": 737738752,
+        "memory_mib": 703.6,
+        "p50_ms": 0.1221,
+        "p95_ms": 0.1319,
+        "p99_ms": 0.2425,
+        "params": {
+          "nlist": 4096,
+          "nprobe": 16
+        },
+        "recall_at_10": 0.188,
+        "recall_at_top_k": 0.071175,
+        "tie_aware_recall_at_10": 0.1925
+      },
+      {
+        "build_seconds": 4.3,
+        "faiss_threads": 10,
+        "family": "ivfflat",
+        "index_bytes": 698206559,
+        "index_mib": 665.9,
+        "latency_batch_size": 1,
+        "memory_bytes": 711327744,
+        "memory_mib": 678.4,
+        "p50_ms": 0.2627,
+        "p95_ms": 0.3389,
+        "p99_ms": 0.5665,
+        "params": {
+          "nlist": 1024,
+          "nprobe": 16
+        },
+        "recall_at_10": 0.2515,
+        "recall_at_top_k": 0.130575,
+        "tie_aware_recall_at_10": 0.2625
+      },
+      {
+        "build_seconds": 39.8,
+        "faiss_threads": 10,
+        "family": "ivfflat",
+        "index_bytes": 699816287,
+        "index_mib": 667.4,
+        "latency_batch_size": 1,
+        "memory_bytes": 737738752,
+        "memory_mib": 703.6,
+        "p50_ms": 0.292,
+        "p95_ms": 0.3155,
+        "p99_ms": 0.6413,
+        "params": {
+          "nlist": 4096,
+          "nprobe": 64
+        },
+        "recall_at_10": 0.322,
+        "recall_at_top_k": 0.169425,
+        "tie_aware_recall_at_10": 0.3325
+      },
+      {
+        "build_seconds": 4.3,
+        "faiss_threads": 10,
+        "family": "ivfflat",
+        "index_bytes": 698206559,
+        "index_mib": 665.9,
+        "latency_batch_size": 1,
+        "memory_bytes": 711327744,
+        "memory_mib": 678.4,
+        "p50_ms": 1.0913,
+        "p95_ms": 1.4012,
+        "p99_ms": 2.4151,
+        "params": {
+          "nlist": 1024,
+          "nprobe": 64
+        },
+        "recall_at_10": 0.465,
+        "recall_at_top_k": 0.32165,
+        "tie_aware_recall_at_10": 0.484
+      }
+    ],
+    "ivfpq": [
+      {
+        "build_seconds": 48.6,
+        "faiss_threads": 10,
+        "family": "ivfpq",
+        "index_bytes": 34772572,
+        "index_mib": 33.2,
+        "latency_batch_size": 1,
+        "memory_bytes": 106889216,
+        "memory_mib": 101.9,
+        "p50_ms": 0.0837,
+        "p95_ms": 0.0962,
+        "p99_ms": 0.0988,
+        "params": {
+          "m": 16,
+          "nlist": 4096,
+          "nprobe": 1
+        },
+        "recall_at_10": 0.078,
+        "recall_at_top_k": 0.0123,
+        "tie_aware_recall_at_10": 0.078
+      },
+      {
+        "build_seconds": 47.0,
+        "faiss_threads": 10,
+        "family": "ivfpq",
+        "index_bytes": 56075468,
+        "index_mib": 53.5,
+        "latency_batch_size": 1,
+        "memory_bytes": 200261632,
+        "memory_mib": 191.0,
+        "p50_ms": 0.082,
+        "p95_ms": 0.0867,
+        "p99_ms": 0.092,
+        "params": {
+          "m": 32,
+          "nlist": 4096,
+          "nprobe": 1
+        },
+        "recall_at_10": 0.083,
+        "recall_at_top_k": 0.01245,
+        "tie_aware_recall_at_10": 0.083
+      },
+      {
+        "build_seconds": 14.8,
+        "faiss_threads": 10,
+        "family": "ivfpq",
+        "index_bytes": 32781916,
+        "index_mib": 31.3,
+        "latency_batch_size": 1,
+        "memory_bytes": 55312384,
+        "memory_mib": 52.8,
+        "p50_ms": 0.0847,
+        "p95_ms": 0.0919,
+        "p99_ms": 0.0945,
+        "params": {
+          "m": 16,
+          "nlist": 1024,
+          "nprobe": 1
+        },
+        "recall_at_10": 0.082,
+        "recall_at_top_k": 0.018325,
+        "tie_aware_recall_at_10": 0.0825
+      },
+      {
+        "build_seconds": 12.9,
+        "faiss_threads": 10,
+        "family": "ivfpq",
+        "index_bytes": 54084812,
+        "index_mib": 51.6,
+        "latency_batch_size": 1,
+        "memory_bytes": 97058816,
+        "memory_mib": 92.6,
+        "p50_ms": 0.0912,
+        "p95_ms": 0.0957,
+        "p99_ms": 0.0993,
+        "params": {
+          "m": 32,
+          "nlist": 1024,
+          "nprobe": 1
+        },
+        "recall_at_10": 0.088,
+        "recall_at_top_k": 0.0189,
+        "tie_aware_recall_at_10": 0.0885
+      },
+      {
+        "build_seconds": 48.6,
+        "faiss_threads": 10,
+        "family": "ivfpq",
+        "index_bytes": 34772572,
+        "index_mib": 33.2,
+        "latency_batch_size": 1,
+        "memory_bytes": 106889216,
+        "memory_mib": 101.9,
+        "p50_ms": 0.1062,
+        "p95_ms": 0.117,
+        "p99_ms": 0.1191,
+        "params": {
+          "m": 16,
+          "nlist": 4096,
+          "nprobe": 4
+        },
+        "recall_at_10": 0.103,
+        "recall_at_top_k": 0.02755,
+        "tie_aware_recall_at_10": 0.103
+      },
+      {
+        "build_seconds": 47.0,
+        "faiss_threads": 10,
+        "family": "ivfpq",
+        "index_bytes": 56075468,
+        "index_mib": 53.5,
+        "latency_batch_size": 1,
+        "memory_bytes": 200261632,
+        "memory_mib": 191.0,
+        "p50_ms": 0.1094,
+        "p95_ms": 0.1176,
+        "p99_ms": 0.1233,
+        "params": {
+          "m": 32,
+          "nlist": 4096,
+          "nprobe": 4
+        },
+        "recall_at_10": 0.111,
+        "recall_at_top_k": 0.029125,
+        "tie_aware_recall_at_10": 0.1115
+      },
+      {
+        "build_seconds": 14.8,
+        "faiss_threads": 10,
+        "family": "ivfpq",
+        "index_bytes": 32781916,
+        "index_mib": 31.3,
+        "latency_batch_size": 1,
+        "memory_bytes": 55312384,
+        "memory_mib": 52.8,
+        "p50_ms": 0.1215,
+        "p95_ms": 0.1275,
+        "p99_ms": 0.1308,
+        "params": {
+          "m": 16,
+          "nlist": 1024,
+          "nprobe": 4
+        },
+        "recall_at_10": 0.1075,
+        "recall_at_top_k": 0.041825,
+        "tie_aware_recall_at_10": 0.1105
+      },
+      {
+        "build_seconds": 12.9,
+        "faiss_threads": 10,
+        "family": "ivfpq",
+        "index_bytes": 54084812,
+        "index_mib": 51.6,
+        "latency_batch_size": 1,
+        "memory_bytes": 97058816,
+        "memory_mib": 92.6,
+        "p50_ms": 0.1527,
+        "p95_ms": 0.1618,
+        "p99_ms": 0.1662,
+        "params": {
+          "m": 32,
+          "nlist": 1024,
+          "nprobe": 4
+        },
+        "recall_at_10": 0.122,
+        "recall_at_top_k": 0.047725,
+        "tie_aware_recall_at_10": 0.127
+      },
+      {
+        "build_seconds": 48.6,
+        "faiss_threads": 10,
+        "family": "ivfpq",
+        "index_bytes": 34772572,
+        "index_mib": 33.2,
+        "latency_batch_size": 1,
+        "memory_bytes": 106889216,
+        "memory_mib": 101.9,
+        "p50_ms": 0.141,
+        "p95_ms": 0.1596,
+        "p99_ms": 0.1652,
+        "params": {
+          "m": 16,
+          "nlist": 4096,
+          "nprobe": 16
+        },
+        "recall_at_10": 0.14,
+        "recall_at_top_k": 0.057425,
+        "tie_aware_recall_at_10": 0.1405
+      },
+      {
+        "build_seconds": 47.0,
+        "faiss_threads": 10,
+        "family": "ivfpq",
+        "index_bytes": 56075468,
+        "index_mib": 53.5,
+        "latency_batch_size": 1,
+        "memory_bytes": 200261632,
+        "memory_mib": 191.0,
+        "p50_ms": 0.1748,
+        "p95_ms": 0.1899,
+        "p99_ms": 0.204,
+        "params": {
+          "m": 32,
+          "nlist": 4096,
+          "nprobe": 16
+        },
+        "recall_at_10": 0.1715,
+        "recall_at_top_k": 0.0696,
+        "tie_aware_recall_at_10": 0.173
+      },
+      {
+        "build_seconds": 14.8,
+        "faiss_threads": 10,
+        "family": "ivfpq",
+        "index_bytes": 32781916,
+        "index_mib": 31.3,
+        "latency_batch_size": 1,
+        "memory_bytes": 55312384,
+        "memory_mib": 52.8,
+        "p50_ms": 0.2324,
+        "p95_ms": 0.245,
+        "p99_ms": 0.2516,
+        "params": {
+          "m": 16,
+          "nlist": 1024,
+          "nprobe": 16
+        },
+        "recall_at_10": 0.149,
+        "recall_at_top_k": 0.080875,
+        "tie_aware_recall_at_10": 0.1515
+      },
+      {
+        "build_seconds": 48.6,
+        "faiss_threads": 10,
+        "family": "ivfpq",
+        "index_bytes": 34772572,
+        "index_mib": 33.2,
+        "latency_batch_size": 1,
+        "memory_bytes": 106889216,
+        "memory_mib": 101.9,
+        "p50_ms": 0.2507,
+        "p95_ms": 0.2661,
+        "p99_ms": 0.2728,
+        "params": {
+          "m": 16,
+          "nlist": 4096,
+          "nprobe": 64
+        },
+        "recall_at_10": 0.172,
+        "recall_at_top_k": 0.099575,
+        "tie_aware_recall_at_10": 0.174
+      },
+      {
+        "build_seconds": 12.9,
+        "faiss_threads": 10,
+        "family": "ivfpq",
+        "index_bytes": 54084812,
+        "index_mib": 51.6,
+        "latency_batch_size": 1,
+        "memory_bytes": 97058816,
+        "memory_mib": 92.6,
+        "p50_ms": 0.3164,
+        "p95_ms": 0.3561,
+        "p99_ms": 0.3645,
+        "params": {
+          "m": 32,
+          "nlist": 1024,
+          "nprobe": 16
+        },
+        "recall_at_10": 0.2005,
+        "recall_at_top_k": 0.114225,
+        "tie_aware_recall_at_10": 0.2065
+      },
+      {
+        "build_seconds": 14.8,
+        "faiss_threads": 10,
+        "family": "ivfpq",
+        "index_bytes": 32781916,
+        "index_mib": 31.3,
+        "latency_batch_size": 1,
+        "memory_bytes": 55312384,
+        "memory_mib": 52.8,
+        "p50_ms": 0.5529,
+        "p95_ms": 0.5766,
+        "p99_ms": 0.6348,
+        "params": {
+          "m": 16,
+          "nlist": 1024,
+          "nprobe": 64
+        },
+        "recall_at_10": 0.195,
+        "recall_at_top_k": 0.1246,
+        "tie_aware_recall_at_10": 0.199
+      },
+      {
+        "build_seconds": 47.0,
+        "faiss_threads": 10,
+        "family": "ivfpq",
+        "index_bytes": 56075468,
+        "index_mib": 53.5,
+        "latency_batch_size": 1,
+        "memory_bytes": 200261632,
+        "memory_mib": 191.0,
+        "p50_ms": 0.3473,
+        "p95_ms": 0.4022,
+        "p99_ms": 0.4153,
+        "params": {
+          "m": 32,
+          "nlist": 4096,
+          "nprobe": 64
+        },
+        "recall_at_10": 0.247,
+        "recall_at_top_k": 0.145825,
+        "tie_aware_recall_at_10": 0.252
+      },
+      {
+        "build_seconds": 12.9,
+        "faiss_threads": 10,
+        "family": "ivfpq",
+        "index_bytes": 54084812,
+        "index_mib": 51.6,
+        "latency_batch_size": 1,
+        "memory_bytes": 97058816,
+        "memory_mib": 92.6,
+        "p50_ms": 0.8795,
+        "p95_ms": 0.9694,
+        "p99_ms": 0.976,
+        "params": {
+          "m": 32,
+          "nlist": 1024,
+          "nprobe": 64
+        },
+        "recall_at_10": 0.295,
+        "recall_at_top_k": 0.216875,
+        "tie_aware_recall_at_10": 0.3005
+      }
+    ]
+  },
+  "diagnostics_command": "uv run python scripts/bench_ann_index.py --vectors two_tower --queries 200 --diagnostics-only",
+  "diagnostics_note": "Added after the sweep. ivf_list_sizes come from rebuilding each IVF index with the sweep's builder on the same vectors; FAISS k-means runs with its fixed default seed.",
+  "dimensions": 128,
+  "elapsed_seconds": 4875.6,
+  "environment": {
+    "cpu": "Apple M5",
+    "date": "2026-11-04",
+    "faiss": "1.15.1",
+    "faiss_threads": 10,
+    "logical_cpus": 10,
+    "memory_bytes": 17179869184,
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "processor": "arm",
+    "python": "3.12.13"
+  },
+  "exact_search_seconds": 2.1,
+  "float32_bytes": 681692672,
+  "highest_recall": {
+    "flat": {
+      "build_seconds": 0.1,
+      "faiss_threads": 1,
+      "family": "flat",
+      "index_bytes": 681692717,
+      "index_mib": 650.1,
+      "latency_batch_size": 1,
+      "memory_bytes": 681984000,
+      "memory_mib": 650.4,
+      "p50_ms": 14.5027,
+      "p95_ms": 16.4412,
+      "p99_ms": 17.2022,
+      "params": {
+        "threads": 1
+      },
+      "recall_at_10": 1.0,
+      "recall_at_top_k": 1.0,
+      "tie_aware_recall_at_10": 1.0
+    },
+    "hnsw": {
+      "build_seconds": 1431.1,
+      "faiss_threads": 10,
+      "family": "hnsw",
+      "index_bytes": 1390127686,
+      "index_mib": 1325.7,
+      "latency_batch_size": 1,
+      "memory_bytes": 1380909056,
+      "memory_mib": 1316.9,
+      "p50_ms": 9.0251,
+      "p95_ms": 9.5983,
+      "p99_ms": 9.7837,
+      "params": {
+        "M": 64,
+        "ef_construction": 400,
+        "ef_search": 1024
+      },
+      "recall_at_10": 0.982,
+      "recall_at_top_k": 0.902425,
+      "tie_aware_recall_at_10": 0.9855
+    },
+    "ivfflat": {
+      "build_seconds": 4.3,
+      "faiss_threads": 10,
+      "family": "ivfflat",
+      "index_bytes": 698206559,
+      "index_mib": 665.9,
+      "latency_batch_size": 1,
+      "memory_bytes": 711327744,
+      "memory_mib": 678.4,
+      "p50_ms": 1.0913,
+      "p95_ms": 1.4012,
+      "p99_ms": 2.4151,
+      "params": {
+        "nlist": 1024,
+        "nprobe": 64
+      },
+      "recall_at_10": 0.465,
+      "recall_at_top_k": 0.32165,
+      "tie_aware_recall_at_10": 0.484
+    },
+    "ivfpq": {
+      "build_seconds": 12.9,
+      "faiss_threads": 10,
+      "family": "ivfpq",
+      "index_bytes": 54084812,
+      "index_mib": 51.6,
+      "latency_batch_size": 1,
+      "memory_bytes": 97058816,
+      "memory_mib": 92.6,
+      "p50_ms": 0.8795,
+      "p95_ms": 0.9694,
+      "p99_ms": 0.976,
+      "params": {
+        "m": 32,
+        "nlist": 1024,
+        "nprobe": 64
+      },
+      "recall_at_10": 0.295,
+      "recall_at_top_k": 0.216875,
+      "tie_aware_recall_at_10": 0.3005
+    }
+  },
+  "index_space": "mips_l2",
+  "items_indexed": 1331431,
+  "items_untrained_excluded": 3483,
+  "ivf_list_sizes": [
+    {
+      "empty_lists": 0,
+      "family": "ivfflat",
+      "items": 1331431,
+      "largest_list_items": 1448,
+      "largest_list_share": 0.0011,
+      "nlist": 1024,
+      "ten_largest_lists_share": 0.0107
+    },
+    {
+      "empty_lists": 0,
+      "family": "ivfpq",
+      "items": 1331431,
+      "largest_list_items": 1433,
+      "largest_list_share": 0.0011,
+      "m": 16,
+      "nlist": 1024,
+      "ten_largest_lists_share": 0.0107
+    },
+    {
+      "empty_lists": 0,
+      "family": "ivfpq",
+      "items": 1331431,
+      "largest_list_items": 1433,
+      "largest_list_share": 0.0011,
+      "m": 32,
+      "nlist": 1024,
+      "ten_largest_lists_share": 0.0107
+    },
+    {
+      "empty_lists": 0,
+      "family": "ivfflat",
+      "items": 1331431,
+      "largest_list_items": 382,
+      "largest_list_share": 0.0003,
+      "nlist": 4096,
+      "ten_largest_lists_share": 0.0028
+    },
+    {
+      "empty_lists": 0,
+      "family": "ivfpq",
+      "items": 1331431,
+      "largest_list_items": 381,
+      "largest_list_share": 0.0003,
+      "m": 16,
+      "nlist": 4096,
+      "ten_largest_lists_share": 0.0028
+    },
+    {
+      "empty_lists": 0,
+      "family": "ivfpq",
+      "items": 1331431,
+      "largest_list_items": 381,
+      "largest_list_share": 0.0003,
+      "m": 32,
+      "nlist": 4096,
+      "ten_largest_lists_share": 0.0028
+    }
+  ],
+  "neighbour_contrast": {
+    "median_gap_rank_10_to_k": 0.0613,
+    "median_relative_gap_rank_10_to_k": 0.1635,
+    "median_score_rank_1": 1.0,
+    "median_score_rank_10": 0.3751,
+    "median_score_rank_k": 0.3136
+  },
+  "queries": 200,
+  "query_definition": "user-tower vectors (recency-weighted mean pool) of servable users",
+  "query_diagnostics": {
+    "seen_items_in_exact_top_k": {
+      "max": 6,
+      "max_recall_shift_at_top_k": 0.03,
+      "mean": 1.89
+    },
+    "self_match": {
+      "neighbour_contrast_by_history": {
+        "one_item_history": {
+          "median_gap_rank_10_to_k": 0.0602,
+          "median_relative_gap_rank_10_to_k": 0.1611,
+          "median_score_rank_1": 1.0,
+          "median_score_rank_10": 0.3731,
+          "median_score_rank_k": 0.3133,
+          "queries": 116
+        },
+        "two_or_more_items": {
+          "median_gap_rank_10_to_k": 0.0644,
+          "median_relative_gap_rank_10_to_k": 0.1699,
+          "median_score_rank_1": 0.6709,
+          "median_score_rank_10": 0.3783,
+          "median_score_rank_k": 0.3136,
+          "queries": 84
+        }
+      },
+      "one_item_history_queries": 116,
+      "one_item_history_share_all_servable_users": 0.5863,
+      "queries": 200,
+      "score_threshold": 0.9999,
+      "top1_at_threshold": 116,
+      "top1_at_threshold_in_own_history": 116,
+      "top1_at_threshold_with_one_item_history": 116,
+      "top1_in_own_history": 200
+    }
+  },
+  "quick": false,
+  "recall_definition": "recall_at_top_k and recall_at_10: fraction of exact top-k (top-10) ids recovered, against brute-force inner-product search over the trained item vectors. tie_aware_recall_at_10: a returned top-10 item is a hit if its exact score is at least the exact 10th-best score minus 0.001.",
+  "recall_target": 0.95,
+  "seed": 20261008,
+  "tie_tolerance": 0.001,
+  "top_k": 200,
+  "vectors": "two_tower"
+}

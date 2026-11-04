@@ -21,7 +21,9 @@ from scripts.bench_ann_index import (
     _choose,
     _index_bytes,
     _measure_recalls,
+    _mips_to_l2,
     _neighbour_contrast,
+    _pad_columns,
     _percentile,
 )
 
@@ -164,3 +166,31 @@ def test_index_bytes_counts_the_hnsw_graph() -> None:
 
     assert _index_bytes(sparse) > vectors.nbytes
     assert _index_bytes(dense) > _index_bytes(sparse)
+
+
+def test_mips_to_l2_preserves_inner_product_order_on_uneven_norms() -> None:
+    """The reduction is only valid if L2 order on the transformed vectors is exactly IP order."""
+    rng = np.random.default_rng(1)
+    items = rng.standard_normal((500, 8)).astype(np.float32)
+    items *= np.exp(rng.uniform(-6, 3, size=(500, 1))).astype(np.float32)
+    queries = rng.standard_normal((20, 8)).astype(np.float32)
+
+    items_l2, queries_l2 = _mips_to_l2(items, queries)
+    inner = queries.astype(np.float64) @ items.T.astype(np.float64)
+    squared = ((queries_l2[:, None, :].astype(np.float64) - items_l2[None, :, :]) ** 2).sum(-1)
+
+    assert items_l2.shape == (500, 9)
+    assert np.allclose(np.linalg.norm(items_l2, axis=1), np.linalg.norm(items, axis=1).max())
+    for row in range(len(queries)):
+        assert np.array_equal(np.argsort(-inner[row])[:50], np.argsort(squared[row])[:50])
+
+
+def test_pad_columns_rounds_width_up_and_changes_no_distance() -> None:
+    """Padding exists only to make PQ's sub-vectors even; it must not move any vector."""
+    vectors = np.arange(66, dtype=np.float32).reshape(2, 33)
+
+    padded = _pad_columns(vectors, 32)
+    assert padded.shape == (2, 64)
+    assert np.array_equal(padded[:, :33], vectors)
+    assert not padded[:, 33:].any()
+    assert _pad_columns(padded, 32).shape == (2, 64)

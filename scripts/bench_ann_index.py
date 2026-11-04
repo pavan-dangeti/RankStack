@@ -23,7 +23,23 @@ counts a returned item as a hit if its exact score is at least the true 10th-bes
 `TIE_TOLERANCE`. The gap between the two numbers is how much of the miss rate is ties rather than
 bad neighbours, and `neighbour_contrast` records how crowded the exact neighbours are.
 
+**The MIPS-to-L2 reduction.** ALS item factors vary in length by four orders of magnitude, and a
+graph or cluster index built directly on inner product, which is not a distance, routes badly over
+them. By default every approximate index is built on transformed vectors instead: each item gains
+one coordinate `sqrt(max_norm^2 - norm^2)` so all items have the same length, and each query gains
+a zero, which makes L2 order on the transformed vectors identical to inner-product order on the
+originals. Ground truth and every recall figure stay on the original vectors and exact inner
+product, so the transform can change how well the index routes but never what counts as right.
+`--raw-inner-product` builds on the original vectors with the inner-product metric, the ablation.
+For the unit-norm two-tower vectors the extra coordinate is zero up to float rounding.
+
+**Baselines inside the sweep.** `flat` is exact `IndexFlatIP` on the original vectors: recall 1.0
+by construction, so its latency and size are what every approximate index has to beat. `ivfflat`
+uses the same clustering as `ivfpq` without quantisation, so the gap between the two separates
+recall lost to cluster routing from recall lost to compression.
+
     uv run python scripts/bench_ann_index.py --vectors als --queries 200
+    uv run python scripts/bench_ann_index.py --vectors als --queries 200 --raw-inner-product
 """
 
 from __future__ import annotations
@@ -54,9 +70,12 @@ DEFAULT_TOP_K = 200
 #: design document 6.3. Kept as written; `--quick` trims the grids for a smoke run.
 HNSW_M = (16, 32, 64)
 HNSW_EF_CONSTRUCTION = (100, 200, 400)
-HNSW_EF_SEARCH = (32, 64, 128, 256, 512)
-#: The dimension must divide evenly by `m`: 128 and 32 (the two-tower and ALS widths) both do.
+HNSW_EF_SEARCH = (32, 64, 128, 256, 512, 1024)
 IVF_PQ_M = (16, 32)
+#: PQ splits a vector into `m` equal sub-vectors, so IVF-PQ input is zero-padded to a multiple of
+#: the largest `m`; the reduction's extra coordinate makes the width odd. Zero columns change no
+#: distance and no inner product.
+PQ_WIDTH_MULTIPLE = 32
 IVF_NLIST = (1024, 4096)
 IVF_NPROBE = (1, 4, 16, 64)
 #: The operating point must reach this recall against exact search to be considered usable.
@@ -67,6 +86,7 @@ SHORT_K = 10
 #: similar scale, which `neighbour_contrast` records so a reader can check.
 TIE_TOLERANCE = 1e-3
 VECTOR_SETS = ("als", "two_tower")
+FAMILIES = ("flat", "hnsw", "ivfflat", "ivfpq")
 
 
 @dataclass(frozen=True, slots=True)
@@ -140,6 +160,63 @@ class VectorSet:
     queries: np.ndarray
     items_untrained_excluded: int
     query_definition: str
+
+
+@dataclass(frozen=True, slots=True)
+class IndexSpace:
+    """The vectors approximate indexes are built on, and the queries that search them."""
+
+    name: str
+    items: np.ndarray
+    queries: np.ndarray
+    metric: int
+
+
+@dataclass(frozen=True, slots=True)
+class Built:
+    """One built index, how long it took, and the queries it must be searched with."""
+
+    index: faiss.Index
+    family: str
+    params: dict[str, int]
+    build_seconds: float
+    queries: np.ndarray
+
+
+def _mips_to_l2(items: np.ndarray, queries: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Return items and queries transformed so L2 order equals the original inner-product order.
+
+    For a query q and item x with the extra coordinate e = sqrt(R^2 - |x|^2), where R is the
+    largest item norm: |q' - x'|^2 = |q|^2 + R^2 - 2 q.x, and |q|^2 + R^2 is the same for every
+    item, so the nearest item in L2 is the one with the largest inner product.
+    """
+    norms = np.linalg.norm(items, axis=1)
+    extra = np.sqrt(np.clip(norms.max() ** 2 - norms**2, 0.0, None)).astype(np.float32)
+    return (
+        np.ascontiguousarray(np.hstack([items, extra[:, None]]), dtype=np.float32),
+        np.ascontiguousarray(
+            np.hstack([queries, np.zeros((queries.shape[0], 1), dtype=np.float32)]),
+            dtype=np.float32,
+        ),
+    )
+
+
+def _pad_columns(vectors: np.ndarray, multiple: int) -> np.ndarray:
+    """Zero-pad columns up to the next multiple of `multiple`."""
+    width = -(-vectors.shape[1] // multiple) * multiple
+    padded = np.zeros((vectors.shape[0], width), dtype=np.float32)
+    padded[:, : vectors.shape[1]] = vectors
+    return padded
+
+
+def _index_space(vectors: VectorSet, *, raw_inner_product: bool) -> IndexSpace:
+    """Choose what the approximate indexes are built on; see the module docstring."""
+    if raw_inner_product:
+        return IndexSpace(
+            "inner_product", vectors.items, vectors.queries, faiss.METRIC_INNER_PRODUCT
+        )
+    items, queries = _mips_to_l2(vectors.items, vectors.queries)
+    return IndexSpace("mips_l2", items, queries, faiss.METRIC_L2)
 
 
 def _percentile(samples: list[float], q: float) -> float:
@@ -237,83 +314,103 @@ def _neighbour_contrast(scores: np.ndarray) -> dict[str, float]:
     }
 
 
+def _measure(
+    built: Built, params: dict[str, int], vectors: VectorSet, truth: GroundTruth, index_bytes: int
+) -> Measurement:
+    """Time and score one index at its current search settings."""
+    top_k = truth.ids.shape[1]
+    samples = _time_search(built.index, built.queries, top_k, repeats=1)
+    _, found = built.index.search(built.queries, top_k)
+    point = Measurement(
+        family=built.family,
+        params=params,
+        recalls=_measure_recalls(found, truth, vectors.items, vectors.queries),
+        p50_ms=_percentile(samples, 50),
+        p95_ms=_percentile(samples, 95),
+        p99_ms=_percentile(samples, 99),
+        index_bytes=index_bytes,
+        build_seconds=built.build_seconds,
+    )
+    _logger.info(
+        "ann.sweep_point",
+        extra={"family": built.family, **params, "recall": point.recalls.at_top_k},
+    )
+    return point
+
+
 def _sweep(
-    index: faiss.Index,
-    family: str,
-    params: dict[str, int],
+    built: Built,
     knob: tuple[str, str],
     values: tuple[int, ...],
     vectors: VectorSet,
     truth: GroundTruth,
-    build_seconds: float,
 ) -> list[Measurement]:
     """Measure one built index at each value of its search-time knob.
 
     `knob` is `(name recorded in the result file, name FAISS sets it by)`.
     """
-    top_k = truth.ids.shape[1]
-    index_bytes = _index_bytes(index)
+    index_bytes = _index_bytes(built.index)
     out: list[Measurement] = []
     for value in values:
-        faiss.ParameterSpace().set_index_parameter(index, knob[1], value)
-        samples = _time_search(index, vectors.queries, top_k, repeats=1)
-        _, found = index.search(vectors.queries, top_k)
-        out.append(
-            Measurement(
-                family=family,
-                params={**params, knob[0]: value},
-                recalls=_measure_recalls(found, truth, vectors.items, vectors.queries),
-                p50_ms=_percentile(samples, 50),
-                p95_ms=_percentile(samples, 95),
-                p99_ms=_percentile(samples, 99),
-                index_bytes=index_bytes,
-                build_seconds=build_seconds,
-            )
-        )
-        _logger.info(
-            "ann.sweep_point",
-            extra={"family": family, **out[-1].params, "recall": out[-1].recalls.at_top_k},
-        )
+        faiss.ParameterSpace().set_index_parameter(built.index, knob[1], value)
+        out.append(_measure(built, {**built.params, knob[0]: value}, vectors, truth, index_bytes))
     return out
 
 
+def _build_flat(vectors: VectorSet, truth: GroundTruth) -> list[Measurement]:
+    """Exact inner-product search on the original vectors, the baseline every index must beat."""
+    started = time.perf_counter()
+    index = faiss.IndexFlatIP(vectors.items.shape[1])
+    index.add(vectors.items)
+    built = Built(index, "flat", {}, time.perf_counter() - started, vectors.queries)
+    return [_measure(built, {}, vectors, truth, _index_bytes(index))]
+
+
 def _build_hnsw(
-    vectors: VectorSet, truth: GroundTruth, m: int, ef_construction: int
+    space: IndexSpace, vectors: VectorSet, truth: GroundTruth, m: int, ef_construction: int
 ) -> list[Measurement]:
     """Build one HNSW graph and sweep its search width."""
     started = time.perf_counter()
-    index = faiss.IndexHNSWFlat(vectors.items.shape[1], m, faiss.METRIC_INNER_PRODUCT)
+    index = faiss.IndexHNSWFlat(space.items.shape[1], m, space.metric)
     index.hnsw.efConstruction = ef_construction
-    index.add(vectors.items)
-    build_seconds = time.perf_counter() - started
+    index.add(space.items)
     params = {"M": m, "ef_construction": ef_construction}
-    return _sweep(
-        index,
-        "hnsw",
-        params,
-        ("ef_search", "efSearch"),
-        HNSW_EF_SEARCH,
-        vectors,
-        truth,
-        build_seconds,
-    )
+    built = Built(index, "hnsw", params, time.perf_counter() - started, space.queries)
+    return _sweep(built, ("ef_search", "efSearch"), HNSW_EF_SEARCH, vectors, truth)
 
 
-def _build_ivfpq(vectors: VectorSet, truth: GroundTruth, nlist: int, m: int) -> list[Measurement]:
-    """Train one IVF-PQ index and sweep how many lists it probes."""
-    dim = vectors.items.shape[1]
+def _build_ivf(
+    space: IndexSpace, vectors: VectorSet, truth: GroundTruth, nlist: int, pq_m: int | None
+) -> list[Measurement]:
+    """Train one IVF index, flat or product-quantised, and sweep how many lists it probes.
+
+    Training the coarse quantiser (and the PQ codebooks) is part of every rebuild, so it is part
+    of the build time; timing only `add` understated it.
+    """
+    items, queries = space.items, space.queries
+    if pq_m is not None:
+        items = _pad_columns(items, PQ_WIDTH_MULTIPLE)
+        queries = _pad_columns(queries, PQ_WIDTH_MULTIPLE)
+    dim = items.shape[1]
     started = time.perf_counter()
-    quantizer = faiss.IndexFlatIP(dim)
-    index = faiss.IndexIVFPQ(quantizer, dim, nlist, m, 8, faiss.METRIC_INNER_PRODUCT)
-    # Training the coarse quantiser and the PQ codebooks is part of every rebuild, so it is part of
-    # the build time; timing only `add` understated it.
-    index.train(vectors.items)
-    index.add(vectors.items)
-    build_seconds = time.perf_counter() - started
-    params = {"nlist": nlist, "m": m}
-    return _sweep(
-        index, "ivfpq", params, ("nprobe", "nprobe"), IVF_NPROBE, vectors, truth, build_seconds
+    quantizer = faiss.IndexFlat(dim, space.metric)
+    index: faiss.Index = (
+        faiss.IndexIVFFlat(quantizer, dim, nlist, space.metric)
+        if pq_m is None
+        else faiss.IndexIVFPQ(quantizer, dim, nlist, pq_m, 8, space.metric)
     )
+    index.train(items)
+    index.add(items)
+    family, params = (
+        ("ivfflat", {"nlist": nlist})
+        if pq_m is None
+        else (
+            "ivfpq",
+            {"nlist": nlist, "m": pq_m},
+        )
+    )
+    built = Built(index, family, params, time.perf_counter() - started, queries)
+    return _sweep(built, ("nprobe", "nprobe"), IVF_NPROBE, vectors, truth)
 
 
 def _choose(points: list[Measurement], target: float) -> Measurement | None:
@@ -376,11 +473,16 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--top-k", type=int, default=DEFAULT_TOP_K)
     parser.add_argument("--recall-target", type=float, default=RECALL_TARGET)
     parser.add_argument("--quick", action="store_true", help="Trim the grids for a smoke run.")
+    parser.add_argument(
+        "--raw-inner-product",
+        action="store_true",
+        help="Build on the original vectors with the inner-product metric (the ablation).",
+    )
     return parser.parse_args(argv)
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Run the sweep and write `results/ann_index_<corpus>_<vectors>.json`."""
+    """Run the sweep and write `results/ann_index_<corpus>_<vectors>[_raw_ip].json`."""
     args = parse_args(argv)
     configure_logging()
     corpus = get_corpus(args.corpus)
@@ -393,6 +495,7 @@ def main(argv: list[str] | None = None) -> int:
     rng = np.random.default_rng(settings.seed)
     loader = _load_als if args.vectors == "als" else _load_two_tower
     vectors = loader(root, rng, args.queries)
+    space = _index_space(vectors, raw_inner_product=args.raw_inner_product)
 
     started = time.perf_counter()
     truth = _exact_index(vectors.items, vectors.queries, args.top_k)
@@ -415,17 +518,17 @@ def main(argv: list[str] | None = None) -> int:
     pq_m = IVF_PQ_M if not args.quick else (16,)
     nlists = IVF_NLIST if not args.quick else (1024,)
 
-    points: list[Measurement] = []
+    points = _build_flat(vectors, truth)
     for m in m_values:
         for efc in efc_values:
-            points.extend(_build_hnsw(vectors, truth, m, efc))
+            points.extend(_build_hnsw(space, vectors, truth, m, efc))
     for nlist in nlists:
+        points.extend(_build_ivf(space, vectors, truth, nlist, None))
         for m in pq_m:
-            points.extend(_build_ivfpq(vectors, truth, nlist, m))
+            points.extend(_build_ivf(space, vectors, truth, nlist, m))
 
     curves = {
-        family: Curve(family, [p for p in points if p.family == family])
-        for family in ("hnsw", "ivfpq")
+        family: Curve(family, [p for p in points if p.family == family]) for family in FAMILIES
     }
     chosen = {family: _choose(c.points, args.recall_target) for family, c in curves.items()}
     best = {family: _best(c.points) for family, c in curves.items()}
@@ -433,6 +536,7 @@ def main(argv: list[str] | None = None) -> int:
     payload: dict[str, Any] = {
         "corpus": corpus.name,
         "vectors": vectors.name,
+        "index_space": space.name,
         "command": " ".join(["uv run python scripts/bench_ann_index.py", *sys.argv[1:]]),
         "quick": args.quick,
         "items_indexed": int(vectors.items.shape[0]),
@@ -474,7 +578,8 @@ def main(argv: list[str] | None = None) -> int:
             "faiss_threads": faiss.omp_get_max_threads(),
         },
     }
-    out = settings.results_root / f"ann_index_{corpus.name}_{vectors.name}.json"
+    suffix = "_raw_ip" if args.raw_inner_product else ""
+    out = settings.results_root / f"ann_index_{corpus.name}_{vectors.name}{suffix}.json"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
     _print(payload, out)
@@ -484,10 +589,11 @@ def main(argv: list[str] | None = None) -> int:
 def _print(payload: dict[str, Any], out: object) -> None:
     """Print the operating points, the best recall and where the result file landed."""
     print(
-        f"\n=== {payload['vectors']}: {payload['items_indexed']} vectors, "
+        f"\n=== {payload['vectors']} ({payload['index_space']}): "
+        f"{payload['items_indexed']} vectors, "
         f"{payload['dimensions']}d, {payload['queries']} queries, top-{payload['top_k']} ==="
     )
-    for family in ("hnsw", "ivfpq"):
+    for family in FAMILIES:
         chosen = payload["chosen"][family]
         point = chosen or payload["highest_recall"][family]
         if chosen is None:

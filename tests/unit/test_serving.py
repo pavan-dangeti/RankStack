@@ -194,6 +194,38 @@ def test_unknown_user_list_does_not_depend_on_any_real_users_history(
     assert _unknown_user_items(rewritten, k) == _unknown_user_items(distinct_recent, k)
 
 
+def test_known_user_without_cooccurrence_neighbours_gets_the_popularity_order(
+    distinct_recent: ServingArtifacts,
+) -> None:
+    """Co-occurrence scores 0 everywhere for this user, so it must add nothing to the fused list.
+
+    Ranking those zeros used to hand rank credit to the lowest item codes, reordering the list
+    towards whichever items happened to be encoded first.
+    """
+    assert distinct_recent.cooccurrence is not None
+    code = 0
+    history = distinct_recent.cooccurrence.history(code)
+    similarity = distinct_recent.cooccurrence.similarity.tolil()
+    similarity[history, :] = 0
+    isolated = replace(
+        distinct_recent,
+        cooccurrence=replace(distinct_recent.cooccurrence, similarity=similarity.tocsr()),
+    )
+    seen = isolated.seen_mask(code)
+    assert isolated.cooccurrence is not None
+    cooccurrence = isolated.cooccurrence.score(code, seen)
+    assert not cooccurrence[np.isfinite(cooccurrence)].any(), "the user still has neighbours"
+
+    k = min(MAX_K, int((~seen).sum()))
+    recent = isolated.popularity_recent.global_scores(seen)
+    order = np.argsort(-recent, kind="stable")[:k]
+    expected = [isolated.encoding.item_codes[int(c)] for c in order]
+    response = Recommender(artifacts=isolated).recommend(isolated.encoding.user_codes[code], k)
+
+    assert response.fallback_used is None
+    assert [item.item_id for item in response.items] == expected
+
+
 def test_broken_index_degrades_to_popularity(artifacts: ServingArtifacts) -> None:
     """A retriever that raises falls back to global popularity rather than erroring."""
     response = Recommender(artifacts=artifacts, source=_Exploding).recommend(

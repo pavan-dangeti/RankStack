@@ -59,7 +59,11 @@ class FusedSource:
         contributed = 0
         for source in self.sources.values():
             scores = source.score(user_code, seen)  # type: ignore[attr-defined]
-            codes, _ = top_k(scores, self.depth)
+            codes, values = top_k(scores, self.depth)
+            # A zero score is no evidence: co-occurrence scores 0 for every item unrelated to the
+            # user's history. Ranking those would hand RRF credit to the lowest item codes, which
+            # the encoding assigns to the most popular items, in every slot the source left unused.
+            codes = codes[values != 0]
             if codes.size == 0:
                 continue
             contributed += 1

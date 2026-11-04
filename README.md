@@ -126,6 +126,124 @@ Two defects were found by this measurement and are fixed, with regression tests:
 - `exact_rank` counted ties against a *filtered* score vector, misaligning values with item codes, so
   any source with masked items produced wrong ranks.
 
+### Stage 1 ANN index: exact search is the recommendation for ALS
+
+```bash
+uv run python scripts/bench_ann_index.py --vectors als --queries 200
+uv run python scripts/bench_ann_index.py --vectors als --queries 200 --raw-inner-product
+uv run python scripts/bench_ann_index.py --vectors two_tower --queries 200
+# diagnostics added to the same files without re-running the sweep (same flags + --diagnostics-only):
+uv run python scripts/bench_ann_index.py --vectors als --queries 200 --diagnostics-only
+```
+
+Results: `results/ann_index_electronics_0core_{als,als_raw_ip,two_tower}.json`. Apple M5, 10 logical
+CPUs, 16 GiB, macOS 26.6.2, Python 3.12.13, faiss 1.15.1, 2026-11-04, seed in the file. Every
+latency is one query per `search` call (batch size 1) over 200 sampled users. Approximate indexes run
+at faiss's default 10 threads (`omp_get_max_threads`). Memory is the resident growth from loading
+the index in a fresh process.
+
+**Recall@200 is the target**, because design §6.3 defines a retriever's contract as recovering the
+exact top-200. That is one source's share of the candidate list the ranker scores, and the ranker
+can only reorder what retrieval returns. The bar is ≥ 0.95, against exact inner-product search on
+the original vectors.
+
+**No approximate index meets the 0.95 target.** Exact search does by construction, at 3.8 ms p99
+with one thread, which is about 15% of the 25 ms retrieval budget (§3.3). At 1.2M ALS items,
+**exact `IndexFlatIP` is the recommended retrieval index**. This recommendation covers ALS only.
+
+| ALS exact search (`IndexFlatIP`, 32 dims, 1,217,903 items) | p99 ms | p50 ms | Memory MiB | Figure |
+|---|---|---|---|---|
+| 1 thread: the per-request figure under concurrency | 3.8184 | 2.7225 | 148.9 | `results/ann_index_electronics_0core_als.json#/curves/flat/0/p99_ms` |
+| 10 threads: the single-request best case | 3.7434 | 2.4949 | 148.9 | `results/ann_index_electronics_0core_als.json#/curves/flat/1/p99_ms` |
+| 1 thread, same index measured in the ablation run | 4.5217 | – | 148.9 | `results/ann_index_electronics_0core_als_raw_ip.json#/curves/flat/0/p99_ms` |
+
+The last row is the same index, measured again in a later run. Its p99 differs by 0.7 ms, which is
+the run-to-run latency noise on this machine. Read every sub-millisecond difference below with that
+in mind.
+
+| ALS approximate index, highest recall per family | Recall@200 | Recall@10 | p99 ms | Memory MiB | Figure |
+|---|---|---|---|---|---|
+| HNSW M32, efC400, ef1024 (MIPS-to-L2) | 0.90175 | 0.96 | 1.37 | 469.9 | `results/ann_index_electronics_0core_als.json#/curves/hnsw/53/recall_at_top_k` |
+| HNSW M64, efC400, ef1024 (MIPS-to-L2) | 0.789425 | 0.843 | 2.21 | 767.1 | `results/ann_index_electronics_0core_als.json#/curves/hnsw/42/recall_at_top_k` |
+| IVF-Flat nlist 4096, nprobe 64 (MIPS-to-L2) | 0.80145 | 0.981 | 0.06 | 165.5 | `results/ann_index_electronics_0core_als.json#/curves/ivfflat/7/recall_at_top_k` |
+| IVF-PQ m32, nlist 4096, nprobe 64 (MIPS-to-L2) | 0.2879 | 0.1515 | 0.11 | 176.5 | `results/ann_index_electronics_0core_als.json#/curves/ivfpq/15/recall_at_top_k` |
+| HNSW M64, efC100, ef1024 (raw inner product, ablation) | 0.5811 | 0.883 | 1.23 | 762.5 | `results/ann_index_electronics_0core_als_raw_ip.json#/curves/hnsw/53/recall_at_top_k` |
+| IVF-Flat nlist 1024, nprobe 64 (raw inner product, ablation) | 0.3034 | 0.789 | 0.17 | 167.2 | `results/ann_index_electronics_0core_als_raw_ip.json#/curves/ivfflat/7/recall_at_top_k` |
+
+What the curves show:
+
+- **The MIPS-to-L2 reduction is needed.** ALS factor norms vary by orders of magnitude. Built on
+  raw inner product, the best HNSW reaches 0.58 recall@200; after the reduction it reaches 0.90.
+  It still falls short of 0.95.
+- **IVF-Flat looks good at the top and bad at depth.** It reaches 0.981 recall@10 but only 0.801
+  recall@200, so it would pass a top-10 test and fails the contract the ranker depends on.
+- **Routing loss: the clusters collapse.** In MIPS space the IVF quantiser puts most items in one
+  list (table below). With raw inner product the lists are even, but recall is lower still.
+- **Quantisation loss is separate.** Under the same clustering, IVF-PQ plateaus at 0.275–0.288
+  recall@200 from nprobe 16 upward, while IVF-Flat keeps climbing to 0.80. One possible reason: the reduction's extra
+  coordinate dominates most ALS vectors and leaves PQ codes too little resolution for the rest.
+  *That explanation is untested.*
+- **More graph degree did not help.** M64 is worse than M32 at the same efConstruction 400 and
+  ef 1024 (0.789 against 0.902).
+
+| ALS IVF list sizes (nlist 1024) | Value | Figure |
+|---|---|---|
+| Share of items in the largest list, MIPS-to-L2 | 0.5609 | `results/ann_index_electronics_0core_als.json#/ivf_list_sizes/0/largest_list_share` |
+| Empty lists out of 1,024, MIPS-to-L2 | 760 | `results/ann_index_electronics_0core_als.json#/ivf_list_sizes/0/empty_lists` |
+| Share of items in the largest list, raw inner product | 0.0125 | `results/ann_index_electronics_0core_als_raw_ip.json#/ivf_list_sizes/0/largest_list_share` |
+
+The list sizes come from rebuilding each IVF index with the sweep's own builder; faiss's k-means
+uses a fixed default seed. The result files record this.
+
+### Two-tower vectors: the failure case
+
+The two-tower is measured on the same protocol, and **this README makes no serving claim for it**.
+The model loses its own evaluation (above), so its latency is not a deployment figure.
+
+| Two-tower (128 dims, 1,331,431 items) | Value | Figure |
+|---|---|---|
+| Highest recall@200, any approximate index (HNSW M64, efC400, ef1024) | 0.902425 | `results/ann_index_electronics_0core_two_tower.json#/curves/hnsw/53/recall_at_top_k` |
+| Median relative score gap, rank 10 to rank 200: two-tower | 0.1635 | `results/ann_index_electronics_0core_two_tower.json#/neighbour_contrast/median_relative_gap_rank_10_to_k` |
+| Median relative score gap, rank 10 to rank 200: ALS | 0.6165 | `results/ann_index_electronics_0core_als.json#/neighbour_contrast/median_relative_gap_rank_10_to_k` |
+| Sampled users (of 200) with a one-item history | 116 | `results/ann_index_electronics_0core_two_tower.json#/query_diagnostics/self_match/one_item_history_queries` |
+| … whose exact top-1 is their own history item at score ≥ 0.9999 | 116 | `results/ann_index_electronics_0core_two_tower.json#/query_diagnostics/self_match/top1_at_threshold_in_own_history` |
+| Share of all servable users with a one-item history | 0.5863 | `results/ann_index_electronics_0core_two_tower.json#/query_diagnostics/self_match/one_item_history_share_all_servable_users` |
+| Relative gap, one-item-history users | 0.1611 | `results/ann_index_electronics_0core_two_tower.json#/query_diagnostics/self_match/neighbour_contrast_by_history/one_item_history/median_relative_gap_rank_10_to_k` |
+| Relative gap, users with two or more items | 0.1699 | `results/ann_index_electronics_0core_two_tower.json#/query_diagnostics/self_match/neighbour_contrast_by_history/two_or_more_items/median_relative_gap_rank_10_to_k` |
+
+**The two-tower's neighbours are crowded, not tied.**
+
+- For two-tower vectors the 200th neighbour scores within 16% of the 10th; for ALS the gap is 62%.
+  An approximate index cannot separate neighbours that close without visiting most of them.
+- Its best setting, the largest graph after a 1,431 s build, reaches 0.90.
+- Counting near-ties as hits (tie-aware recall@10, in the result file) adds at most 3.1 points on
+  any approximate setting, so ties are not the cause.
+
+**One-item histories explain the median top-1 score of 1.0.** The user vector is the normalised,
+recency-weighted mean of the user's history embeddings. For the 58% of users with a single item,
+that vector *is* the item's embedding. They are not why the two-tower fails: the score gap is the
+same with and without them (0.161 against 0.170).
+
+### Limitation: seen items are counted in the ground truth
+
+The exact top-200 includes items the user already interacted with, and serving drops those. This
+benchmark keeps them in, for both models. **From the next phase on, the recall definition excludes
+seen items.** No rerun is needed now:
+
+- Excluding them changes any query's recall@200 by at most the number of seen items in its exact
+  top-200, divided by 200.
+- The worst query has 6, which bounds the shift at 0.03.
+- The best approximate index is 0.902, and 0.902 + 0.03 is still below 0.95, so the conclusion
+  does not change.
+
+| Seen items in the exact top-200 | Value | Figure |
+|---|---|---|
+| Maximum over queries, ALS | 6 | `results/ann_index_electronics_0core_als.json#/query_diagnostics/seen_items_in_exact_top_k/max` |
+| Mean per query, ALS | 0.92 | `results/ann_index_electronics_0core_als.json#/query_diagnostics/seen_items_in_exact_top_k/mean` |
+| Maximum over queries, two-tower | 6 | `results/ann_index_electronics_0core_two_tower.json#/query_diagnostics/seen_items_in_exact_top_k/max` |
+| Mean per query, two-tower | 1.89 | `results/ann_index_electronics_0core_two_tower.json#/query_diagnostics/seen_items_in_exact_top_k/mean` |
+| Largest possible shift in recall@200 | 0.03 | `results/ann_index_electronics_0core_als.json#/query_diagnostics/seen_items_in_exact_top_k/max_recall_shift_at_top_k` |
+
 ### Stage 2: re-ranking
 
 Stage 2 takes a candidate list from `popularity_recent` and item-to-item co-occurrence, scores it

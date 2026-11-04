@@ -139,8 +139,12 @@ uv run python scripts/bench_ann_index.py --vectors als --queries 200 --diagnosti
 Results: `results/ann_index_electronics_0core_{als,als_raw_ip,two_tower}.json`. Apple M5, 10 logical
 CPUs, 16 GiB, macOS 26.6.2, Python 3.12.13, faiss 1.15.1, 2026-11-04, seed in the file. Every
 latency is one query per `search` call (batch size 1) over 200 sampled users. Approximate indexes run
-at faiss's default 10 threads (`omp_get_max_threads`). Memory is the resident growth from loading
-the index in a fresh process.
+at faiss's default 10 threads (`omp_get_max_threads`).
+
+The memory column is the **peak RSS growth during load (macOS)**: how much a fresh process's peak
+resident memory rises while it loads the index file. Because it is a peak, it includes transient
+load-time buffers. For IVF-PQ in particular it may overstate steady-state memory; for example, the
+m32, nlist 4096 index below is 47.5 MiB on disk but shows 176.5 MiB here.
 
 **Recall@200 is the target**, because design §6.3 defines a retriever's contract as recovering the
 exact top-200. That is one source's share of the candidate list the ranker scores, and the ranker
@@ -151,7 +155,7 @@ the original vectors.
 with one thread, which is about 15% of the 25 ms retrieval budget (§3.3). At 1.2M ALS items,
 **exact `IndexFlatIP` is the recommended retrieval index**. This recommendation covers ALS only.
 
-| ALS exact search (`IndexFlatIP`, 32 dims, 1,217,903 items) | p99 ms | p50 ms | Memory MiB | Figure |
+| ALS exact search (`IndexFlatIP`, 32 dims, 1,217,903 items) | p99 ms | p50 ms | Peak RSS growth during load (macOS), MiB | Figure |
 |---|---|---|---|---|
 | 1 thread: the per-request figure under concurrency | 3.8184 | 2.7225 | 148.9 | `results/ann_index_electronics_0core_als.json#/curves/flat/0/p99_ms` |
 | 10 threads: the single-request best case | 3.7434 | 2.4949 | 148.9 | `results/ann_index_electronics_0core_als.json#/curves/flat/1/p99_ms` |
@@ -161,7 +165,7 @@ The last row is the same index, measured again in a later run. Its p99 differs b
 the run-to-run latency noise on this machine. Read every sub-millisecond difference below with that
 in mind.
 
-| ALS approximate index, highest recall per family | Recall@200 | Recall@10 | p99 ms | Memory MiB | Figure |
+| ALS approximate index, highest recall per family | Recall@200 | Recall@10 | p99 ms | Peak RSS growth during load (macOS), MiB | Figure |
 |---|---|---|---|---|---|
 | HNSW M32, efC400, ef1024 (MIPS-to-L2) | 0.90175 | 0.96 | 1.37 | 469.9 | `results/ann_index_electronics_0core_als.json#/curves/hnsw/53/recall_at_top_k` |
 | HNSW M64, efC400, ef1024 (MIPS-to-L2) | 0.789425 | 0.843 | 2.21 | 767.1 | `results/ann_index_electronics_0core_als.json#/curves/hnsw/42/recall_at_top_k` |

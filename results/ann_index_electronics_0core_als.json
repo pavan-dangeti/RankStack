@@ -7,14 +7,14 @@
       "index_bytes": 155891629,
       "index_mib": 148.7,
       "latency_batch_size": 1,
-      "memory_bytes": 156172288,
-      "memory_mib": 148.9,
       "p50_ms": 2.4949,
       "p95_ms": 3.0116,
       "p99_ms": 3.7434,
       "params": {
         "threads": 10
       },
+      "peak_rss_growth_during_load_macos_bytes": 156172288,
+      "peak_rss_growth_during_load_macos_mib": 148.9,
       "recall_at_10": 1.0,
       "recall_at_top_k": 1.0,
       "tie_aware_recall_at_10": 1.0
@@ -35,14 +35,14 @@
         "index_bytes": 155891629,
         "index_mib": 148.7,
         "latency_batch_size": 1,
-        "memory_bytes": 156172288,
-        "memory_mib": 148.9,
         "p50_ms": 2.7225,
         "p95_ms": 3.4236,
         "p99_ms": 3.8184,
         "params": {
           "threads": 1
         },
+        "peak_rss_growth_during_load_macos_bytes": 156172288,
+        "peak_rss_growth_during_load_macos_mib": 148.9,
         "recall_at_10": 1.0,
         "recall_at_top_k": 1.0,
         "tie_aware_recall_at_10": 1.0
@@ -54,14 +54,14 @@
         "index_bytes": 155891629,
         "index_mib": 148.7,
         "latency_batch_size": 1,
-        "memory_bytes": 156172288,
-        "memory_mib": 148.9,
         "p50_ms": 2.4949,
         "p95_ms": 3.0116,
         "p99_ms": 3.7434,
         "params": {
           "threads": 10
         },
+        "peak_rss_growth_during_load_macos_bytes": 156172288,
+        "peak_rss_growth_during_load_macos_mib": 148.9,
         "recall_at_10": 1.0,
         "recall_at_top_k": 1.0,
         "tie_aware_recall_at_10": 1.0
@@ -75,8 +75,6 @@
         "index_bytes": 803910982,
         "index_mib": 766.7,
         "latency_batch_size": 1,
-        "memory_bytes": 804388864,
-        "memory_mib": 767.1,
         "p50_ms": 0.3072,
         "p95_ms": 0.7262,
         "p99_ms": 0.9143,
@@ -85,6 +83,8 @@
           "ef_construction": 200,
           "ef_search": 32
         },
+        "peak_rss_growth_during_load_macos_bytes": 804388864,
+        "peak_rss_growth_during_load_macos_mib": 767.1,
         "recall_at_10": 0.241,
         "recall_at_top_k": 0.1477,
         "tie_aware_recall_at_10": 0.266
@@ -96,8 +96,6 @@
         "index_bytes": 492212434,
         "index_mib": 469.4,
         "latency_batch_size": 1,
-        "memory_bytes": 492699648,
-        "memory_mib": 469.9,
         "p50_ms": 0.0676,
         "p95_ms": 0.1987,
         "p99_ms": 0.3377,
@@ -106,6 +104,8 @@
           "ef_construction": 100,
           "ef_search": 32
         },
+        "peak_rss_growth_during_load_macos_bytes": 492699648,
+        "peak_rss_growth_during_load_macos_mib": 469.9,
         "recall_at_10": 0.314,
         "recall_at_top_k": 0.176875,
         "tie_aware_recall_at_10": 0.387
@@ -117,8 +117,6 @@
         "index_bytes": 336470634,
         "index_mib": 320.9,
         "latency_batch_size": 1,
-        "memory_bytes": 336969728,
-        "memory_mib": 321.4,
         "p50_ms": 0.0402,
         "p95_ms": 0.3549,
         "p99_ms": 0.5208,
@@ -127,6 +125,8 @@
           "ef_construction": 100,
           "ef_search": 32
         },
+        "peak_rss_growth_during_load_macos_bytes": 336969728,
+        "peak_rss_growth_during_load_macos_mib": 321.4,
         "recall_at_10": 0.3415,
         "recall_at_top_k": 0.1819,
         "tie_aware_recall_at_10": 0.4285
@@ -138,8 +138,6 @@
         "index_bytes": 803910982,
         "index_mib": 766.7,
         "latency_batch_size": 1,
-        "memory_bytes": 804405248,
-        "memory_mib": 767.1,
         "p50_ms": 0.3098,
         "p95_ms": 0.6765,
         "p99_ms": 0.7867,
@@ -148,6 +146,8 @@
           "ef_construction": 400,
           "ef_search": 32
         },
+        "peak_rss_growth_during_load_macos_bytes": 804405248,
+        "peak_rss_growth_during_load_macos_mib": 767.1,
         "recall_at_10": 0.3885,
         "recall_at_top_k": 0.226225,
         "tie_aware_recall_at_10": 0.423
@@ -159,8 +159,6 @@
         "index_bytes": 336470634,
         "index_mib": 320.9,
         "latency_batch_size": 1,
-        "memory_bytes": 336969728,
-        "memory_mib": 321.4,
         "p50_ms": 0.0448,
         "p95_ms": 0.3865,
         "p99_ms": 0.4972,
@@ -169,6 +167,8 @@
           "ef_construction": 200,
           "ef_search": 32
         },
+        "peak_rss_growth_during_load_macos_bytes": 336969728,
+        "peak_rss_growth_during_load_macos_mib": 321.4,
         "recall_at_10": 0.4255,
         "recall_at_top_k": 0.226625,
         "tie_aware_recall_at_10": 0.5045
@@ -180,8 +180,6 @@
         "index_bytes": 492212434,
         "index_mib": 469.4,
         "latency_batch_size": 1,
-        "memory_bytes": 492699648,
-        "memory_mib": 469.9,
         "p50_ms": 0.0795,
         "p95_ms": 0.199,
         "p99_ms": 0.3705,
@@ -190,6 +188,8 @@
           "ef_construction": 200,
           "ef_search": 32
         },
+        "peak_rss_growth_during_load_macos_bytes": 492699648,
+        "peak_rss_growth_during_load_macos_mib": 469.9,
         "recall_at_10": 0.459,
         "recall_at_top_k": 0.2529,
         "tie_aware_recall_at_10": 0.5405
@@ -201,8 +201,6 @@
         "index_bytes": 336470634,
         "index_mib": 320.9,
         "latency_batch_size": 1,
-        "memory_bytes": 336969728,
-        "memory_mib": 321.4,
         "p50_ms": 0.0602,
         "p95_ms": 0.3725,
         "p99_ms": 0.5918,
@@ -211,6 +209,8 @@
           "ef_construction": 400,
           "ef_search": 32
         },
+        "peak_rss_growth_during_load_macos_bytes": 336969728,
+        "peak_rss_growth_during_load_macos_mib": 321.4,
         "recall_at_10": 0.4875,
         "recall_at_top_k": 0.275025,
         "tie_aware_recall_at_10": 0.5745
@@ -222,8 +222,6 @@
         "index_bytes": 803910982,
         "index_mib": 766.7,
         "latency_batch_size": 1,
-        "memory_bytes": 804388864,
-        "memory_mib": 767.1,
         "p50_ms": 0.3148,
         "p95_ms": 0.696,
         "p99_ms": 0.8409,
@@ -232,6 +230,8 @@
           "ef_construction": 200,
           "ef_search": 64
         },
+        "peak_rss_growth_during_load_macos_bytes": 804388864,
+        "peak_rss_growth_during_load_macos_mib": 767.1,
         "recall_at_10": 0.491,
         "recall_at_top_k": 0.295825,
         "tie_aware_recall_at_10": 0.524
@@ -243,8 +243,6 @@
         "index_bytes": 336470634,
         "index_mib": 320.9,
         "latency_batch_size": 1,
-        "memory_bytes": 336969728,
-        "memory_mib": 321.4,
         "p50_ms": 0.0542,
         "p95_ms": 0.4497,
         "p99_ms": 0.6362,
@@ -253,6 +251,8 @@
           "ef_construction": 100,
           "ef_search": 64
         },
+        "peak_rss_growth_during_load_macos_bytes": 336969728,
+        "peak_rss_growth_during_load_macos_mib": 321.4,
         "recall_at_10": 0.5385,
         "recall_at_top_k": 0.29675,
         "tie_aware_recall_at_10": 0.6175
@@ -264,8 +264,6 @@
         "index_bytes": 492212434,
         "index_mib": 469.4,
         "latency_batch_size": 1,
-        "memory_bytes": 492699648,
-        "memory_mib": 469.9,
         "p50_ms": 0.1048,
         "p95_ms": 0.2316,
         "p99_ms": 0.3593,
@@ -274,6 +272,8 @@
           "ef_construction": 100,
           "ef_search": 64
         },
+        "peak_rss_growth_during_load_macos_bytes": 492699648,
+        "peak_rss_growth_during_load_macos_mib": 469.9,
         "recall_at_10": 0.5285,
         "recall_at_top_k": 0.303975,
         "tie_aware_recall_at_10": 0.608
@@ -285,8 +285,6 @@
         "index_bytes": 492212434,
         "index_mib": 469.4,
         "latency_batch_size": 1,
-        "memory_bytes": 492732416,
-        "memory_mib": 469.9,
         "p50_ms": 0.0814,
         "p95_ms": 0.187,
         "p99_ms": 0.4847,
@@ -295,6 +293,8 @@
           "ef_construction": 400,
           "ef_search": 32
         },
+        "peak_rss_growth_during_load_macos_bytes": 492732416,
+        "peak_rss_growth_during_load_macos_mib": 469.9,
         "recall_at_10": 0.541,
         "recall_at_top_k": 0.312925,
         "tie_aware_recall_at_10": 0.6155
@@ -306,8 +306,6 @@
         "index_bytes": 336470634,
         "index_mib": 320.9,
         "latency_batch_size": 1,
-        "memory_bytes": 336969728,
-        "memory_mib": 321.4,
         "p50_ms": 0.0657,
         "p95_ms": 0.4468,
         "p99_ms": 0.7575,
@@ -316,6 +314,8 @@
           "ef_construction": 200,
           "ef_search": 64
         },
+        "peak_rss_growth_during_load_macos_bytes": 336969728,
+        "peak_rss_growth_during_load_macos_mib": 321.4,
         "recall_at_10": 0.612,
         "recall_at_top_k": 0.35595,
         "tie_aware_recall_at_10": 0.6865
@@ -327,8 +327,6 @@
         "index_bytes": 803910982,
         "index_mib": 766.7,
         "latency_batch_size": 1,
-        "memory_bytes": 804405248,
-        "memory_mib": 767.1,
         "p50_ms": 0.3277,
         "p95_ms": 0.6201,
         "p99_ms": 0.771,
@@ -337,6 +335,8 @@
           "ef_construction": 400,
           "ef_search": 64
         },
+        "peak_rss_growth_during_load_macos_bytes": 804405248,
+        "peak_rss_growth_during_load_macos_mib": 767.1,
         "recall_at_10": 0.611,
         "recall_at_top_k": 0.3751,
         "tie_aware_recall_at_10": 0.6465
@@ -348,8 +348,6 @@
         "index_bytes": 492212434,
         "index_mib": 469.4,
         "latency_batch_size": 1,
-        "memory_bytes": 492699648,
-        "memory_mib": 469.9,
         "p50_ms": 0.1066,
         "p95_ms": 0.2215,
         "p99_ms": 0.319,
@@ -358,6 +356,8 @@
           "ef_construction": 200,
           "ef_search": 64
         },
+        "peak_rss_growth_during_load_macos_bytes": 492699648,
+        "peak_rss_growth_during_load_macos_mib": 469.9,
         "recall_at_10": 0.671,
         "recall_at_top_k": 0.384275,
         "tie_aware_recall_at_10": 0.746
@@ -369,8 +369,6 @@
         "index_bytes": 803910982,
         "index_mib": 766.7,
         "latency_batch_size": 1,
-        "memory_bytes": 804388864,
-        "memory_mib": 767.1,
         "p50_ms": 0.351,
         "p95_ms": 0.7042,
         "p99_ms": 0.9127,
@@ -379,6 +377,8 @@
           "ef_construction": 200,
           "ef_search": 128
         },
+        "peak_rss_growth_during_load_macos_bytes": 804388864,
+        "peak_rss_growth_during_load_macos_mib": 767.1,
         "recall_at_10": 0.655,
         "recall_at_top_k": 0.4239,
         "tie_aware_recall_at_10": 0.6855
@@ -390,8 +390,6 @@
         "index_bytes": 336470634,
         "index_mib": 320.9,
         "latency_batch_size": 1,
-        "memory_bytes": 336969728,
-        "memory_mib": 321.4,
         "p50_ms": 0.0919,
         "p95_ms": 0.6487,
         "p99_ms": 1.0038,
@@ -400,6 +398,8 @@
           "ef_construction": 400,
           "ef_search": 64
         },
+        "peak_rss_growth_during_load_macos_bytes": 336969728,
+        "peak_rss_growth_during_load_macos_mib": 321.4,
         "recall_at_10": 0.699,
         "recall_at_top_k": 0.4293,
         "tie_aware_recall_at_10": 0.7675
@@ -411,8 +411,6 @@
         "index_bytes": 336470634,
         "index_mib": 320.9,
         "latency_batch_size": 1,
-        "memory_bytes": 336969728,
-        "memory_mib": 321.4,
         "p50_ms": 0.0816,
         "p95_ms": 0.5485,
         "p99_ms": 0.7517,
@@ -421,6 +419,8 @@
           "ef_construction": 100,
           "ef_search": 128
         },
+        "peak_rss_growth_during_load_macos_bytes": 336969728,
+        "peak_rss_growth_during_load_macos_mib": 321.4,
         "recall_at_10": 0.705,
         "recall_at_top_k": 0.43315,
         "tie_aware_recall_at_10": 0.774
@@ -432,8 +432,6 @@
         "index_bytes": 492212434,
         "index_mib": 469.4,
         "latency_batch_size": 1,
-        "memory_bytes": 492699648,
-        "memory_mib": 469.9,
         "p50_ms": 0.1518,
         "p95_ms": 0.2895,
         "p99_ms": 0.6088,
@@ -442,6 +440,8 @@
           "ef_construction": 100,
           "ef_search": 128
         },
+        "peak_rss_growth_during_load_macos_bytes": 492699648,
+        "peak_rss_growth_during_load_macos_mib": 469.9,
         "recall_at_10": 0.728,
         "recall_at_top_k": 0.4421,
         "tie_aware_recall_at_10": 0.793
@@ -453,8 +453,6 @@
         "index_bytes": 492212434,
         "index_mib": 469.4,
         "latency_batch_size": 1,
-        "memory_bytes": 492732416,
-        "memory_mib": 469.9,
         "p50_ms": 0.1057,
         "p95_ms": 0.2142,
         "p99_ms": 0.348,
@@ -463,6 +461,8 @@
           "ef_construction": 400,
           "ef_search": 64
         },
+        "peak_rss_growth_during_load_macos_bytes": 492732416,
+        "peak_rss_growth_during_load_macos_mib": 469.9,
         "recall_at_10": 0.7255,
         "recall_at_top_k": 0.449475,
         "tie_aware_recall_at_10": 0.7905
@@ -474,8 +474,6 @@
         "index_bytes": 803910982,
         "index_mib": 766.7,
         "latency_batch_size": 1,
-        "memory_bytes": 804405248,
-        "memory_mib": 767.1,
         "p50_ms": 0.3404,
         "p95_ms": 0.6362,
         "p99_ms": 0.8115,
@@ -484,6 +482,8 @@
           "ef_construction": 400,
           "ef_search": 128
         },
+        "peak_rss_growth_during_load_macos_bytes": 804405248,
+        "peak_rss_growth_during_load_macos_mib": 767.1,
         "recall_at_10": 0.7185,
         "recall_at_top_k": 0.489475,
         "tie_aware_recall_at_10": 0.748
@@ -495,8 +495,6 @@
         "index_bytes": 336470634,
         "index_mib": 320.9,
         "latency_batch_size": 1,
-        "memory_bytes": 336969728,
-        "memory_mib": 321.4,
         "p50_ms": 0.0999,
         "p95_ms": 0.5201,
         "p99_ms": 0.7255,
@@ -505,6 +503,8 @@
           "ef_construction": 200,
           "ef_search": 128
         },
+        "peak_rss_growth_during_load_macos_bytes": 336969728,
+        "peak_rss_growth_during_load_macos_mib": 321.4,
         "recall_at_10": 0.775,
         "recall_at_top_k": 0.4952,
         "tie_aware_recall_at_10": 0.8285
@@ -516,8 +516,6 @@
         "index_bytes": 492212434,
         "index_mib": 469.4,
         "latency_batch_size": 1,
-        "memory_bytes": 492699648,
-        "memory_mib": 469.9,
         "p50_ms": 0.1458,
         "p95_ms": 0.2505,
         "p99_ms": 0.337,
@@ -526,6 +524,8 @@
           "ef_construction": 200,
           "ef_search": 128
         },
+        "peak_rss_growth_during_load_macos_bytes": 492699648,
+        "peak_rss_growth_during_load_macos_mib": 469.9,
         "recall_at_10": 0.7915,
         "recall_at_top_k": 0.506825,
         "tie_aware_recall_at_10": 0.848
@@ -537,8 +537,6 @@
         "index_bytes": 803910982,
         "index_mib": 766.7,
         "latency_batch_size": 1,
-        "memory_bytes": 804388864,
-        "memory_mib": 767.1,
         "p50_ms": 0.4279,
         "p95_ms": 0.7687,
         "p99_ms": 0.9207,
@@ -547,6 +545,8 @@
           "ef_construction": 200,
           "ef_search": 256
         },
+        "peak_rss_growth_during_load_macos_bytes": 804388864,
+        "peak_rss_growth_during_load_macos_mib": 767.1,
         "recall_at_10": 0.731,
         "recall_at_top_k": 0.539325,
         "tie_aware_recall_at_10": 0.7585
@@ -558,8 +558,6 @@
         "index_bytes": 803910982,
         "index_mib": 766.7,
         "latency_batch_size": 1,
-        "memory_bytes": 804421632,
-        "memory_mib": 767.2,
         "p50_ms": 0.4248,
         "p95_ms": 0.8339,
         "p99_ms": 1.3633,
@@ -568,6 +566,8 @@
           "ef_construction": 100,
           "ef_search": 32
         },
+        "peak_rss_growth_during_load_macos_bytes": 804421632,
+        "peak_rss_growth_during_load_macos_mib": 767.2,
         "recall_at_10": 0.8055,
         "recall_at_top_k": 0.553,
         "tie_aware_recall_at_10": 0.823
@@ -579,8 +579,6 @@
         "index_bytes": 336470634,
         "index_mib": 320.9,
         "latency_batch_size": 1,
-        "memory_bytes": 336969728,
-        "memory_mib": 321.4,
         "p50_ms": 0.1314,
         "p95_ms": 0.6712,
         "p99_ms": 0.8684,
@@ -589,6 +587,8 @@
           "ef_construction": 100,
           "ef_search": 256
         },
+        "peak_rss_growth_during_load_macos_bytes": 336969728,
+        "peak_rss_growth_during_load_macos_mib": 321.4,
         "recall_at_10": 0.809,
         "recall_at_top_k": 0.559475,
         "tie_aware_recall_at_10": 0.858
@@ -600,8 +600,6 @@
         "index_bytes": 336470634,
         "index_mib": 320.9,
         "latency_batch_size": 1,
-        "memory_bytes": 336969728,
-        "memory_mib": 321.4,
         "p50_ms": 0.1685,
         "p95_ms": 0.7791,
         "p99_ms": 1.1545,
@@ -610,6 +608,8 @@
           "ef_construction": 400,
           "ef_search": 128
         },
+        "peak_rss_growth_during_load_macos_bytes": 336969728,
+        "peak_rss_growth_during_load_macos_mib": 321.4,
         "recall_at_10": 0.829,
         "recall_at_top_k": 0.5633,
         "tie_aware_recall_at_10": 0.8775
@@ -621,8 +621,6 @@
         "index_bytes": 492212434,
         "index_mib": 469.4,
         "latency_batch_size": 1,
-        "memory_bytes": 492699648,
-        "memory_mib": 469.9,
         "p50_ms": 0.2019,
         "p95_ms": 0.3725,
         "p99_ms": 0.7226,
@@ -631,6 +629,8 @@
           "ef_construction": 100,
           "ef_search": 256
         },
+        "peak_rss_growth_during_load_macos_bytes": 492699648,
+        "peak_rss_growth_during_load_macos_mib": 469.9,
         "recall_at_10": 0.8335,
         "recall_at_top_k": 0.5721,
         "tie_aware_recall_at_10": 0.881
@@ -642,8 +642,6 @@
         "index_bytes": 492212434,
         "index_mib": 469.4,
         "latency_batch_size": 1,
-        "memory_bytes": 492732416,
-        "memory_mib": 469.9,
         "p50_ms": 0.1445,
         "p95_ms": 0.2408,
         "p99_ms": 0.3844,
@@ -652,6 +650,8 @@
           "ef_construction": 400,
           "ef_search": 128
         },
+        "peak_rss_growth_during_load_macos_bytes": 492732416,
+        "peak_rss_growth_during_load_macos_mib": 469.9,
         "recall_at_10": 0.832,
         "recall_at_top_k": 0.580675,
         "tie_aware_recall_at_10": 0.8775
@@ -663,8 +663,6 @@
         "index_bytes": 803910982,
         "index_mib": 766.7,
         "latency_batch_size": 1,
-        "memory_bytes": 804405248,
-        "memory_mib": 767.1,
         "p50_ms": 0.402,
         "p95_ms": 0.724,
         "p99_ms": 0.8942,
@@ -673,6 +671,8 @@
           "ef_construction": 400,
           "ef_search": 256
         },
+        "peak_rss_growth_during_load_macos_bytes": 804405248,
+        "peak_rss_growth_during_load_macos_mib": 767.1,
         "recall_at_10": 0.7685,
         "recall_at_top_k": 0.597175,
         "tie_aware_recall_at_10": 0.7895
@@ -684,8 +684,6 @@
         "index_bytes": 336470634,
         "index_mib": 320.9,
         "latency_batch_size": 1,
-        "memory_bytes": 336969728,
-        "memory_mib": 321.4,
         "p50_ms": 0.1587,
         "p95_ms": 0.6653,
         "p99_ms": 0.8541,
@@ -694,6 +692,8 @@
           "ef_construction": 200,
           "ef_search": 256
         },
+        "peak_rss_growth_during_load_macos_bytes": 336969728,
+        "peak_rss_growth_during_load_macos_mib": 321.4,
         "recall_at_10": 0.847,
         "recall_at_top_k": 0.621425,
         "tie_aware_recall_at_10": 0.89
@@ -705,8 +705,6 @@
         "index_bytes": 803910982,
         "index_mib": 766.7,
         "latency_batch_size": 1,
-        "memory_bytes": 804421632,
-        "memory_mib": 767.2,
         "p50_ms": 0.3791,
         "p95_ms": 0.6924,
         "p99_ms": 0.8565,
@@ -715,6 +713,8 @@
           "ef_construction": 100,
           "ef_search": 64
         },
+        "peak_rss_growth_during_load_macos_bytes": 804421632,
+        "peak_rss_growth_during_load_macos_mib": 767.2,
         "recall_at_10": 0.835,
         "recall_at_top_k": 0.62825,
         "tie_aware_recall_at_10": 0.848
@@ -726,8 +726,6 @@
         "index_bytes": 492212434,
         "index_mib": 469.4,
         "latency_batch_size": 1,
-        "memory_bytes": 492699648,
-        "memory_mib": 469.9,
         "p50_ms": 0.2099,
         "p95_ms": 0.335,
         "p99_ms": 0.4172,
@@ -736,6 +734,8 @@
           "ef_construction": 200,
           "ef_search": 256
         },
+        "peak_rss_growth_during_load_macos_bytes": 492699648,
+        "peak_rss_growth_during_load_macos_mib": 469.9,
         "recall_at_10": 0.867,
         "recall_at_top_k": 0.631375,
         "tie_aware_recall_at_10": 0.9095
@@ -747,8 +747,6 @@
         "index_bytes": 803910982,
         "index_mib": 766.7,
         "latency_batch_size": 1,
-        "memory_bytes": 804388864,
-        "memory_mib": 767.1,
         "p50_ms": 0.664,
         "p95_ms": 1.1079,
         "p99_ms": 1.3305,
@@ -757,6 +755,8 @@
           "ef_construction": 200,
           "ef_search": 512
         },
+        "peak_rss_growth_during_load_macos_bytes": 804388864,
+        "peak_rss_growth_during_load_macos_mib": 767.1,
         "recall_at_10": 0.775,
         "recall_at_top_k": 0.65225,
         "tie_aware_recall_at_10": 0.7965
@@ -768,8 +768,6 @@
         "index_bytes": 336470634,
         "index_mib": 320.9,
         "latency_batch_size": 1,
-        "memory_bytes": 336969728,
-        "memory_mib": 321.4,
         "p50_ms": 0.2625,
         "p95_ms": 0.7451,
         "p99_ms": 1.2518,
@@ -778,6 +776,8 @@
           "ef_construction": 400,
           "ef_search": 256
         },
+        "peak_rss_growth_during_load_macos_bytes": 336969728,
+        "peak_rss_growth_during_load_macos_mib": 321.4,
         "recall_at_10": 0.8865,
         "recall_at_top_k": 0.692,
         "tie_aware_recall_at_10": 0.923
@@ -789,8 +789,6 @@
         "index_bytes": 336470634,
         "index_mib": 320.9,
         "latency_batch_size": 1,
-        "memory_bytes": 336969728,
-        "memory_mib": 321.4,
         "p50_ms": 0.29,
         "p95_ms": 0.9691,
         "p99_ms": 1.2441,
@@ -799,6 +797,8 @@
           "ef_construction": 100,
           "ef_search": 512
         },
+        "peak_rss_growth_during_load_macos_bytes": 336969728,
+        "peak_rss_growth_during_load_macos_mib": 321.4,
         "recall_at_10": 0.874,
         "recall_at_top_k": 0.700075,
         "tie_aware_recall_at_10": 0.91
@@ -810,8 +810,6 @@
         "index_bytes": 492212434,
         "index_mib": 469.4,
         "latency_batch_size": 1,
-        "memory_bytes": 492732416,
-        "memory_mib": 469.9,
         "p50_ms": 0.2045,
         "p95_ms": 0.3052,
         "p99_ms": 0.4549,
@@ -820,6 +818,8 @@
           "ef_construction": 400,
           "ef_search": 256
         },
+        "peak_rss_growth_during_load_macos_bytes": 492732416,
+        "peak_rss_growth_during_load_macos_mib": 469.9,
         "recall_at_10": 0.897,
         "recall_at_top_k": 0.702925,
         "tie_aware_recall_at_10": 0.9325
@@ -831,8 +831,6 @@
         "index_bytes": 803910982,
         "index_mib": 766.7,
         "latency_batch_size": 1,
-        "memory_bytes": 804405248,
-        "memory_mib": 767.1,
         "p50_ms": 0.6414,
         "p95_ms": 1.1525,
         "p99_ms": 1.458,
@@ -841,6 +839,8 @@
           "ef_construction": 400,
           "ef_search": 512
         },
+        "peak_rss_growth_during_load_macos_bytes": 804405248,
+        "peak_rss_growth_during_load_macos_mib": 767.1,
         "recall_at_10": 0.811,
         "recall_at_top_k": 0.703025,
         "tie_aware_recall_at_10": 0.829
@@ -852,8 +852,6 @@
         "index_bytes": 492212434,
         "index_mib": 469.4,
         "latency_batch_size": 1,
-        "memory_bytes": 492699648,
-        "memory_mib": 469.9,
         "p50_ms": 0.3722,
         "p95_ms": 0.6171,
         "p99_ms": 0.9554,
@@ -862,6 +860,8 @@
           "ef_construction": 100,
           "ef_search": 512
         },
+        "peak_rss_growth_during_load_macos_bytes": 492699648,
+        "peak_rss_growth_during_load_macos_mib": 469.9,
         "recall_at_10": 0.897,
         "recall_at_top_k": 0.711925,
         "tie_aware_recall_at_10": 0.9265
@@ -873,8 +873,6 @@
         "index_bytes": 803910982,
         "index_mib": 766.7,
         "latency_batch_size": 1,
-        "memory_bytes": 804421632,
-        "memory_mib": 767.2,
         "p50_ms": 0.4074,
         "p95_ms": 0.7299,
         "p99_ms": 0.8653,
@@ -883,6 +881,8 @@
           "ef_construction": 100,
           "ef_search": 128
         },
+        "peak_rss_growth_during_load_macos_bytes": 804421632,
+        "peak_rss_growth_during_load_macos_mib": 767.2,
         "recall_at_10": 0.8525,
         "recall_at_top_k": 0.71975,
         "tie_aware_recall_at_10": 0.86
@@ -894,8 +894,6 @@
         "index_bytes": 803910982,
         "index_mib": 766.7,
         "latency_batch_size": 1,
-        "memory_bytes": 804388864,
-        "memory_mib": 767.1,
         "p50_ms": 1.231,
         "p95_ms": 1.8981,
         "p99_ms": 2.2127,
@@ -904,6 +902,8 @@
           "ef_construction": 200,
           "ef_search": 1024
         },
+        "peak_rss_growth_during_load_macos_bytes": 804388864,
+        "peak_rss_growth_during_load_macos_mib": 767.1,
         "recall_at_10": 0.8115,
         "recall_at_top_k": 0.746125,
         "tie_aware_recall_at_10": 0.8275
@@ -915,8 +915,6 @@
         "index_bytes": 336470634,
         "index_mib": 320.9,
         "latency_batch_size": 1,
-        "memory_bytes": 336969728,
-        "memory_mib": 321.4,
         "p50_ms": 0.339,
         "p95_ms": 0.925,
         "p99_ms": 1.2521,
@@ -925,6 +923,8 @@
           "ef_construction": 200,
           "ef_search": 512
         },
+        "peak_rss_growth_during_load_macos_bytes": 336969728,
+        "peak_rss_growth_during_load_macos_mib": 321.4,
         "recall_at_10": 0.892,
         "recall_at_top_k": 0.7489,
         "tie_aware_recall_at_10": 0.927
@@ -936,8 +936,6 @@
         "index_bytes": 492212434,
         "index_mib": 469.4,
         "latency_batch_size": 1,
-        "memory_bytes": 492699648,
-        "memory_mib": 469.9,
         "p50_ms": 0.4099,
         "p95_ms": 0.5716,
         "p99_ms": 0.8407,
@@ -946,6 +944,8 @@
           "ef_construction": 200,
           "ef_search": 512
         },
+        "peak_rss_growth_during_load_macos_bytes": 492699648,
+        "peak_rss_growth_during_load_macos_mib": 469.9,
         "recall_at_10": 0.9195,
         "recall_at_top_k": 0.76095,
         "tie_aware_recall_at_10": 0.946
@@ -957,8 +957,6 @@
         "index_bytes": 803910982,
         "index_mib": 766.7,
         "latency_batch_size": 1,
-        "memory_bytes": 804405248,
-        "memory_mib": 767.1,
         "p50_ms": 1.1887,
         "p95_ms": 1.9888,
         "p99_ms": 2.2052,
@@ -967,6 +965,8 @@
           "ef_construction": 400,
           "ef_search": 1024
         },
+        "peak_rss_growth_during_load_macos_bytes": 804405248,
+        "peak_rss_growth_during_load_macos_mib": 767.1,
         "recall_at_10": 0.843,
         "recall_at_top_k": 0.789425,
         "tie_aware_recall_at_10": 0.855
@@ -978,8 +978,6 @@
         "index_bytes": 336470634,
         "index_mib": 320.9,
         "latency_batch_size": 1,
-        "memory_bytes": 336969728,
-        "memory_mib": 321.4,
         "p50_ms": 0.517,
         "p95_ms": 1.1337,
         "p99_ms": 1.6333,
@@ -988,6 +986,8 @@
           "ef_construction": 400,
           "ef_search": 512
         },
+        "peak_rss_growth_during_load_macos_bytes": 336969728,
+        "peak_rss_growth_during_load_macos_mib": 321.4,
         "recall_at_10": 0.926,
         "recall_at_top_k": 0.803325,
         "tie_aware_recall_at_10": 0.954
@@ -999,8 +999,6 @@
         "index_bytes": 803910982,
         "index_mib": 766.7,
         "latency_batch_size": 1,
-        "memory_bytes": 804421632,
-        "memory_mib": 767.2,
         "p50_ms": 0.5354,
         "p95_ms": 0.9662,
         "p99_ms": 1.2673,
@@ -1009,6 +1007,8 @@
           "ef_construction": 100,
           "ef_search": 256
         },
+        "peak_rss_growth_during_load_macos_bytes": 804421632,
+        "peak_rss_growth_during_load_macos_mib": 767.2,
         "recall_at_10": 0.8585,
         "recall_at_top_k": 0.8081,
         "tie_aware_recall_at_10": 0.864
@@ -1020,8 +1020,6 @@
         "index_bytes": 336470634,
         "index_mib": 320.9,
         "latency_batch_size": 1,
-        "memory_bytes": 336969728,
-        "memory_mib": 321.4,
         "p50_ms": 0.7511,
         "p95_ms": 1.4966,
         "p99_ms": 1.9155,
@@ -1030,6 +1028,8 @@
           "ef_construction": 100,
           "ef_search": 1024
         },
+        "peak_rss_growth_during_load_macos_bytes": 336969728,
+        "peak_rss_growth_during_load_macos_mib": 321.4,
         "recall_at_10": 0.905,
         "recall_at_top_k": 0.812425,
         "tie_aware_recall_at_10": 0.9335
@@ -1041,8 +1041,6 @@
         "index_bytes": 492212434,
         "index_mib": 469.4,
         "latency_batch_size": 1,
-        "memory_bytes": 492732416,
-        "memory_mib": 469.9,
         "p50_ms": 0.3828,
         "p95_ms": 0.5104,
         "p99_ms": 0.7485,
@@ -1051,6 +1049,8 @@
           "ef_construction": 400,
           "ef_search": 512
         },
+        "peak_rss_growth_during_load_macos_bytes": 492732416,
+        "peak_rss_growth_during_load_macos_mib": 469.9,
         "recall_at_10": 0.9415,
         "recall_at_top_k": 0.8158,
         "tie_aware_recall_at_10": 0.9645
@@ -1062,8 +1062,6 @@
         "index_bytes": 492212434,
         "index_mib": 469.4,
         "latency_batch_size": 1,
-        "memory_bytes": 492699648,
-        "memory_mib": 469.9,
         "p50_ms": 0.8781,
         "p95_ms": 1.1388,
         "p99_ms": 1.604,
@@ -1072,6 +1070,8 @@
           "ef_construction": 100,
           "ef_search": 1024
         },
+        "peak_rss_growth_during_load_macos_bytes": 492699648,
+        "peak_rss_growth_during_load_macos_mib": 469.9,
         "recall_at_10": 0.9385,
         "recall_at_top_k": 0.82855,
         "tie_aware_recall_at_10": 0.9605
@@ -1083,8 +1083,6 @@
         "index_bytes": 336470634,
         "index_mib": 320.9,
         "latency_batch_size": 1,
-        "memory_bytes": 336969728,
-        "memory_mib": 321.4,
         "p50_ms": 0.8481,
         "p95_ms": 1.6223,
         "p99_ms": 2.1012,
@@ -1093,6 +1091,8 @@
           "ef_construction": 200,
           "ef_search": 1024
         },
+        "peak_rss_growth_during_load_macos_bytes": 336969728,
+        "peak_rss_growth_during_load_macos_mib": 321.4,
         "recall_at_10": 0.927,
         "recall_at_top_k": 0.8541,
         "tie_aware_recall_at_10": 0.9555
@@ -1104,8 +1104,6 @@
         "index_bytes": 803910982,
         "index_mib": 766.7,
         "latency_batch_size": 1,
-        "memory_bytes": 804421632,
-        "memory_mib": 767.2,
         "p50_ms": 0.7786,
         "p95_ms": 1.2438,
         "p99_ms": 1.4293,
@@ -1114,6 +1112,8 @@
           "ef_construction": 100,
           "ef_search": 512
         },
+        "peak_rss_growth_during_load_macos_bytes": 804421632,
+        "peak_rss_growth_during_load_macos_mib": 767.2,
         "recall_at_10": 0.8695,
         "recall_at_top_k": 0.861625,
         "tie_aware_recall_at_10": 0.8745
@@ -1125,8 +1125,6 @@
         "index_bytes": 492212434,
         "index_mib": 469.4,
         "latency_batch_size": 1,
-        "memory_bytes": 492699648,
-        "memory_mib": 469.9,
         "p50_ms": 0.95,
         "p95_ms": 1.1417,
         "p99_ms": 1.6315,
@@ -1135,6 +1133,8 @@
           "ef_construction": 200,
           "ef_search": 1024
         },
+        "peak_rss_growth_during_load_macos_bytes": 492699648,
+        "peak_rss_growth_during_load_macos_mib": 469.9,
         "recall_at_10": 0.952,
         "recall_at_top_k": 0.867375,
         "tie_aware_recall_at_10": 0.9715
@@ -1146,8 +1146,6 @@
         "index_bytes": 803910982,
         "index_mib": 766.7,
         "latency_batch_size": 1,
-        "memory_bytes": 804421632,
-        "memory_mib": 767.2,
         "p50_ms": 1.385,
         "p95_ms": 2.155,
         "p99_ms": 2.4343,
@@ -1156,6 +1154,8 @@
           "ef_construction": 100,
           "ef_search": 1024
         },
+        "peak_rss_growth_during_load_macos_bytes": 804421632,
+        "peak_rss_growth_during_load_macos_mib": 767.2,
         "recall_at_10": 0.87,
         "recall_at_top_k": 0.8691,
         "tie_aware_recall_at_10": 0.875
@@ -1167,8 +1167,6 @@
         "index_bytes": 336470634,
         "index_mib": 320.9,
         "latency_batch_size": 1,
-        "memory_bytes": 336969728,
-        "memory_mib": 321.4,
         "p50_ms": 1.179,
         "p95_ms": 1.8894,
         "p99_ms": 2.4682,
@@ -1177,6 +1175,8 @@
           "ef_construction": 400,
           "ef_search": 1024
         },
+        "peak_rss_growth_during_load_macos_bytes": 336969728,
+        "peak_rss_growth_during_load_macos_mib": 321.4,
         "recall_at_10": 0.9445,
         "recall_at_top_k": 0.89065,
         "tie_aware_recall_at_10": 0.9655
@@ -1188,8 +1188,6 @@
         "index_bytes": 492212434,
         "index_mib": 469.4,
         "latency_batch_size": 1,
-        "memory_bytes": 492732416,
-        "memory_mib": 469.9,
         "p50_ms": 0.9367,
         "p95_ms": 1.0995,
         "p99_ms": 1.3738,
@@ -1198,6 +1196,8 @@
           "ef_construction": 400,
           "ef_search": 1024
         },
+        "peak_rss_growth_during_load_macos_bytes": 492732416,
+        "peak_rss_growth_during_load_macos_mib": 469.9,
         "recall_at_10": 0.96,
         "recall_at_top_k": 0.90175,
         "tie_aware_recall_at_10": 0.9775
@@ -1211,8 +1211,6 @@
         "index_bytes": 171061551,
         "index_mib": 163.1,
         "latency_batch_size": 1,
-        "memory_bytes": 173490176,
-        "memory_mib": 165.5,
         "p50_ms": 0.0134,
         "p95_ms": 0.0142,
         "p99_ms": 0.0228,
@@ -1220,6 +1218,8 @@
           "nlist": 4096,
           "nprobe": 1
         },
+        "peak_rss_growth_during_load_macos_bytes": 173490176,
+        "peak_rss_growth_during_load_macos_mib": 165.5,
         "recall_at_10": 0.275,
         "recall_at_top_k": 0.0455,
         "tie_aware_recall_at_10": 0.327
@@ -1231,8 +1231,6 @@
         "index_bytes": 170645951,
         "index_mib": 162.7,
         "latency_batch_size": 1,
-        "memory_bytes": 171671552,
-        "memory_mib": 163.7,
         "p50_ms": 0.0077,
         "p95_ms": 0.0084,
         "p99_ms": 0.0154,
@@ -1240,6 +1238,8 @@
           "nlist": 1024,
           "nprobe": 1
         },
+        "peak_rss_growth_during_load_macos_bytes": 171671552,
+        "peak_rss_growth_during_load_macos_mib": 163.7,
         "recall_at_10": 0.4205,
         "recall_at_top_k": 0.0886,
         "tie_aware_recall_at_10": 0.4915
@@ -1251,8 +1251,6 @@
         "index_bytes": 171061551,
         "index_mib": 163.1,
         "latency_batch_size": 1,
-        "memory_bytes": 173490176,
-        "memory_mib": 165.5,
         "p50_ms": 0.0212,
         "p95_ms": 0.0222,
         "p99_ms": 0.0247,
@@ -1260,6 +1258,8 @@
           "nlist": 4096,
           "nprobe": 4
         },
+        "peak_rss_growth_during_load_macos_bytes": 173490176,
+        "peak_rss_growth_during_load_macos_mib": 165.5,
         "recall_at_10": 0.723,
         "recall_at_top_k": 0.301,
         "tie_aware_recall_at_10": 0.7785
@@ -1271,8 +1271,6 @@
         "index_bytes": 170645951,
         "index_mib": 162.7,
         "latency_batch_size": 1,
-        "memory_bytes": 171671552,
-        "memory_mib": 163.7,
         "p50_ms": 0.0244,
         "p95_ms": 0.0261,
         "p99_ms": 0.0335,
@@ -1280,6 +1278,8 @@
           "nlist": 1024,
           "nprobe": 4
         },
+        "peak_rss_growth_during_load_macos_bytes": 171671552,
+        "peak_rss_growth_during_load_macos_mib": 163.7,
         "recall_at_10": 0.914,
         "recall_at_top_k": 0.55515,
         "tie_aware_recall_at_10": 0.9355
@@ -1291,8 +1291,6 @@
         "index_bytes": 170645951,
         "index_mib": 162.7,
         "latency_batch_size": 1,
-        "memory_bytes": 171671552,
-        "memory_mib": 163.7,
         "p50_ms": 0.0257,
         "p95_ms": 0.0275,
         "p99_ms": 0.0325,
@@ -1300,6 +1298,8 @@
           "nlist": 1024,
           "nprobe": 16
         },
+        "peak_rss_growth_during_load_macos_bytes": 171671552,
+        "peak_rss_growth_during_load_macos_mib": 163.7,
         "recall_at_10": 0.93,
         "recall_at_top_k": 0.60155,
         "tie_aware_recall_at_10": 0.9485
@@ -1311,8 +1311,6 @@
         "index_bytes": 171061551,
         "index_mib": 163.1,
         "latency_batch_size": 1,
-        "memory_bytes": 173490176,
-        "memory_mib": 165.5,
         "p50_ms": 0.0324,
         "p95_ms": 0.0363,
         "p99_ms": 0.0525,
@@ -1320,6 +1318,8 @@
           "nlist": 4096,
           "nprobe": 16
         },
+        "peak_rss_growth_during_load_macos_bytes": 173490176,
+        "peak_rss_growth_during_load_macos_mib": 165.5,
         "recall_at_10": 0.94,
         "recall_at_top_k": 0.623925,
         "tie_aware_recall_at_10": 0.959
@@ -1331,8 +1331,6 @@
         "index_bytes": 170645951,
         "index_mib": 162.7,
         "latency_batch_size": 1,
-        "memory_bytes": 171671552,
-        "memory_mib": 163.7,
         "p50_ms": 0.0327,
         "p95_ms": 0.036,
         "p99_ms": 0.0414,
@@ -1340,6 +1338,8 @@
           "nlist": 1024,
           "nprobe": 64
         },
+        "peak_rss_growth_during_load_macos_bytes": 171671552,
+        "peak_rss_growth_during_load_macos_mib": 163.7,
         "recall_at_10": 0.9735,
         "recall_at_top_k": 0.770175,
         "tie_aware_recall_at_10": 0.981
@@ -1351,8 +1351,6 @@
         "index_bytes": 171061551,
         "index_mib": 163.1,
         "latency_batch_size": 1,
-        "memory_bytes": 173490176,
-        "memory_mib": 165.5,
         "p50_ms": 0.0423,
         "p95_ms": 0.045,
         "p99_ms": 0.0607,
@@ -1360,6 +1358,8 @@
           "nlist": 4096,
           "nprobe": 64
         },
+        "peak_rss_growth_during_load_macos_bytes": 173490176,
+        "peak_rss_growth_during_load_macos_mib": 165.5,
         "recall_at_10": 0.981,
         "recall_at_top_k": 0.80145,
         "tie_aware_recall_at_10": 0.9885
@@ -1373,8 +1373,6 @@
         "index_bytes": 30356524,
         "index_mib": 29.0,
         "latency_batch_size": 1,
-        "memory_bytes": 98140160,
-        "memory_mib": 93.6,
         "p50_ms": 0.0389,
         "p95_ms": 0.0405,
         "p99_ms": 0.0498,
@@ -1383,6 +1381,8 @@
           "nlist": 4096,
           "nprobe": 1
         },
+        "peak_rss_growth_during_load_macos_bytes": 98140160,
+        "peak_rss_growth_during_load_macos_mib": 93.6,
         "recall_at_10": 0.164,
         "recall_at_top_k": 0.026275,
         "tie_aware_recall_at_10": 0.193
@@ -1394,8 +1394,6 @@
         "index_bytes": 49842972,
         "index_mib": 47.5,
         "latency_batch_size": 1,
-        "memory_bytes": 185024512,
-        "memory_mib": 176.5,
         "p50_ms": 0.0395,
         "p95_ms": 0.0412,
         "p99_ms": 0.0468,
@@ -1404,6 +1402,8 @@
           "nlist": 4096,
           "nprobe": 1
         },
+        "peak_rss_growth_during_load_macos_bytes": 185024512,
+        "peak_rss_growth_during_load_macos_mib": 176.5,
         "recall_at_10": 0.1515,
         "recall_at_top_k": 0.026275,
         "tie_aware_recall_at_10": 0.178
@@ -1415,8 +1415,6 @@
         "index_bytes": 30356524,
         "index_mib": 29.0,
         "latency_batch_size": 1,
-        "memory_bytes": 98140160,
-        "memory_mib": 93.6,
         "p50_ms": 0.0441,
         "p95_ms": 0.047,
         "p99_ms": 0.0506,
@@ -1425,6 +1423,8 @@
           "nlist": 4096,
           "nprobe": 4
         },
+        "peak_rss_growth_during_load_macos_bytes": 98140160,
+        "peak_rss_growth_during_load_macos_mib": 93.6,
         "recall_at_10": 0.164,
         "recall_at_top_k": 0.1971,
         "tie_aware_recall_at_10": 0.193
@@ -1436,8 +1436,6 @@
         "index_bytes": 49842972,
         "index_mib": 47.5,
         "latency_batch_size": 1,
-        "memory_bytes": 185024512,
-        "memory_mib": 176.5,
         "p50_ms": 0.0476,
         "p95_ms": 0.0598,
         "p99_ms": 0.0612,
@@ -1446,6 +1444,8 @@
           "nlist": 4096,
           "nprobe": 4
         },
+        "peak_rss_growth_during_load_macos_bytes": 185024512,
+        "peak_rss_growth_during_load_macos_mib": 176.5,
         "recall_at_10": 0.1515,
         "recall_at_top_k": 0.1971,
         "tie_aware_recall_at_10": 0.178
@@ -1457,8 +1457,6 @@
         "index_bytes": 29561228,
         "index_mib": 28.2,
         "latency_batch_size": 1,
-        "memory_bytes": 46202880,
-        "memory_mib": 44.1,
         "p50_ms": 0.0297,
         "p95_ms": 0.0318,
         "p99_ms": 0.0407,
@@ -1467,6 +1465,8 @@
           "nlist": 1024,
           "nprobe": 1
         },
+        "peak_rss_growth_during_load_macos_bytes": 46202880,
+        "peak_rss_growth_during_load_macos_mib": 44.1,
         "recall_at_10": 0.1025,
         "recall_at_top_k": 0.19905,
         "tie_aware_recall_at_10": 0.131
@@ -1478,8 +1478,6 @@
         "index_bytes": 49047676,
         "index_mib": 46.8,
         "latency_batch_size": 1,
-        "memory_bytes": 82984960,
-        "memory_mib": 79.1,
         "p50_ms": 0.0315,
         "p95_ms": 0.037,
         "p99_ms": 0.0399,
@@ -1488,6 +1486,8 @@
           "nlist": 1024,
           "nprobe": 1
         },
+        "peak_rss_growth_during_load_macos_bytes": 82984960,
+        "peak_rss_growth_during_load_macos_mib": 79.1,
         "recall_at_10": 0.0975,
         "recall_at_top_k": 0.19905,
         "tie_aware_recall_at_10": 0.1255
@@ -1499,8 +1499,6 @@
         "index_bytes": 49047676,
         "index_mib": 46.8,
         "latency_batch_size": 1,
-        "memory_bytes": 82984960,
-        "memory_mib": 79.1,
         "p50_ms": 0.0581,
         "p95_ms": 0.068,
         "p99_ms": 0.0706,
@@ -1509,6 +1507,8 @@
           "nlist": 1024,
           "nprobe": 64
         },
+        "peak_rss_growth_during_load_macos_bytes": 82984960,
+        "peak_rss_growth_during_load_macos_mib": 79.1,
         "recall_at_10": 0.098,
         "recall_at_top_k": 0.275,
         "tie_aware_recall_at_10": 0.124
@@ -1520,8 +1520,6 @@
         "index_bytes": 49047676,
         "index_mib": 46.8,
         "latency_batch_size": 1,
-        "memory_bytes": 82984960,
-        "memory_mib": 79.1,
         "p50_ms": 0.0474,
         "p95_ms": 0.0529,
         "p99_ms": 0.0535,
@@ -1530,6 +1528,8 @@
           "nlist": 1024,
           "nprobe": 4
         },
+        "peak_rss_growth_during_load_macos_bytes": 82984960,
+        "peak_rss_growth_during_load_macos_mib": 79.1,
         "recall_at_10": 0.098,
         "recall_at_top_k": 0.2765,
         "tie_aware_recall_at_10": 0.124
@@ -1541,8 +1541,6 @@
         "index_bytes": 49047676,
         "index_mib": 46.8,
         "latency_batch_size": 1,
-        "memory_bytes": 82984960,
-        "memory_mib": 79.1,
         "p50_ms": 0.0489,
         "p95_ms": 0.0542,
         "p99_ms": 0.055,
@@ -1551,6 +1549,8 @@
           "nlist": 1024,
           "nprobe": 16
         },
+        "peak_rss_growth_during_load_macos_bytes": 82984960,
+        "peak_rss_growth_during_load_macos_mib": 79.1,
         "recall_at_10": 0.098,
         "recall_at_top_k": 0.27715,
         "tie_aware_recall_at_10": 0.124
@@ -1562,8 +1562,6 @@
         "index_bytes": 29561228,
         "index_mib": 28.2,
         "latency_batch_size": 1,
-        "memory_bytes": 46202880,
-        "memory_mib": 44.1,
         "p50_ms": 0.0537,
         "p95_ms": 0.0588,
         "p99_ms": 0.0651,
@@ -1572,6 +1570,8 @@
           "nlist": 1024,
           "nprobe": 64
         },
+        "peak_rss_growth_during_load_macos_bytes": 46202880,
+        "peak_rss_growth_during_load_macos_mib": 44.1,
         "recall_at_10": 0.1025,
         "recall_at_top_k": 0.278625,
         "tie_aware_recall_at_10": 0.131
@@ -1583,8 +1583,6 @@
         "index_bytes": 29561228,
         "index_mib": 28.2,
         "latency_batch_size": 1,
-        "memory_bytes": 46202880,
-        "memory_mib": 44.1,
         "p50_ms": 0.0433,
         "p95_ms": 0.0458,
         "p99_ms": 0.0517,
@@ -1593,6 +1591,8 @@
           "nlist": 1024,
           "nprobe": 16
         },
+        "peak_rss_growth_during_load_macos_bytes": 46202880,
+        "peak_rss_growth_during_load_macos_mib": 44.1,
         "recall_at_10": 0.1025,
         "recall_at_top_k": 0.27955,
         "tie_aware_recall_at_10": 0.131
@@ -1604,8 +1604,6 @@
         "index_bytes": 29561228,
         "index_mib": 28.2,
         "latency_batch_size": 1,
-        "memory_bytes": 46202880,
-        "memory_mib": 44.1,
         "p50_ms": 0.0411,
         "p95_ms": 0.0432,
         "p99_ms": 0.0494,
@@ -1614,6 +1612,8 @@
           "nlist": 1024,
           "nprobe": 4
         },
+        "peak_rss_growth_during_load_macos_bytes": 46202880,
+        "peak_rss_growth_during_load_macos_mib": 44.1,
         "recall_at_10": 0.1025,
         "recall_at_top_k": 0.279575,
         "tie_aware_recall_at_10": 0.131
@@ -1625,8 +1625,6 @@
         "index_bytes": 30356524,
         "index_mib": 29.0,
         "latency_batch_size": 1,
-        "memory_bytes": 98140160,
-        "memory_mib": 93.6,
         "p50_ms": 0.0572,
         "p95_ms": 0.0625,
         "p99_ms": 0.0665,
@@ -1635,6 +1633,8 @@
           "nlist": 4096,
           "nprobe": 16
         },
+        "peak_rss_growth_during_load_macos_bytes": 98140160,
+        "peak_rss_growth_during_load_macos_mib": 93.6,
         "recall_at_10": 0.164,
         "recall_at_top_k": 0.28125,
         "tie_aware_recall_at_10": 0.193
@@ -1646,8 +1646,6 @@
         "index_bytes": 30356524,
         "index_mib": 29.0,
         "latency_batch_size": 1,
-        "memory_bytes": 98140160,
-        "memory_mib": 93.6,
         "p50_ms": 0.074,
         "p95_ms": 0.0784,
         "p99_ms": 0.0862,
@@ -1656,6 +1654,8 @@
           "nlist": 4096,
           "nprobe": 64
         },
+        "peak_rss_growth_during_load_macos_bytes": 98140160,
+        "peak_rss_growth_during_load_macos_mib": 93.6,
         "recall_at_10": 0.164,
         "recall_at_top_k": 0.283275,
         "tie_aware_recall_at_10": 0.193
@@ -1667,8 +1667,6 @@
         "index_bytes": 49842972,
         "index_mib": 47.5,
         "latency_batch_size": 1,
-        "memory_bytes": 185024512,
-        "memory_mib": 176.5,
         "p50_ms": 0.0652,
         "p95_ms": 0.0791,
         "p99_ms": 0.0833,
@@ -1677,6 +1675,8 @@
           "nlist": 4096,
           "nprobe": 16
         },
+        "peak_rss_growth_during_load_macos_bytes": 185024512,
+        "peak_rss_growth_during_load_macos_mib": 176.5,
         "recall_at_10": 0.1515,
         "recall_at_top_k": 0.28515,
         "tie_aware_recall_at_10": 0.178
@@ -1688,8 +1688,6 @@
         "index_bytes": 49842972,
         "index_mib": 47.5,
         "latency_batch_size": 1,
-        "memory_bytes": 185024512,
-        "memory_mib": 176.5,
         "p50_ms": 0.0904,
         "p95_ms": 0.1053,
         "p99_ms": 0.1075,
@@ -1698,6 +1696,8 @@
           "nlist": 4096,
           "nprobe": 64
         },
+        "peak_rss_growth_during_load_macos_bytes": 185024512,
+        "peak_rss_growth_during_load_macos_mib": 176.5,
         "recall_at_10": 0.1515,
         "recall_at_top_k": 0.2879,
         "tie_aware_recall_at_10": 0.178
@@ -1729,14 +1729,14 @@
       "index_bytes": 155891629,
       "index_mib": 148.7,
       "latency_batch_size": 1,
-      "memory_bytes": 156172288,
-      "memory_mib": 148.9,
       "p50_ms": 2.7225,
       "p95_ms": 3.4236,
       "p99_ms": 3.8184,
       "params": {
         "threads": 1
       },
+      "peak_rss_growth_during_load_macos_bytes": 156172288,
+      "peak_rss_growth_during_load_macos_mib": 148.9,
       "recall_at_10": 1.0,
       "recall_at_top_k": 1.0,
       "tie_aware_recall_at_10": 1.0
@@ -1748,8 +1748,6 @@
       "index_bytes": 492212434,
       "index_mib": 469.4,
       "latency_batch_size": 1,
-      "memory_bytes": 492732416,
-      "memory_mib": 469.9,
       "p50_ms": 0.9367,
       "p95_ms": 1.0995,
       "p99_ms": 1.3738,
@@ -1758,6 +1756,8 @@
         "ef_construction": 400,
         "ef_search": 1024
       },
+      "peak_rss_growth_during_load_macos_bytes": 492732416,
+      "peak_rss_growth_during_load_macos_mib": 469.9,
       "recall_at_10": 0.96,
       "recall_at_top_k": 0.90175,
       "tie_aware_recall_at_10": 0.9775
@@ -1769,8 +1769,6 @@
       "index_bytes": 171061551,
       "index_mib": 163.1,
       "latency_batch_size": 1,
-      "memory_bytes": 173490176,
-      "memory_mib": 165.5,
       "p50_ms": 0.0423,
       "p95_ms": 0.045,
       "p99_ms": 0.0607,
@@ -1778,6 +1776,8 @@
         "nlist": 4096,
         "nprobe": 64
       },
+      "peak_rss_growth_during_load_macos_bytes": 173490176,
+      "peak_rss_growth_during_load_macos_mib": 165.5,
       "recall_at_10": 0.981,
       "recall_at_top_k": 0.80145,
       "tie_aware_recall_at_10": 0.9885
@@ -1789,8 +1789,6 @@
       "index_bytes": 49842972,
       "index_mib": 47.5,
       "latency_batch_size": 1,
-      "memory_bytes": 185024512,
-      "memory_mib": 176.5,
       "p50_ms": 0.0904,
       "p95_ms": 0.1053,
       "p99_ms": 0.1075,
@@ -1799,6 +1797,8 @@
         "nlist": 4096,
         "nprobe": 64
       },
+      "peak_rss_growth_during_load_macos_bytes": 185024512,
+      "peak_rss_growth_during_load_macos_mib": 176.5,
       "recall_at_10": 0.1515,
       "recall_at_top_k": 0.2879,
       "tie_aware_recall_at_10": 0.178
@@ -1867,6 +1867,7 @@
       "ten_largest_lists_share": 0.8448
     }
   ],
+  "memory_definition": "peak_rss_growth_during_load_macos: rise in peak resident memory while a fresh process loads the index file. rss_growth_after_load_linux: rise in current resident memory across the load. A peak includes transient load-time buffers, so for IVF-PQ in particular the macOS figure may overstate steady-state memory.",
   "neighbour_contrast": {
     "median_gap_rank_10_to_k": 0.11,
     "median_relative_gap_rank_10_to_k": 0.6165,

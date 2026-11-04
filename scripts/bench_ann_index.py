@@ -117,6 +117,18 @@ before = rss()
 index = faiss.read_index(sys.argv[1])
 print(rss() - before)
 """
+#: The probe measures different things per platform, so the result-file field names which one.
+MEMORY_FIELD = (
+    "peak_rss_growth_during_load_macos"
+    if platform.system() == "Darwin"
+    else "rss_growth_after_load_linux"
+)
+MEMORY_DEFINITION = (
+    "peak_rss_growth_during_load_macos: rise in peak resident memory while a fresh process loads "
+    "the index file. rss_growth_after_load_linux: rise in current resident memory across the "
+    "load. A peak includes transient load-time buffers, so for IVF-PQ in particular the macOS "
+    "figure may overstate steady-state memory."
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -143,8 +155,8 @@ class Footprint:
     #: Bytes `faiss.write_index` puts on disk. `faiss.serialize_index` reported the raw vector
     #: bytes for every HNSW graph at 1.33M vectors whatever `M` was, so this comes from a file.
     disk_bytes: int
-    #: Peak resident-memory growth from loading that file in a fresh process: the RAM a server
-    #: holding this index would need for it.
+    #: Resident-memory growth from loading that file in a fresh process; `MEMORY_DEFINITION` says
+    #: which kind per platform.
     memory_bytes: int
 
 
@@ -178,8 +190,8 @@ class Measurement:
             "faiss_threads": self.faiss_threads,
             "index_bytes": self.footprint.disk_bytes,
             "index_mib": round(self.footprint.disk_bytes / (1024 * 1024), 1),
-            "memory_bytes": self.footprint.memory_bytes,
-            "memory_mib": round(self.footprint.memory_bytes / (1024 * 1024), 1),
+            f"{MEMORY_FIELD}_bytes": self.footprint.memory_bytes,
+            f"{MEMORY_FIELD}_mib": round(self.footprint.memory_bytes / (1024 * 1024), 1),
             "build_seconds": round(self.build_seconds, 1),
         }
 
@@ -761,6 +773,7 @@ def main(argv: list[str] | None = None) -> int:
             f"least the exact 10th-best score minus {TIE_TOLERANCE}."
         ),
         "tie_tolerance": TIE_TOLERANCE,
+        "memory_definition": MEMORY_DEFINITION,
         "seed": settings.seed,
         "float32_bytes": int(vectors.items.nbytes),
         "exact_search_seconds": round(exact_seconds, 1),
@@ -847,7 +860,8 @@ def _print(payload: dict[str, Any], out: object) -> None:
             f"\n    p50 {point['p50_ms']:.3f}ms  p95 {point['p95_ms']:.3f}ms"
             f"  p99 {point['p99_ms']:.3f}ms  (batch {point['latency_batch_size']},"
             f" {point['faiss_threads']} threads)"
-            f"\n    disk {point['index_mib']} MiB  memory {point['memory_mib']} MiB"
+            f"\n    disk {point['index_mib']} MiB"
+            f"  {MEMORY_FIELD} {point[f'{MEMORY_FIELD}_mib']} MiB"
             f"  build {point['build_seconds']}s"
         )
     print(f"\n  float32 vectors: {payload['float32_bytes'] / (1024 * 1024):.0f} MiB")

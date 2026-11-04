@@ -1,14 +1,24 @@
 #!/usr/bin/env python
 """Fail if a figure in the documentation no longer matches its committed result file.
 
-Every number in README.md and docs/design.md must come from a committed file under `results/`, with
-the file named next to it. For each table row of the form
+Every number in README.md, docs/design.md and docs/runbook.md must come from a committed file under
+`results/`, with the file named next to it. Two forms are checked.
+
+A table row, where the first figure cell is compared with the pointer in the same row:
 
     | Label | 43,365,424 | `results/dataset_x.json#/totals/interactions` |
+    | Warm user | 25.1 ms | ... | results/load_test_x.json#/latency/0/p50_ms |
 
-this script resolves the JSON pointer and compares it with the number written in the row. It is the
-mechanism behind the README's claim that every published figure is reproducible, and it fails CI
-when a re-run changes a number that has not been re-stated in the documentation.
+A figure in prose, written directly before its pointer in parentheses:
+
+    the re-ranker scores -0.0148 (`results/two_stage_x.json#/cohorts/.../difference`) against
+
+A prose pointer without a figure directly before it is an error rather than being skipped, so a
+sentence cannot cite a result file while stating a number the check never reads. A figure must equal
+its result rounded to the precision written: `25.1 ms` matches 25.076, `25.0 ms` does not.
+
+It is the mechanism behind the README's claim that every published figure is reproducible, and it
+fails CI when a re-run changes a number that has not been re-stated in the documentation.
 """
 
 from __future__ import annotations
@@ -21,14 +31,22 @@ from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 RESULTS_DIR = REPO_ROOT / "results"
-DOCUMENTS = (REPO_ROOT / "README.md", REPO_ROOT / "docs" / "design.md")
-
-#: `results/<name>.json#/a/b` as it appears inside a Markdown code span.
-REFERENCE = re.compile(
-    r"results/(?P<name>[a-z0-9][a-z0-9._-]*)\.json#(?P<pointer>/[A-Za-z0-9_/.\[\]@-]*)"
+DOCUMENTS = (
+    REPO_ROOT / "README.md",
+    REPO_ROOT / "docs" / "design.md",
+    REPO_ROOT / "docs" / "runbook.md",
 )
-#: A number as written in a table cell: optional thousands separators, optional decimals.
-NUMBER = re.compile(r"^[0-9][0-9,_]*(?:\.[0-9]+)?$")
+
+_POINTER = r"results/(?P<name>[a-z0-9][a-z0-9._-]*)\.json#(?P<pointer>/[A-Za-z0-9_/.\[\]@-]*)"
+_FIGURE = r"(?P<figure>-?[0-9][0-9,_]*(?:\.[0-9]+)?)"
+_UNIT = r"(?:\s?(?:ms|s|MiB|MB|GB|req/s|%))?"
+
+#: `results/<name>.json#/a/b` as it appears inside a Markdown code span or table cell.
+REFERENCE = re.compile(_POINTER)
+#: A figure as written in a table cell: optional sign, thousands separators, decimals and a unit.
+NUMBER = re.compile(rf"^{_FIGURE}{_UNIT}$")
+#: A figure in prose, immediately followed by its pointer as a parenthesised code span.
+PROSE_FIGURE = re.compile(rf"{_FIGURE}{_UNIT} \(`{_POINTER}`\)")
 
 TOLERANCE = 1e-9
 
@@ -47,10 +65,40 @@ def resolve(result_path: Path, pointer: str) -> Any:
     return payload
 
 
+def matches(written: str, expected: float) -> bool:
+    """Return True when `written` is `expected` rounded to the precision it is written with."""
+    digits = written.replace(",", "").replace("_", "")
+    decimals = len(digits.partition(".")[2])
+    allowed = 0.5 * 10.0**-decimals + TOLERANCE * max(1.0, abs(expected))
+    return abs(float(digits) - expected) <= allowed
+
+
 def stated_figure(row: str) -> str | None:
-    """Return the numeric cell of a table row, if the row contains one."""
-    cells = [cell.strip() for cell in row.strip().strip("|").split("|")]
-    return next((cell for cell in cells if NUMBER.match(cell.strip("`* "))), None)
+    """Return the first figure cell of a table row, without its unit, if the row has one."""
+    for cell in row.strip().strip("|").split("|"):
+        match = NUMBER.match(cell.strip().strip("`* "))
+        if match:
+            return match.group("figure")
+    return None
+
+
+def _compare(document: Path, written: str, name: str, pointer: str) -> str | None:
+    """Return a problem message when `written` disagrees with the value at `name#pointer`."""
+    result_path = RESULTS_DIR / f"{name}.json"
+    if not result_path.exists():
+        return f"{document.name}: {result_path.name} is referenced but not committed"
+    try:
+        expected = resolve(result_path, pointer)
+    except (KeyError, ValueError, IndexError) as exc:
+        return f"{document.name}: {exc}"
+    if isinstance(expected, bool) or not isinstance(expected, int | float):
+        return None
+    if not matches(written, float(expected)):
+        return (
+            f"{document.name}: figure {written} does not match "
+            f"{result_path.name}#{pointer} = {expected:g}"
+        )
+    return None
 
 
 def check_row(document: Path, row: str) -> str | None:
@@ -59,24 +107,26 @@ def check_row(document: Path, row: str) -> str | None:
     stated = stated_figure(row)
     if match is None or stated is None:
         return None
+    return _compare(document, stated, match.group("name"), match.group("pointer"))
 
-    result_path = RESULTS_DIR / f"{match.group('name')}.json"
-    if not result_path.exists():
-        return f"{document.name}: {result_path.name} is referenced but not committed"
-    try:
-        expected = resolve(result_path, match.group("pointer"))
-    except (KeyError, ValueError, IndexError) as exc:
-        return f"{document.name}: {exc}"
-    if not isinstance(expected, int | float):
-        return None
 
-    written = float(stated.strip("`* ").replace(",", ""))
-    if abs(written - float(expected)) > max(TOLERANCE, abs(float(expected)) * TOLERANCE):
-        return (
-            f"{document.name}: figure {written:g} does not match "
-            f"{result_path.name}#{match.group('pointer')} = {expected:g}"
+def check_prose(document: Path, line: str) -> tuple[list[str], int]:
+    """Return the problems and the number of figures checked in one line of prose."""
+    figures = list(PROSE_FIGURE.finditer(line))
+    covered = {figure.start("name") for figure in figures}
+    problems = [
+        f"{document.name}: {reference.group(0)} is cited in prose without a figure "
+        "written directly before it"
+        for reference in REFERENCE.finditer(line)
+        if reference.start("name") not in covered
+    ]
+    for figure in figures:
+        problem = _compare(
+            document, figure.group("figure"), figure.group("name"), figure.group("pointer")
         )
-    return None
+        if problem is not None:
+            problems.append(problem)
+    return problems, len(figures)
 
 
 def verify_document(document: Path) -> tuple[list[str], int]:
@@ -87,10 +137,13 @@ def verify_document(document: Path) -> tuple[list[str], int]:
     checked = 0
     for line in document.read_text().splitlines():
         if not line.lstrip().startswith("|"):
+            prose_problems, prose_checked = check_prose(document, line)
+            problems.extend(prose_problems)
+            checked += prose_checked
             continue
         problem = check_row(document, line)
         if problem is None:
-            checked += 1 if REFERENCE.search(line) else 0
+            checked += 1 if REFERENCE.search(line) and stated_figure(line) else 0
         else:
             problems.append(problem)
     return problems, checked

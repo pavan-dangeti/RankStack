@@ -40,7 +40,9 @@ jobs:
           enable-cache: true
       - run: uv sync --all-groups --locked
       - name: Unit and property tests
-        run: uv run pytest tests/unit tests/property -q
+        # -rA names every outcome, passes included. Some faiss tests skip on macOS when torch is
+        # loaded, so this log is where they are shown to have run.
+        run: uv run pytest tests/unit tests/property -q -rA
       - name: Coverage gate across the whole suite
         # The gate is measured over every suite: build, download and leakage code is only reachable
         # through the integration and end-to-end tests, so a unit-only gate would be meaningless.

@@ -46,7 +46,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import platform
+import subprocess
 import sys
 import tempfile
 import time
@@ -87,6 +89,18 @@ SHORT_K = 10
 TIE_TOLERANCE = 1e-3
 VECTOR_SETS = ("als", "two_tower")
 FAMILIES = ("flat", "hnsw", "ivfflat", "ivfpq")
+#: Every latency figure is one query per `search` call, the shape of a single API request.
+LATENCY_BATCH_SIZE = 1
+#: Run in a fresh interpreter so the measured growth is the index alone, not whatever this process
+#: allocated and freed before. `ru_maxrss` is bytes on macOS and kilobytes on Linux.
+_MEMORY_PROBE = """
+import resource, sys
+import faiss
+scale = 1 if sys.platform == "darwin" else 1024
+before = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+index = faiss.read_index(sys.argv[1])
+print((resource.getrusage(resource.RUSAGE_SELF).ru_maxrss - before) * scale)
+"""
 
 
 @dataclass(frozen=True, slots=True)
@@ -106,6 +120,18 @@ class Recalls:
     tie_aware_at_10: float
 
 
+@dataclass(frozen=True, slots=True)
+class Footprint:
+    """How much an index costs to keep: on disk, and in memory once loaded."""
+
+    #: Bytes `faiss.write_index` puts on disk. `faiss.serialize_index` reported the raw vector
+    #: bytes for every HNSW graph at 1.33M vectors whatever `M` was, so this comes from a file.
+    disk_bytes: int
+    #: Peak resident-memory growth from loading that file in a fresh process: the RAM a server
+    #: holding this index would need for it.
+    memory_bytes: int
+
+
 @dataclass(slots=True)
 class Measurement:
     """One point on a recall-versus-latency curve."""
@@ -116,11 +142,10 @@ class Measurement:
     p50_ms: float
     p95_ms: float
     p99_ms: float
-    #: Bytes `faiss.write_index` puts on disk, not raw vector bytes. An HNSW graph adds roughly
-    #: `M * 8` bytes per node on top of the vectors, and the hosting decision in the design
-    #: document turns on exactly this number.
-    index_bytes: int
+    footprint: Footprint
     build_seconds: float
+    #: Thread count FAISS was allowed while the latency samples were taken.
+    faiss_threads: int
 
     def as_dict(self) -> dict[str, Any]:
         """Return the measurement as a JSON-serialisable mapping."""
@@ -133,8 +158,12 @@ class Measurement:
             "p50_ms": round(self.p50_ms, 4),
             "p95_ms": round(self.p95_ms, 4),
             "p99_ms": round(self.p99_ms, 4),
-            "index_bytes": self.index_bytes,
-            "index_mib": round(self.index_bytes / (1024 * 1024), 1),
+            "latency_batch_size": LATENCY_BATCH_SIZE,
+            "faiss_threads": self.faiss_threads,
+            "index_bytes": self.footprint.disk_bytes,
+            "index_mib": round(self.footprint.disk_bytes / (1024 * 1024), 1),
+            "memory_bytes": self.footprint.memory_bytes,
+            "memory_mib": round(self.footprint.memory_bytes / (1024 * 1024), 1),
             "build_seconds": round(self.build_seconds, 1),
         }
 
@@ -264,27 +293,34 @@ def _time_search(
     top_k: int,
     repeats: int,
 ) -> list[float]:
-    """Return per-query search latency in milliseconds, one warmed-up pass excluded."""
-    index.search(queries[:1], top_k)
+    """Return per-call search latency in milliseconds, one warmed-up call excluded."""
+    step = LATENCY_BATCH_SIZE
+    index.search(queries[:step], top_k)
     samples: list[float] = []
     for _ in range(repeats):
-        for query in queries:
+        for start in range(0, len(queries), step):
+            batch = queries[start : start + step]
             started = time.perf_counter()
-            index.search(query[None, :], top_k)
+            index.search(batch, top_k)
             samples.append((time.perf_counter() - started) * 1000)
     return samples
 
 
-def _index_bytes(index: faiss.Index) -> int:
-    """Return the on-disk size of an index.
-
-    `faiss.serialize_index` reported exactly the raw float32 bytes for every HNSW graph over the
-    full 1.33M vectors, whatever `M` was, so the size comes from a real file instead.
-    """
+def _footprint(index: faiss.Index, *, measure_memory: bool = True) -> Footprint:
+    """Write the index to disk and, unless told not to, load it in a fresh process to size it."""
     with tempfile.TemporaryDirectory() as tmp:
         path = Path(tmp) / "index.faiss"
         faiss.write_index(index, str(path))
-        return path.stat().st_size
+        memory = 0
+        if measure_memory:
+            probe = subprocess.run(  # noqa: S603 - fixed argv, no shell
+                [sys.executable, "-c", _MEMORY_PROBE, str(path)],
+                capture_output=True,
+                text=True,
+                check=True,
+            )
+            memory = int(probe.stdout.strip().splitlines()[-1])
+        return Footprint(disk_bytes=path.stat().st_size, memory_bytes=memory)
 
 
 def _exact_index(items: np.ndarray, queries: np.ndarray, top_k: int) -> GroundTruth:
@@ -315,7 +351,11 @@ def _neighbour_contrast(scores: np.ndarray) -> dict[str, float]:
 
 
 def _measure(
-    built: Built, params: dict[str, int], vectors: VectorSet, truth: GroundTruth, index_bytes: int
+    built: Built,
+    params: dict[str, int],
+    vectors: VectorSet,
+    truth: GroundTruth,
+    footprint: Footprint,
 ) -> Measurement:
     """Time and score one index at its current search settings."""
     top_k = truth.ids.shape[1]
@@ -328,8 +368,9 @@ def _measure(
         p50_ms=_percentile(samples, 50),
         p95_ms=_percentile(samples, 95),
         p99_ms=_percentile(samples, 99),
-        index_bytes=index_bytes,
+        footprint=footprint,
         build_seconds=built.build_seconds,
+        faiss_threads=faiss.omp_get_max_threads(),
     )
     _logger.info(
         "ann.sweep_point",
@@ -349,21 +390,35 @@ def _sweep(
 
     `knob` is `(name recorded in the result file, name FAISS sets it by)`.
     """
-    index_bytes = _index_bytes(built.index)
+    footprint = _footprint(built.index)
     out: list[Measurement] = []
     for value in values:
         faiss.ParameterSpace().set_index_parameter(built.index, knob[1], value)
-        out.append(_measure(built, {**built.params, knob[0]: value}, vectors, truth, index_bytes))
+        out.append(_measure(built, {**built.params, knob[0]: value}, vectors, truth, footprint))
     return out
 
 
 def _build_flat(vectors: VectorSet, truth: GroundTruth) -> list[Measurement]:
-    """Exact inner-product search on the original vectors, the baseline every index must beat."""
+    """Exact inner-product search on the original vectors, the baseline every index must beat.
+
+    Measured with one thread and with FAISS's default. The default is what a single idle request
+    sees; one thread is closer to what each request gets when concurrent requests share the cores,
+    and it is the figure to hold against the retrieval budget under load.
+    """
     started = time.perf_counter()
     index = faiss.IndexFlatIP(vectors.items.shape[1])
     index.add(vectors.items)
     built = Built(index, "flat", {}, time.perf_counter() - started, vectors.queries)
-    return [_measure(built, {}, vectors, truth, _index_bytes(index))]
+    footprint = _footprint(index)
+    default_threads = faiss.omp_get_max_threads()
+    out: list[Measurement] = []
+    for threads in sorted({1, default_threads}):
+        faiss.omp_set_num_threads(threads)
+        try:
+            out.append(_measure(built, {"threads": threads}, vectors, truth, footprint))
+        finally:
+            faiss.omp_set_num_threads(default_threads)
+    return out
 
 
 def _build_hnsw(
@@ -462,6 +517,37 @@ def _load_als(root: Path, rng: np.random.Generator, queries: int) -> VectorSet:
         items_untrained_excluded=int((~trained).sum()),
         query_definition="fitted ALS user factors of users ALS trained (non-zero factor rows)",
     )
+
+
+def _sysctl(name: str) -> str | None:
+    """Return a macOS sysctl value, or None where sysctl does not exist."""
+    try:
+        return subprocess.run(  # noqa: S603 - fixed argv, no shell
+            ["/usr/sbin/sysctl", "-n", name], capture_output=True, text=True, check=True
+        ).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        return None
+
+
+def _cpu_model() -> str:
+    """Return the CPU model name, which `platform.processor()` reports only as `arm` on macOS."""
+    if platform.system() == "Darwin":
+        return _sysctl("machdep.cpu.brand_string") or "unknown"
+    cpuinfo = Path("/proc/cpuinfo")
+    if cpuinfo.exists():
+        for line in cpuinfo.read_text().splitlines():
+            if line.startswith("model name"):
+                return line.split(":", 1)[1].strip()
+    return platform.processor() or "unknown"
+
+
+def _memory_total() -> int | None:
+    """Return physical memory in bytes, where the platform reports it."""
+    if platform.system() == "Darwin":
+        value = _sysctl("hw.memsize")
+        return int(value) if value else None
+    pages, size = os.sysconf("SC_PHYS_PAGES"), os.sysconf("SC_PAGE_SIZE")
+    return int(pages * size) if pages > 0 and size > 0 else None
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -573,6 +659,9 @@ def main(argv: list[str] | None = None) -> int:
             "date": datetime.now(UTC).date().isoformat(),
             "platform": platform.platform(),
             "processor": platform.processor() or "unknown",
+            "cpu": _cpu_model(),
+            "logical_cpus": os.cpu_count(),
+            "memory_bytes": _memory_total(),
             "python": platform.python_version(),
             "faiss": faiss.__version__,
             "faiss_threads": faiss.omp_get_max_threads(),
@@ -606,7 +695,9 @@ def _print(payload: dict[str, Any], out: object) -> None:
             f"  recall@10 {point['recall_at_10']:.4f}"
             f"  tie-aware@10 {point['tie_aware_recall_at_10']:.4f}"
             f"\n    p50 {point['p50_ms']:.3f}ms  p95 {point['p95_ms']:.3f}ms"
-            f"  p99 {point['p99_ms']:.3f}ms  index {point['index_mib']} MiB"
+            f"  p99 {point['p99_ms']:.3f}ms  (batch {point['latency_batch_size']},"
+            f" {point['faiss_threads']} threads)"
+            f"\n    disk {point['index_mib']} MiB  memory {point['memory_mib']} MiB"
             f"  build {point['build_seconds']}s"
         )
     print(f"\n  float32 vectors: {payload['float32_bytes'] / (1024 * 1024):.0f} MiB")

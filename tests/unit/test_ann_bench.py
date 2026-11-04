@@ -14,12 +14,13 @@ import numpy as np
 import pytest
 from scripts.bench_ann_index import (
     TIE_TOLERANCE,
+    Footprint,
     GroundTruth,
     Measurement,
     Recalls,
     _best,
     _choose,
-    _index_bytes,
+    _footprint,
     _measure_recalls,
     _mips_to_l2,
     _neighbour_contrast,
@@ -36,8 +37,9 @@ def _point(recall: float, p99: float) -> Measurement:
         p50_ms=p99 / 2,
         p95_ms=p99 * 0.9,
         p99_ms=p99,
-        index_bytes=1000,
+        footprint=Footprint(disk_bytes=1000, memory_bytes=1000),
         build_seconds=1.0,
+        faiss_threads=1,
     )
 
 
@@ -152,20 +154,36 @@ def test_neighbour_contrast_reads_ranks_one_ten_and_k() -> None:
     assert contrast["median_relative_gap_rank_10_to_k"] == 1.0
 
 
-def test_index_bytes_counts_the_hnsw_graph() -> None:
-    """A denser graph must cost more bytes; the serialised size once reported the vectors alone."""
+def _skip_if_faiss_cannot_run() -> None:
     if sys.platform == "darwin" and "torch" in sys.modules:
         # torch and faiss bundle separate libomp copies on macOS and the process aborts when both
-        # initialise; Linux CI runs this, and so does this file on its own.
+        # initialise; Linux CI runs these, and so does this file on its own.
         pytest.skip("faiss cannot run alongside torch's libomp on macOS")
+
+
+def test_disk_footprint_counts_the_hnsw_graph() -> None:
+    """A denser graph must cost more bytes; the serialised size once reported the vectors alone."""
+    _skip_if_faiss_cannot_run()
     vectors = np.random.default_rng(0).standard_normal((2000, 16)).astype(np.float32)
     sparse = faiss.IndexHNSWFlat(16, 8, faiss.METRIC_INNER_PRODUCT)
     dense = faiss.IndexHNSWFlat(16, 64, faiss.METRIC_INNER_PRODUCT)
     sparse.add(vectors)
     dense.add(vectors)
 
-    assert _index_bytes(sparse) > vectors.nbytes
-    assert _index_bytes(dense) > _index_bytes(sparse)
+    sparse_bytes = _footprint(sparse, measure_memory=False).disk_bytes
+    assert sparse_bytes > vectors.nbytes
+    assert _footprint(dense, measure_memory=False).disk_bytes > sparse_bytes
+
+
+def test_memory_footprint_measures_the_loaded_index() -> None:
+    """Loading a 20 MB flat index must grow resident memory by about 20 MB, not 0 or double."""
+    _skip_if_faiss_cannot_run()
+    vectors = np.random.default_rng(0).standard_normal((50_000, 100)).astype(np.float32)
+    index = faiss.IndexFlatIP(100)
+    index.add(vectors)
+
+    footprint = _footprint(index)
+    assert 0.8 * vectors.nbytes <= footprint.memory_bytes <= 2 * vectors.nbytes
 
 
 def test_mips_to_l2_preserves_inner_product_order_on_uneven_norms() -> None:

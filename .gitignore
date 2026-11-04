@@ -54,3 +54,4 @@ loadtest-results/
 .vscode/
 # Long-run output from nohup jobs
 logs/
+# Local editor-agent state, never part of the project

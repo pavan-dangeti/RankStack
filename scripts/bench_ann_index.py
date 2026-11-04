@@ -101,14 +101,21 @@ FAMILIES = ("flat", "hnsw", "ivfflat", "ivfpq")
 #: Every latency figure is one query per `search` call, the shape of a single API request.
 LATENCY_BATCH_SIZE = 1
 #: Run in a fresh interpreter so the measured growth is the index alone, not whatever this process
-#: allocated and freed before. `ru_maxrss` is bytes on macOS and kilobytes on Linux.
+#: allocated and freed before. On Linux this reads current RSS: peak RSS reported 0 there, because
+#: `import faiss` had already peaked higher than the loaded index. macOS has no current-RSS call in
+#: the standard library, so it uses peak RSS (`ru_maxrss`, bytes on macOS), which tracked the
+#: vector bytes in every measured row. The unit test guards both.
 _MEMORY_PROBE = """
-import resource, sys
+import os, resource, sys
 import faiss
-scale = 1 if sys.platform == "darwin" else 1024
-before = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+def rss():
+    if sys.platform == "linux":
+        with open("/proc/self/statm") as statm:
+            return int(statm.read().split()[1]) * os.sysconf("SC_PAGE_SIZE")
+    return resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+before = rss()
 index = faiss.read_index(sys.argv[1])
-print((resource.getrusage(resource.RUSAGE_SELF).ru_maxrss - before) * scale)
+print(rss() - before)
 """
 
 

@@ -1,6 +1,6 @@
 {
   "all_slos_met": true,
-  "artifact_load_seconds": 8.66,
+  "artifact_load_seconds": 9.0,
   "catalogue_items": 1334914,
   "command": "uv run python scripts/load_test.py --requests 400 --concurrency 8 --k 20",
   "concurrency": 8,
@@ -14,30 +14,30 @@
   "latency": [
     {
       "label": "warm",
-      "max_ms": 83.467,
-      "mean_ms": 26.906,
+      "max_ms": 83.76,
+      "mean_ms": 26.533,
       "n": 400,
-      "p50_ms": 26.143,
-      "p95_ms": 33.447,
-      "p99_ms": 63.261
+      "p50_ms": 25.86,
+      "p95_ms": 32.062,
+      "p99_ms": 58.52
     },
     {
       "label": "cold_start",
-      "max_ms": 12.524,
-      "mean_ms": 9.246,
+      "max_ms": 11.842,
+      "mean_ms": 8.837,
       "n": 50,
-      "p50_ms": 8.903,
-      "p95_ms": 12.273,
-      "p99_ms": 12.524
+      "p50_ms": 8.553,
+      "p95_ms": 11.276,
+      "p99_ms": 11.842
     },
     {
       "label": "degraded",
-      "max_ms": 14.288,
-      "mean_ms": 10.096,
+      "max_ms": 16.844,
+      "mean_ms": 9.887,
       "n": 50,
-      "p50_ms": 9.812,
-      "p95_ms": 13.547,
-      "p99_ms": 14.288
+      "p50_ms": 9.226,
+      "p95_ms": 16.469,
+      "p99_ms": 16.844
     }
   ],
   "note": "Latency is measured on Recommender.recommend, the path the ASGI layer calls directly. Throughput is one process on one core-pool, not a deployed service under real HTTP.",
@@ -45,31 +45,31 @@
   "served_source": "FusedSource",
   "slo": {
     "cold_start_p95": {
-      "measured_ms": 12.273,
+      "measured_ms": 11.276,
       "met": true,
       "target_ms": 250.0
     },
     "degraded_p95": {
-      "measured_ms": 13.547,
+      "measured_ms": 16.469,
       "met": true,
       "target_ms": 20.0
     },
     "warm_p50": {
-      "measured_ms": 26.143,
+      "measured_ms": 25.86,
       "met": true,
       "target_ms": 60.0
     },
     "warm_p95": {
-      "measured_ms": 33.447,
+      "measured_ms": 32.062,
       "met": true,
       "target_ms": 150.0
     },
     "warm_p99": {
-      "measured_ms": 63.261,
+      "measured_ms": 58.52,
       "met": true,
       "target_ms": 300.0
     }
   },
-  "throughput_requests_per_second_single_process": 317.5,
+  "throughput_requests_per_second_single_process": 305.7,
   "titles_loaded": true
 }

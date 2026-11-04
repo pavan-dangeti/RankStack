@@ -119,11 +119,11 @@ class ServingArtifacts:
         """Return what the request path actually serves.
 
         Fusion, not the single best-scoring retriever. `popularity_recent` has the best hit rate
-        (HR@20 0.0200 against fusion's 0.0150 on the warm cohort) but it is a *global* ranking: it
-        returned only 3 distinct top items across 2,000 warm users. Fusion returns 18 and costs 25%
-        of the hit rate. A recommender that shows everyone the same list is not a
-        recommender, so the trade is taken deliberately and its cost is published rather than
-        discovered.
+        but it is a *global* ranking that gives almost every user the same top item. Fusion costs
+        hit rate and makes the list differ between users; the measured trade is in
+        `results/fusion_electronics_0core.json` and the README. A recommender that shows everyone
+        the same list is not a recommender, so the trade is taken deliberately and its cost is
+        published rather than discovered.
 
         Falls back to the global ranking when co-occurrence was not loaded, which is the
         memory-constrained configuration.

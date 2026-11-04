@@ -17,12 +17,17 @@ cohort (`results/fusion_electronics_0core.json`):
 |---|---|---|---|
 | `popularity_recent` alone | 0.0200 | 3 | results/fusion_electronics_0core.json#/sources/popularity_recent/ranking/hr@20 |
 | `cooccurrence` alone | 0.0015 | 1,911 | results/fusion_electronics_0core.json#/sources/cooccurrence/ranking/hr@20 |
-| **fused (shipped)** | **0.0150** | **18** | results/fusion_electronics_0core.json#/sources/fused/ranking/hr@20 |
+| **fused (shipped)** | **0.0130** | **29** | results/fusion_electronics_0core.json#/sources/fused/ranking/hr@20 |
 
 `popularity_recent` is the strongest single retriever on this corpus, and it is also a *global*
-ranking: it returned only 3 distinct top items across 2,000 warm users. Serving it alone would hand
-nearly every visitor the same list. Fusion gives up 25% of HR@20 and buys six times the
-personalisation. If this service were measured on hit rate alone, the right answer would be to ship
+ranking: it returned only
+3 (`results/fusion_electronics_0core.json#/personalisation/distinct_top_1_global`) distinct top items
+across 2,000 warm users. Serving it alone would hand nearly every visitor the same list. Fusion
+returns
+29 (`results/fusion_electronics_0core.json#/personalisation/distinct_top_1_fused`) distinct top items
+at a paired HR@20 cost of
+-0.007 (`results/fusion_electronics_0core.json#/paired_fused_vs_popularity_recent/hr/hr@20/difference`).
+If this service were measured on hit rate alone, the right answer would be to ship
 `popularity_recent` alone; the choice here is documented rather than hidden.
 
 The learned ranker and the two-tower model are **not** in the request path. Both were measured and
@@ -93,11 +98,11 @@ process on the development machine:
 
 | Path | Target | Measured p50 | p95 | p99 | Figure |
 |---|---|---|---|---|---|
-| Warm user | 60 / 150 / 300 ms | 26.1 ms | 33.4 ms | 63.3 ms | results/load_test_electronics_0core.json#/latency/0/p50_ms |
-| Cold start | p95 ≤ 250 ms | 8.9 ms | 12.3 ms | 12.5 ms | results/load_test_electronics_0core.json#/latency/1/p50_ms |
-| Degraded (index raising) | p95 ≤ 20 ms | 9.8 ms | 13.5 ms | 14.3 ms | results/load_test_electronics_0core.json#/latency/2/p50_ms |
+| Warm user | 60 / 150 / 300 ms | 25.9 ms | 32.1 ms | 58.5 ms | results/load_test_electronics_0core.json#/latency/0/p50_ms |
+| Cold start | p95 ≤ 250 ms | 8.6 ms | 11.3 ms | 11.8 ms | results/load_test_electronics_0core.json#/latency/1/p50_ms |
+| Degraded (index raising) | p95 ≤ 20 ms | 9.2 ms | 16.5 ms | 16.8 ms | results/load_test_electronics_0core.json#/latency/2/p50_ms |
 
-Throughput 317.5 req/s (`results/load_test_electronics_0core.json#/throughput_requests_per_second_single_process`)
+Throughput 305.7 req/s (`results/load_test_electronics_0core.json#/throughput_requests_per_second_single_process`)
 in one process. All five SLOs in the design document are met.
 
 This measures `Recommender.recommend`, the path the ASGI layer calls directly, not the HTTP

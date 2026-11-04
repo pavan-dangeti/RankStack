@@ -384,16 +384,21 @@ co-occurrence (`scripts/measure_fusion.py`, `results/fusion_electronics_0core.js
 |---|---|---|---|---|
 | `popularity_recent` | 0.02000 | 0.01450 | 3 | results/fusion_electronics_0core.json#/sources/popularity_recent/ranking/hr@20 |
 | `cooccurrence` | 0.00150 | 0.00050 | 1,911 | results/fusion_electronics_0core.json#/sources/cooccurrence/ranking/hr@20 |
-| **fused (shipped)** | **0.01500** | **0.00900** | **18** | results/fusion_electronics_0core.json#/sources/fused/ranking/hr@20 |
+| **fused (shipped)** | **0.01300** | **0.00850** | **29** | results/fusion_electronics_0core.json#/sources/fused/ranking/hr@20 |
 
-Fusion gives up 25% of HR@20 (paired difference -0.005, 95% CI [-0.0095, -0.0010]) and buys six
-times the personalisation. The trade is taken deliberately and published rather than discovered by
-a user.
+Fusion costs hit rate. Against `popularity_recent` alone, the paired HR@20 difference is
+-0.007 (`results/fusion_electronics_0core.json#/paired_fused_vs_popularity_recent/hr/hr@20/difference`),
+with a 95% CI from
+-0.012 (`results/fusion_electronics_0core.json#/paired_fused_vs_popularity_recent/hr/hr@20/ci_low`)
+to -0.002 (`results/fusion_electronics_0core.json#/paired_fused_vs_popularity_recent/hr/hr@20/ci_high`).
+What it buys is a list that differs between users. The trade is taken deliberately and published
+rather than discovered by a user. Only items a source actually scores take part in fusion: an item
+co-occurrence scores 0 gets no rank credit from it.
 
 | Measure | Distinct top-1 items over 2,000 warm users | Figure |
 |---|---|---|
 | `popularity_recent` alone, if it were the only source | 3 | results/fusion_electronics_0core.json#/personalisation/distinct_top_1_global |
-| **fused (shipped)** | **18** | results/fusion_electronics_0core.json#/personalisation/distinct_top_1_fused |
+| **fused (shipped)** | **29** | results/fusion_electronics_0core.json#/personalisation/distinct_top_1_fused |
 
 ### Measured latency
 
@@ -402,9 +407,9 @@ a user.
 
 | Path | p50 | p95 | p99 | Target | Figure |
 |---|---|---|---|---|---|
-| Warm user | 26.1 ms | 33.4 ms | 63.3 ms | 60 / 150 / 300 ms | results/load_test_electronics_0core.json#/latency/0/p50_ms |
-| Cold start | 8.9 ms | 12.3 ms | 12.5 ms | p95 ≤ 250 ms | results/load_test_electronics_0core.json#/latency/1/p50_ms |
-| Degraded (index raising) | 9.8 ms | 13.5 ms | 14.3 ms | p95 ≤ 20 ms | results/load_test_electronics_0core.json#/latency/2/p50_ms |
+| Warm user | 25.9 ms | 32.1 ms | 58.5 ms | 60 / 150 / 300 ms | results/load_test_electronics_0core.json#/latency/0/p50_ms |
+| Cold start | 8.6 ms | 11.3 ms | 11.8 ms | p95 ≤ 250 ms | results/load_test_electronics_0core.json#/latency/1/p50_ms |
+| Degraded (index raising) | 9.2 ms | 16.5 ms | 16.8 ms | p95 ≤ 20 ms | results/load_test_electronics_0core.json#/latency/2/p50_ms |
 
 All five SLOs met in one process. CI re-reads each row's p50 from the result file. A cold-start
 request scores the global ranking alone, with no fusion, which is why it is now cheaper than a warm
@@ -413,5 +418,5 @@ one.
 | Quantity | Value | Source |
 |---|---|---|
 | Catalogue size served | 1,334,914 | results/load_test_electronics_0core.json#/catalogue_items |
-| Artefact load time | 8.66 s | results/load_test_electronics_0core.json#/artifact_load_seconds |
-| Throughput, one process | 317.5 req/s | results/load_test_electronics_0core.json#/throughput_requests_per_second_single_process |
+| Artefact load time | 9.0 s | results/load_test_electronics_0core.json#/artifact_load_seconds |
+| Throughput, one process | 305.7 req/s | results/load_test_electronics_0core.json#/throughput_requests_per_second_single_process |

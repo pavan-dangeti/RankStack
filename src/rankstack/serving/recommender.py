@@ -6,10 +6,11 @@ The degradation reasons are the ones the design document's section 6.9 table nam
 branch with a metric rather than a silent fallback.
 
 The serving choice is measurement, not ambition. `popularity_recent` has the best hit rate, but it
-is a global ranking: it returned only 3 distinct top items across 2,000 warm users. The request path
-serves reciprocal-rank fusion of `popularity_recent` with co-occurrence instead, which returns 18
-distinct top items and costs 25% of HR@20 (0.0150 against 0.0200). The re-ranker and the two-tower
-are not in the request path because both were measured and both lost.
+is a global ranking that gives almost every user the same top item. For known users the request
+path serves reciprocal-rank fusion of `popularity_recent` with co-occurrence instead, trading hit
+rate for a list that differs between users; `results/fusion_electronics_0core.json` holds the
+measured cost. The re-ranker and the two-tower are not in the request path because both were
+measured and both lost.
 """
 
 from __future__ import annotations

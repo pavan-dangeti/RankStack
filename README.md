@@ -23,7 +23,7 @@ what the code produces.
 | Two-tower retriever, warm-user HR@20 | 0.00025 (`results/evaluation_electronics_0core.json#/cohorts/warm_users/sources/two_tower/ranking/hr@20`) | `uv run python scripts/evaluate_baselines.py --corpus electronics_0core` |
 | LambdaMART re-ranker against its own stage 1, paired HR@20 difference (95% CI) | -0.0148 (`results/two_stage_electronics_0core.json#/cohorts/warm_users/paired_two_stage_vs_stage_1/hr/hr@20/difference`) (-0.0172 (`results/two_stage_electronics_0core.json#/cohorts/warm_users/paired_two_stage_vs_stage_1/hr/hr@20/ci_low`) to -0.0125 (`results/two_stage_electronics_0core.json#/cohorts/warm_users/paired_two_stage_vs_stage_1/hr/hr@20/ci_high`)) | `uv run python scripts/evaluate_reranker.py --corpus electronics_0core --candidates 120 --cohort-size 20000 --resamples 1000` |
 | Served blend against popularity alone, test split, paired HR@20 difference (95% CI) | +0.0005 (`results/fusion_weight_test_electronics_0core.json#/result/paired_hr@20_vs_popularity_recent/difference`) (-0.003 (`results/fusion_weight_test_electronics_0core.json#/result/paired_hr@20_vs_popularity_recent/ci_low`) to +0.004 (`results/fusion_weight_test_electronics_0core.json#/result/paired_hr@20_vs_popularity_recent/ci_high`)); catalogue coverage@20 23 (`results/fusion_weight_sweep_electronics_0core.json#/by_weight/0.0/coverage_at_20/items`) → 133 (`results/fusion_weight_sweep_electronics_0core.json#/by_weight/0.75/coverage_at_20/items`) items on validation | `uv run python scripts/select_fusion_weight.py confirm` |
-| Serving latency, warm user, p50 / p99 | 23.9 ms (`results/load_test_electronics_0core.json#/latency/0/p50_ms`) / 34.6 ms (`results/load_test_electronics_0core.json#/latency/0/p99_ms`) | `uv run python scripts/load_test.py --requests 400 --concurrency 8 --k 20` |
+| Serving latency, warm user, p50 / p99 | 26.8 ms (`results/load_test_electronics_0core.json#/latency/0/p50_ms`) / 38.9 ms (`results/load_test_electronics_0core.json#/latency/0/p99_ms`) | `uv run python scripts/load_test.py --requests 400 --concurrency 8 --k 20` |
 | Stage-1 index for ALS: exact search p99, against the best approximate index's recall@200 | 3.8184 ms (`results/ann_index_electronics_0core_als.json#/curves/flat/0/p99_ms`), against 0.90175 (`results/ann_index_electronics_0core_als.json#/curves/hnsw/53/recall_at_top_k`) recall for HNSW, below the 0.95 target | `uv run python scripts/bench_ann_index.py --vectors als --queries 200` |
 
 ## Architecture
@@ -512,9 +512,9 @@ For reference, fusion at equal weight (w = 1, served before ADR-0007), from
 
 | Path | p50 (`/p50_ms`) | p95 (`/p95_ms`) | p99 (`/p99_ms`) | Target | Figure |
 |---|---|---|---|---|---|
-| Warm user | 23.9 ms | 30.1 ms | 34.6 ms | 60 / 150 / 300 ms | results/load_test_electronics_0core.json#/latency/0 |
-| Cold start | 8.0 ms | 11.6 ms | 13.4 ms | p95 ≤ 250 ms | results/load_test_electronics_0core.json#/latency/1 |
-| Degraded (index raising) | 8.7 ms | 14.5 ms | 15.2 ms | p95 ≤ 20 ms | results/load_test_electronics_0core.json#/latency/2 |
+| Warm user | 26.8 ms | 34.2 ms | 38.9 ms | 60 / 150 / 300 ms | results/load_test_electronics_0core.json#/latency/0 |
+| Cold start | 8.9 ms | 12.1 ms | 13.2 ms | p95 ≤ 250 ms | results/load_test_electronics_0core.json#/latency/1 |
+| Degraded (index raising) | 10.2 ms | 15.6 ms | 16.7 ms | p95 ≤ 20 ms | results/load_test_electronics_0core.json#/latency/2 |
 
 All five SLOs met in one process. A cold-start request scores the global ranking alone, with no
 fusion, which is why it is cheaper than a warm one.
@@ -522,5 +522,5 @@ fusion, which is why it is cheaper than a warm one.
 | Quantity | Value | Source |
 |---|---|---|
 | Catalogue size served | 1,334,914 | results/load_test_electronics_0core.json#/catalogue_items |
-| Artefact load time | 8.57 s | results/load_test_electronics_0core.json#/artifact_load_seconds |
-| Throughput, one process | 330.8 req/s | results/load_test_electronics_0core.json#/throughput_requests_per_second_single_process |
+| Artefact load time | 3.1 s | results/load_test_electronics_0core.json#/artifact_load_seconds |
+| Throughput, one process | 300.7 req/s | results/load_test_electronics_0core.json#/throughput_requests_per_second_single_process |

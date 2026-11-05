@@ -49,7 +49,7 @@ ENV RANKSTACK_DATA_ROOT=/data \
 EXPOSE 8000
 
 # One worker on purpose. Each worker holds its own copy of the artefacts: measured inside this image,
-# 3,569.7 MiB (`results/memory_electronics_0core_linux-aarch64-container.json#/rss_after_requests_mib`)
+# 2,152.0 MiB (`results/memory_electronics_0core_linux-aarch64-container.json#/rss_after_requests_mib`)
 # resident after serving requests. A second worker buys memory, not throughput. Scale with replicas,
 # not with threads inside one process: numpy scoring already holds the GIL.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=90s --retries=3 \

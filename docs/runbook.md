@@ -55,11 +55,13 @@ Memory, measured with the app built exactly as the server builds it and 120 requ
 
 | Where | After load (`/rss_after_load_mib`) | After 120 requests (`/rss_after_requests_mib`) | Peak, loading included (`/peak_rss_mib`) | Load time (`/artifact_load_seconds`) | Figure |
 |---|---|---|---|---|---|
-| Linux, serving image | 3,520.3 MiB | 3,569.7 MiB | 3,788.1 MiB | 12.85 s | results/memory_electronics_0core_linux-aarch64-container.json#/ |
-| macOS, development machine | 4,954.5 MiB | 4,937.9 MiB | 4,965.8 MiB | 9.43 s | results/memory_electronics_0core_darwin-arm64.json#/ |
+| Linux, serving image | 2,102.7 MiB | 2,152.0 MiB | 2,372.9 MiB | 4.27 s | results/memory_electronics_0core_linux-aarch64-container.json#/ |
+| macOS, development machine | 2,961.9 MiB | 2,971.9 MiB | 2,971.9 MiB | 2.89 s | results/memory_electronics_0core_darwin-arm64.json#/ |
 
-No free tier with 512 MB or 1 GB of memory can hold this process; plan for the peak, not the steady
-state.
+The user map, fifteen million ids, is held as a sorted id array searched by bisection
+(`users.npz`), not a Python dict; `scripts/build_serving_manifest.py` derives it from the encoding
+and refuses to write it unless every user's code matches. No free tier with 512 MB or 1 GB of
+memory can hold this process; plan for the peak, not the steady state.
 
 A known user, with four train-window purchases (a charger and three sets of headphones):
 
@@ -114,11 +116,11 @@ process on the development machine:
 
 | Path | Target | Measured p50 (`/p50_ms`) | p95 (`/p95_ms`) | p99 (`/p99_ms`) | Figure |
 |---|---|---|---|---|---|
-| Warm user | 60 / 150 / 300 ms | 23.9 ms | 30.1 ms | 34.6 ms | results/load_test_electronics_0core.json#/latency/0 |
-| Cold start | p95 ≤ 250 ms | 8.0 ms | 11.6 ms | 13.4 ms | results/load_test_electronics_0core.json#/latency/1 |
-| Degraded (index raising) | p95 ≤ 20 ms | 8.7 ms | 14.5 ms | 15.2 ms | results/load_test_electronics_0core.json#/latency/2 |
+| Warm user | 60 / 150 / 300 ms | 26.8 ms | 34.2 ms | 38.9 ms | results/load_test_electronics_0core.json#/latency/0 |
+| Cold start | p95 ≤ 250 ms | 8.9 ms | 12.1 ms | 13.2 ms | results/load_test_electronics_0core.json#/latency/1 |
+| Degraded (index raising) | p95 ≤ 20 ms | 10.2 ms | 15.6 ms | 16.7 ms | results/load_test_electronics_0core.json#/latency/2 |
 
-Throughput 330.8 req/s (`results/load_test_electronics_0core.json#/throughput_requests_per_second_single_process`)
+Throughput 300.7 req/s (`results/load_test_electronics_0core.json#/throughput_requests_per_second_single_process`)
 in one process. All five SLOs in the design document are met.
 
 This measures `Recommender.recommend`, the path the ASGI layer calls directly, not the HTTP

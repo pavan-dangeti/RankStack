@@ -54,17 +54,25 @@ def short_story(page: Page) -> None:
 
 
 def long_story(page: Page) -> None:
-    """About two minutes: several shoppers, both modes, the same-list note, a cold start."""
-    page.wait_for_timeout(6000)
-    _choose_mode(page, "popular", 7)
-    _choose_mode(page, "blended", 6)
-    for shopper in ("2", "1", "6", "8", "3"):
-        _choose_shopper(page, shopper, 8)
-        _choose_mode(page, "popular", 6)
-        _choose_mode(page, "blended", 4)
-    _choose_shopper(page, "anonymous", 8)
+    """About two minutes: Shopper 5 both ways, Shoppers 2 and 1, a cold start, then `/metrics`.
+
+    Shopper 1 gets the same top 10 in both modes, so the same-list note is on screen; `/metrics`
+    at the end shows the requests the walkthrough itself made, counted by the running service.
+    """
+    page.wait_for_timeout(10000)
+    _choose_mode(page, "popular", 10)
+    _choose_mode(page, "blended", 8)
+    for shopper in ("2", "1"):
+        _choose_shopper(page, shopper, 10)
+        _choose_mode(page, "popular", 9)
+        _choose_mode(page, "blended", 7)
+    _choose_shopper(page, "anonymous", 12)
     page.mouse.wheel(0, 2000)
-    page.wait_for_timeout(6000)
+    page.wait_for_timeout(7000)
+    url = page.url.removesuffix("/demo")
+    page.goto(f"{url}/metrics")
+    expect(page.locator("body")).to_contain_text("recommend_requests_total")
+    page.wait_for_timeout(15000)
 
 
 def record(url: str, story: str, workdir: Path) -> tuple[Path, float]:

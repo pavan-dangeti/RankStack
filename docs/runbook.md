@@ -7,28 +7,28 @@ every quality number from a committed result file; the commands that produced th
 ## What is actually being served
 
 For a known user, the request path serves **reciprocal-rank fusion of `popularity_recent` and
-item-item co-occurrence**, over a 1,334,914-item catalogue. An unknown user has no history for
-co-occurrence to use, so they get `popularity_recent` alone: the same list for every unknown user.
+item-item co-occurrence, with co-occurrence at weight
+0.75 (`results/fusion_weight_sweep_electronics_0core.json#/selected_weight`)**, over a
+1,334,914-item catalogue. An unknown user has no history for co-occurrence to use, so they get
+`popularity_recent` alone: the same list for every unknown user.
 
-That is not the most accurate configuration available and it is deliberate. Measured on the warm
-cohort (`results/fusion_electronics_0core.json`):
+The weight was chosen by the rule pre-registered in
+[ADR-0007](adr/0007-serving-fusion-weight.md), on the validation split, and confirmed once on the
+test split. There, against `popularity_recent` alone, the paired HR@20 difference is
+0.0005 (`results/fusion_weight_test_electronics_0core.json#/result/paired_hr@20_vs_popularity_recent/difference`),
+with a 95% CI from
+-0.003 (`results/fusion_weight_test_electronics_0core.json#/result/paired_hr@20_vs_popularity_recent/ci_low`)
+to 0.004 (`results/fusion_weight_test_electronics_0core.json#/result/paired_hr@20_vs_popularity_recent/ci_high`),
+and the top item varies across
+19 (`results/fusion_weight_test_electronics_0core.json#/result/distinct_top_1`) distinct items over
+2,000 warm users, against
+3 (`results/fusion_electronics_0core.json#/personalisation/distinct_top_1_global`) for
+`popularity_recent` alone. The full sweep is in the README.
 
-| Source | HR@20 | Distinct top-1 items across 2,000 users | Figure |
-|---|---|---|---|
-| `popularity_recent` alone | 0.0200 | 3 | results/fusion_electronics_0core.json#/sources/popularity_recent/ranking/hr@20 |
-| `cooccurrence` alone | 0.0015 | 1,911 | results/fusion_electronics_0core.json#/sources/cooccurrence/ranking/hr@20 |
-| **fused (shipped)** | **0.0130** | **29** | results/fusion_electronics_0core.json#/sources/fused/ranking/hr@20 |
-
-`popularity_recent` is the strongest single retriever on this corpus, and it is also a *global*
-ranking: it returned only
-3 (`results/fusion_electronics_0core.json#/personalisation/distinct_top_1_global`) distinct top items
-across 2,000 warm users. Serving it alone would hand nearly every visitor the same list. Fusion
-returns
-29 (`results/fusion_electronics_0core.json#/personalisation/distinct_top_1_fused`) distinct top items
-at a paired HR@20 cost of
--0.007 (`results/fusion_electronics_0core.json#/paired_fused_vs_popularity_recent/hr/hr@20/difference`).
-If this service were measured on hit rate alone, the right answer would be to ship
-`popularity_recent` alone; the choice here is documented rather than hidden.
+The weight is `Settings.fusion_cooccurrence_weight`. Override it with
+`RANKSTACK_FUSION_COOCCURRENCE_WEIGHT`; `0` serves `popularity_recent` alone to everyone, and
+leaving co-occurrence unloaded does the same. Changing the weight is a model change: re-run
+`scripts/load_test.py` before relying on the latency figures below.
 
 The learned ranker and the two-tower model are **not** in the request path. Both were measured and
 both lost (`results/two_stage_electronics_0core.json`, `results/two_tower_diagnosis_electronics_0core.json`).
@@ -96,13 +96,13 @@ is generated at request time (ADR-0003), so every explanation is traceable to a 
 From `results/load_test_electronics_0core.json`, 400 requests at concurrency 8, k=20, single
 process on the development machine:
 
-| Path | Target | Measured p50 | p95 | p99 | Figure |
+| Path | Target | Measured p50 (`/p50_ms`) | p95 (`/p95_ms`) | p99 (`/p99_ms`) | Figure |
 |---|---|---|---|---|---|
-| Warm user | 60 / 150 / 300 ms | 25.9 ms | 32.1 ms | 58.5 ms | results/load_test_electronics_0core.json#/latency/0/p50_ms |
-| Cold start | p95 ≤ 250 ms | 8.6 ms | 11.3 ms | 11.8 ms | results/load_test_electronics_0core.json#/latency/1/p50_ms |
-| Degraded (index raising) | p95 ≤ 20 ms | 9.2 ms | 16.5 ms | 16.8 ms | results/load_test_electronics_0core.json#/latency/2/p50_ms |
+| Warm user | 60 / 150 / 300 ms | 23.9 ms | 30.1 ms | 34.6 ms | results/load_test_electronics_0core.json#/latency/0 |
+| Cold start | p95 ≤ 250 ms | 8.0 ms | 11.6 ms | 13.4 ms | results/load_test_electronics_0core.json#/latency/1 |
+| Degraded (index raising) | p95 ≤ 20 ms | 8.7 ms | 14.5 ms | 15.2 ms | results/load_test_electronics_0core.json#/latency/2 |
 
-Throughput 305.7 req/s (`results/load_test_electronics_0core.json#/throughput_requests_per_second_single_process`)
+Throughput 330.8 req/s (`results/load_test_electronics_0core.json#/throughput_requests_per_second_single_process`)
 in one process. All five SLOs in the design document are met.
 
 This measures `Recommender.recommend`, the path the ASGI layer calls directly, not the HTTP

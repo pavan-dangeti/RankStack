@@ -371,52 +371,77 @@ Artefacts are hashed at load time and a mismatch refuses to start the process. A
 that cannot vouch for its model does not answer. Operations, alerts and the full degradation table
 are in [`docs/runbook.md`](docs/runbook.md).
 
-### What the service serves, and what that costs
+### What the service serves, and how it was chosen
 
-Serving the best-scoring retriever alone turned out to serve **the same list to everyone**.
-`popularity_recent` is a global ranking: across 2,000 warm users it returned **3 distinct top
-items**. A recommender that does that is not personalising.
+`popularity_recent` has the best hit rate of any single retriever, but it is a global ranking:
+across 2,000 warm users it returned
+3 (`results/fusion_electronics_0core.json#/personalisation/distinct_top_1_global`) distinct top
+items. Fusing it with item-item co-occurrence makes the list differ between users, at some cost in
+hit rate. How much co-occurrence to fuse in was decided by a rule committed before any weight was
+evaluated ([ADR-0007](docs/adr/0007-serving-fusion-weight.md)): sweep the co-occurrence weight w on
+the **validation** split, keep the weights whose paired HR@20 difference against `popularity_recent`
+has a CI that includes zero, and serve the one with the highest catalogue coverage@20.
 
-So the request path serves reciprocal-rank fusion of `popularity_recent` with item-item
-co-occurrence (`scripts/measure_fusion.py`, `results/fusion_electronics_0core.json`):
+Validation split, 2,000 warm users, `uv run python scripts/select_fusion_weight.py sweep`
+(`results/fusion_weight_sweep_electronics_0core.json`). Each row's figures are read by CI from the
+object its pointer names, at the path in each column header:
 
-| Served source | HR@20 | HR@10 | Distinct top-1 over 2,000 users | Figure |
+| w (`/weight`) | HR@20 (`/hr@20/point`) | CI low (`/hr@20/ci_low`) | CI high (`/hr@20/ci_high`) | Paired diff vs `popularity_recent` (`/paired_hr@20_vs_popularity_recent/difference`) | CI low (`/paired_hr@20_vs_popularity_recent/ci_low`) | CI high (`/paired_hr@20_vs_popularity_recent/ci_high`) | Distinct #1 (`/distinct_top_1`) | Coverage@20, items (`/coverage_at_20/items`) | Figure |
+|---|---|---|---|---|---|---|---|---|---|
+| 0.0 | 0.03200 | 0.02400 | 0.04000 | 0.00000 | 0.00000 | 0.00000 | 3 | 23 | results/fusion_weight_sweep_electronics_0core.json#/by_weight/0.0 |
+| 0.1 | 0.03200 | 0.02400 | 0.04000 | 0.00000 | 0.00000 | 0.00000 | 4 | 27 | results/fusion_weight_sweep_electronics_0core.json#/by_weight/0.1 |
+| 0.25 | 0.03250 | 0.02450 | 0.04050 | 0.00050 | 0.00000 | 0.00200 | 9 | 42 | results/fusion_weight_sweep_electronics_0core.json#/by_weight/0.25 |
+| 0.5 | 0.03300 | 0.02550 | 0.04100 | 0.00100 | -0.00150 | 0.00350 | 13 | 71 | results/fusion_weight_sweep_electronics_0core.json#/by_weight/0.5 |
+| **0.75** | **0.03100** | **0.02400** | **0.03900** | **-0.00100** | **-0.00450** | **0.00250** | **22** | **133** | results/fusion_weight_sweep_electronics_0core.json#/by_weight/0.75 |
+| 1.0 | 0.02550 | 0.01900 | 0.03300 | -0.00650 | -0.01200 | -0.00150 | 27 | 13,100 | results/fusion_weight_sweep_electronics_0core.json#/by_weight/1.0 |
+
+Every weight up to 0.75 qualifies; 1.0 does not, because its CI excludes zero. The rule selects
+w = 0.75 (`results/fusion_weight_sweep_electronics_0core.json#/selected_weight`), and that is the
+serving default (`Settings.fusion_cooccurrence_weight`, overridable with
+`RANKSTACK_FUSION_COOCCURRENCE_WEIGHT`).
+
+The selected weight was then evaluated once on the test split, 2,000 warm users
+(`uv run python scripts/select_fusion_weight.py confirm`), which the script will not repeat:
+
+| w (`/weight`) | HR@20 (`/hr@20/point`) | CI low (`/hr@20/ci_low`) | CI high (`/hr@20/ci_high`) | Paired diff vs `popularity_recent` (`/paired_hr@20_vs_popularity_recent/difference`) | CI low (`/paired_hr@20_vs_popularity_recent/ci_low`) | CI high (`/paired_hr@20_vs_popularity_recent/ci_high`) | Distinct #1 (`/distinct_top_1`) | Coverage@20, items (`/coverage_at_20/items`) | Figure |
+|---|---|---|---|---|---|---|---|---|---|
+| 0.75 | 0.02050 | 0.01500 | 0.02701 | 0.00050 | -0.00300 | 0.00400 | 19 | 132 | results/fusion_weight_test_electronics_0core.json#/result |
+
+On the test split too, the loss against `popularity_recent` is not detectable with 2,000 users.
+
+**What the sweep found about the weight itself.** Coverage@20 rises slowly up to w = 0.75 and then
+jumps by two orders of magnitude at w = 1.0. That is arithmetic, not a property of the data. With
+the RRF constant at 60, co-occurrence's first-ranked item scores w/61, and popularity's twentieth
+item scores at least 1/80, so an item that only co-occurrence ranks can enter a top 20 only when
+w/61 exceeds 1/80, which needs w above 61/80. At the selected weight co-occurrence reorders and
+promotes items that popularity already ranks; it cannot bring in an item that only it ranks. ADR-0007
+records this as a finding; the rule is not changed after seeing it.
+
+For reference, fusion at equal weight (w = 1, served before ADR-0007), from
+`scripts/measure_fusion.py` on the test split:
+
+| Source | HR@20 | HR@10 | Distinct top-1 over 2,000 users | Figure |
 |---|---|---|---|---|
 | `popularity_recent` | 0.02000 | 0.01450 | 3 | results/fusion_electronics_0core.json#/sources/popularity_recent/ranking/hr@20 |
 | `cooccurrence` | 0.00150 | 0.00050 | 1,911 | results/fusion_electronics_0core.json#/sources/cooccurrence/ranking/hr@20 |
-| **fused (shipped)** | **0.01300** | **0.00850** | **29** | results/fusion_electronics_0core.json#/sources/fused/ranking/hr@20 |
-
-Fusion costs hit rate. Against `popularity_recent` alone, the paired HR@20 difference is
--0.007 (`results/fusion_electronics_0core.json#/paired_fused_vs_popularity_recent/hr/hr@20/difference`),
-with a 95% CI from
--0.012 (`results/fusion_electronics_0core.json#/paired_fused_vs_popularity_recent/hr/hr@20/ci_low`)
-to -0.002 (`results/fusion_electronics_0core.json#/paired_fused_vs_popularity_recent/hr/hr@20/ci_high`).
-What it buys is a list that differs between users. The trade is taken deliberately and published
-rather than discovered by a user. Only items a source actually scores take part in fusion: an item
-co-occurrence scores 0 gets no rank credit from it.
-
-| Measure | Distinct top-1 items over 2,000 warm users | Figure |
-|---|---|---|
-| `popularity_recent` alone, if it were the only source | 3 | results/fusion_electronics_0core.json#/personalisation/distinct_top_1_global |
-| **fused (shipped)** | **29** | results/fusion_electronics_0core.json#/personalisation/distinct_top_1_fused |
+| fused at w = 1, no longer served | 0.01300 | 0.00850 | 29 | results/fusion_electronics_0core.json#/sources/fused/ranking/hr@20 |
 
 ### Measured latency
 
-400 requests at concurrency 8, k=20, single process (`scripts/load_test.py`,
+400 requests at concurrency 8, k=20, single process, serving w = 0.75 (`scripts/load_test.py`,
 `results/load_test_electronics_0core.json`):
 
-| Path | p50 | p95 | p99 | Target | Figure |
+| Path | p50 (`/p50_ms`) | p95 (`/p95_ms`) | p99 (`/p99_ms`) | Target | Figure |
 |---|---|---|---|---|---|
-| Warm user | 25.9 ms | 32.1 ms | 58.5 ms | 60 / 150 / 300 ms | results/load_test_electronics_0core.json#/latency/0/p50_ms |
-| Cold start | 8.6 ms | 11.3 ms | 11.8 ms | p95 ≤ 250 ms | results/load_test_electronics_0core.json#/latency/1/p50_ms |
-| Degraded (index raising) | 9.2 ms | 16.5 ms | 16.8 ms | p95 ≤ 20 ms | results/load_test_electronics_0core.json#/latency/2/p50_ms |
+| Warm user | 23.9 ms | 30.1 ms | 34.6 ms | 60 / 150 / 300 ms | results/load_test_electronics_0core.json#/latency/0 |
+| Cold start | 8.0 ms | 11.6 ms | 13.4 ms | p95 ≤ 250 ms | results/load_test_electronics_0core.json#/latency/1 |
+| Degraded (index raising) | 8.7 ms | 14.5 ms | 15.2 ms | p95 ≤ 20 ms | results/load_test_electronics_0core.json#/latency/2 |
 
-All five SLOs met in one process. CI re-reads each row's p50 from the result file. A cold-start
-request scores the global ranking alone, with no fusion, which is why it is now cheaper than a warm
-one.
+All five SLOs met in one process. A cold-start request scores the global ranking alone, with no
+fusion, which is why it is cheaper than a warm one.
 
 | Quantity | Value | Source |
 |---|---|---|
 | Catalogue size served | 1,334,914 | results/load_test_electronics_0core.json#/catalogue_items |
-| Artefact load time | 9.0 s | results/load_test_electronics_0core.json#/artifact_load_seconds |
-| Throughput, one process | 305.7 req/s | results/load_test_electronics_0core.json#/throughput_requests_per_second_single_process |
+| Artefact load time | 8.57 s | results/load_test_electronics_0core.json#/artifact_load_seconds |
+| Throughput, one process | 330.8 req/s | results/load_test_electronics_0core.json#/throughput_requests_per_second_single_process |

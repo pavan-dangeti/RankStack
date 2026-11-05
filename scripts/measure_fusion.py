@@ -1,8 +1,9 @@
-"""Measure the cost of personalising the served list by fusing two retrievers.
+"""Measure equal-weight fusion of `popularity_recent` and co-occurrence against each source alone.
 
 Serving `popularity_recent` alone returns the same list to every user, because it is a global
-ranking. This measures what fusing it with co-occurrence costs in hit rate, on the same warm cohort
-the harness uses for everything else, so the trade is a number rather than an assertion.
+ranking. This measures what fusing it with co-occurrence at equal weight costs in hit rate, on the
+test-split warm cohort. The served weight is chosen separately, on the validation split, by
+`scripts/select_fusion_weight.py` (ADR-0007).
 
     uv run python scripts/measure_fusion.py --cohort-size 2000
 """

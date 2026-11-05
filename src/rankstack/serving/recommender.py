@@ -7,10 +7,9 @@ branch with a metric rather than a silent fallback.
 
 The serving choice is measurement, not ambition. `popularity_recent` has the best hit rate, but it
 is a global ranking that gives almost every user the same top item. For known users the request
-path serves reciprocal-rank fusion of `popularity_recent` with co-occurrence instead, trading hit
-rate for a list that differs between users; `results/fusion_electronics_0core.json` holds the
-measured cost. The re-ranker and the two-tower are not in the request path because both were
-measured and both lost.
+path fuses it with co-occurrence at the weight chosen by the pre-registered rule in
+docs/adr/0007-serving-fusion-weight.md, which `ServingArtifacts.served_source` applies. The
+re-ranker and the two-tower are not in the request path because both were measured and both lost.
 """
 
 from __future__ import annotations

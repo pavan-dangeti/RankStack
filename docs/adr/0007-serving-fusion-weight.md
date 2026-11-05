@@ -1,6 +1,6 @@
 # ADR-0007 — Choosing the co-occurrence weight in the served fusion by a pre-registered rule
 
-- Status: Proposed — pre-registered, no result seen
+- Status: Accepted — rule pre-registered in commit 07359c8, results added after the sweep
 - Date: 2026-11-05
 
 ## Context
@@ -61,6 +61,33 @@ the service serves `popularity_recent` alone to every user, known or not.
 
 ## Consequences
 
-To be completed with the sweep, the selected weight and the test-split confirmation. The rule above
-is not edited after this commit; anything learned from the results that would have changed it is
-recorded here as a finding, not applied.
+The rule above is unchanged since it was committed. Results, added afterwards:
+
+**Selection.** The sweep (`uv run python scripts/select_fusion_weight.py sweep`) selected
+w = 0.75 (`results/fusion_weight_sweep_electronics_0core.json#/selected_weight`). Every weight from 0
+to 0.75 qualified; w = 1 did not, with a paired HR@20 difference CI from
+-0.012 (`results/fusion_weight_sweep_electronics_0core.json#/by_weight/1.0/paired_hr@20_vs_popularity_recent/ci_low`)
+to -0.0015 (`results/fusion_weight_sweep_electronics_0core.json#/by_weight/1.0/paired_hr@20_vs_popularity_recent/ci_high`).
+The full table is in the README.
+
+**Confirmation.** On the test split the selected weight's paired HR@20 difference against
+`popularity_recent` is
+0.0005 (`results/fusion_weight_test_electronics_0core.json#/result/paired_hr@20_vs_popularity_recent/difference`),
+CI from
+-0.003 (`results/fusion_weight_test_electronics_0core.json#/result/paired_hr@20_vs_popularity_recent/ci_low`)
+to 0.004 (`results/fusion_weight_test_electronics_0core.json#/result/paired_hr@20_vs_popularity_recent/ci_high`):
+no detectable loss there either. It was run once.
+
+**Serving.** `Settings.fusion_cooccurrence_weight` defaults to the selected weight.
+
+**Finding, not applied.** Coverage@20 grows slowly up to w = 0.75, from
+23 (`results/fusion_weight_sweep_electronics_0core.json#/by_weight/0.0/coverage_at_20/items`) to
+133 (`results/fusion_weight_sweep_electronics_0core.json#/by_weight/0.75/coverage_at_20/items`)
+items, then jumps to
+13,100 (`results/fusion_weight_sweep_electronics_0core.json#/by_weight/1.0/coverage_at_20/items`)
+at w = 1. The cause is the RRF arithmetic, not the data: co-occurrence's first-ranked item scores
+w/61 and popularity's twentieth item scores at least 1/80, so an item ranked only by co-occurrence
+can reach a top 20 only when w exceeds 61/80. Every candidate weight below 1 sits under that line, so
+the grid could not test a blend that brings new items into the top 20 at an acceptable hit-rate cost.
+A future rule that wants to test that should place grid points between 61/80 and 1; this one is not
+re-run to do so.

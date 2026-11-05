@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """Fail if a figure in the documentation no longer matches its committed result file.
 
-Every number in README.md, docs/design.md, docs/runbook.md and the ADRs must come from a committed
-file under `results/`, with the file named next to it. These forms are checked.
+Every number in README.md, CHANGELOG.md, docs/design.md, docs/runbook.md and the ADRs must come
+from a committed file under `results/`, with the file named next to it. These forms are checked.
 
 A table row, where the first figure cell is compared with the pointer in the same row:
 
@@ -47,6 +47,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 RESULTS_DIR = REPO_ROOT / "results"
 DOCUMENTS = (
     REPO_ROOT / "README.md",
+    REPO_ROOT / "CHANGELOG.md",
     REPO_ROOT / "docs" / "design.md",
     REPO_ROOT / "docs" / "runbook.md",
     *sorted((REPO_ROOT / "docs" / "adr").glob("*.md")),

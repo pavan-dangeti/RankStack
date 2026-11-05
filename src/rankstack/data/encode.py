@@ -8,10 +8,12 @@ seen in the test window has no code and no collaborative model can serve it.
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass, field
 from pathlib import Path  # noqa: TC003 - used at runtime by the writers
 
 import duckdb
+import numpy as np
 
 from rankstack.config import Settings
 from rankstack.config import settings as default_settings
@@ -21,6 +23,109 @@ _logger = get_logger(__name__)
 
 CODEC_PATH = "encoding.json"
 CODEC_SCHEMA_VERSION = 1
+#: What serving loads instead of `CODEC_PATH`: the code space without its user map, and the user
+#: map as a `CodeIndex`.
+SERVING_CODEC_PATH = "encoding.serving.json"
+USER_INDEX_PATH = "users.npz"
+
+
+class CodeIndex(Mapping[str, int]):
+    """An id-to-code map held as two arrays and searched by bisection.
+
+    A dict of fifteen million ids holds a Python string and a Python int per entry, gigabytes for
+    the user map alone. This holds each id once as fixed-width UTF-8 bytes in a sorted array, with
+    the codes alongside, and finds an id by binary search. Iteration yields ids in code order, the
+    order a dict built from codes 0..n-1 iterates in.
+    """
+
+    __slots__ = ("_by_code", "_codes", "_keys")
+
+    def __init__(self, keys: np.ndarray, codes: np.ndarray) -> None:
+        """Wrap ids already sorted bytewise (`np.bytes_` array) and their aligned codes."""
+        if keys.shape != codes.shape:
+            msg = f"{keys.shape[0]} ids but {codes.shape[0]} codes"
+            raise ValueError(msg)
+        self._keys = keys
+        self._codes = codes
+        self._by_code = np.argsort(codes, kind="stable")
+
+    @classmethod
+    def from_mapping(cls, mapping: Mapping[str, int]) -> CodeIndex:
+        """Build the index from any id-to-code mapping."""
+        encoded = [key.encode("utf-8") for key in mapping]
+        if any(key.endswith(b"\x00") for key in encoded):
+            # Fixed-width byte arrays drop trailing NULs, so such an id could not be told apart.
+            msg = "an id ending in a NUL byte cannot be stored in a CodeIndex"
+            raise ValueError(msg)
+        keys = np.array(encoded, dtype=np.bytes_) if encoded else np.array([], dtype="S1")
+        codes = np.fromiter(mapping.values(), dtype=np.int64, count=len(encoded))
+        order = np.argsort(keys, kind="stable")
+        return cls(keys[order], codes[order].astype(np.int32))
+
+    def save(self, path: Path) -> Path:
+        """Write the two arrays, uncompressed so loading is a plain read."""
+        with path.open("wb") as handle:
+            np.savez(handle, keys=self._keys, codes=self._codes)
+        return path
+
+    @classmethod
+    def load(cls, path: Path) -> CodeIndex:
+        """Read an index written by `save`."""
+        with np.load(path, allow_pickle=False) as arrays:
+            return cls(arrays["keys"], arrays["codes"])
+
+    def _find(self, key: object) -> int | None:
+        if not isinstance(key, str):
+            return None
+        try:
+            encoded = key.encode("utf-8")
+        except UnicodeEncodeError:
+            return None
+        # A longer query would be truncated to the array's width and could match a stored prefix.
+        if len(encoded) > self._keys.dtype.itemsize or encoded.endswith(b"\x00"):
+            return None
+        position = int(np.searchsorted(self._keys, encoded))
+        if position < self._keys.size and self._keys[position] == encoded:
+            return int(self._codes[position])
+        return None
+
+    def __getitem__(self, key: str) -> int:
+        """Return the code for `key`, raising KeyError when it is unknown."""
+        code = self._find(key)
+        if code is None:
+            raise KeyError(key)
+        return code
+
+    def __contains__(self, key: object) -> bool:
+        """Return True when `key` has a code."""
+        return self._find(key) is not None
+
+    def __iter__(self) -> Iterator[str]:
+        """Yield every id, in code order."""
+        for position in self._by_code:
+            yield bytes(self._keys[position]).decode("utf-8")
+
+    def __len__(self) -> int:
+        """Return the number of ids."""
+        return int(self._keys.size)
+
+    def agrees_with(self, mapping: Mapping[str, int]) -> bool:
+        """Return True when every id in `mapping` maps to the same code here, and nothing more."""
+        if len(mapping) != len(self):
+            return False
+        if not mapping:
+            return True
+        encoded = [key.encode("utf-8") for key in mapping]
+        width = self._keys.dtype.itemsize
+        if any(len(key) > width or key.endswith(b"\x00") for key in encoded):
+            return False
+        queries = np.array(encoded, dtype=self._keys.dtype)
+        expected = np.fromiter(mapping.values(), dtype=np.int64, count=len(mapping))
+        positions = np.minimum(np.searchsorted(self._keys, queries), self._keys.size - 1)
+        found = self._keys[positions] == queries
+        return bool(found.all()) and bool(
+            np.array_equal(self._codes[positions].astype(np.int64), expected)
+        )
 
 
 @dataclass(slots=True)
@@ -31,7 +136,8 @@ class Encoding:
     a real category with its own evaluation segment, not an error.
     """
 
-    user_to_code: dict[str, int]
+    #: A dict when built or read for training; a `CodeIndex` when loaded for serving.
+    user_to_code: Mapping[str, int]
     item_to_code: dict[str, int]
     boundaries: dict[str, int]
     seed: int
@@ -154,6 +260,52 @@ def load_encoding(artifact_root: Path, corpus: str) -> Encoding:
             k: v
             for k, v in payload.items()
             if k not in {"user_to_code", "item_to_code", "schema_version"}
+        },
+    )
+
+
+def write_serving_encoding(encoding: Encoding, out_dir: Path) -> tuple[Path, Path]:
+    """Write what serving loads: the code space without its user map, and the user map as arrays.
+
+    Refuses to write unless the arrays give every user the same code the encoding does, so the
+    compact form is checked against the original on the real data every time it is built.
+    """
+    index = CodeIndex.from_mapping(encoding.user_to_code)
+    if not index.agrees_with(encoding.user_to_code):
+        msg = "the user index disagrees with the encoding it was built from"
+        raise ValueError(msg)
+    out_dir.mkdir(parents=True, exist_ok=True)
+    payload = encoding.as_dict()
+    payload["item_to_code"] = encoding.item_to_code
+    codec = out_dir / SERVING_CODEC_PATH
+    codec.write_text(json.dumps(payload, sort_keys=True))
+    return codec, index.save(out_dir / USER_INDEX_PATH)
+
+
+def load_serving_encoding(artifact_root: Path, corpus: str) -> Encoding:
+    """Read the serving form of the code space, with users as a `CodeIndex`."""
+    root = artifact_root / corpus
+    codec, users = root / SERVING_CODEC_PATH, root / USER_INDEX_PATH
+    if not (codec.exists() and users.exists()):
+        msg = f"no serving encoding in {root}; run scripts/build_serving_manifest.py first"
+        raise FileNotFoundError(msg)
+    payload = json.loads(codec.read_text())
+    if payload.get("schema_version") != CODEC_SCHEMA_VERSION:
+        msg = f"encoding schema {payload.get('schema_version')} is not supported"
+        raise ValueError(msg)
+    index = CodeIndex.load(users)
+    if len(index) != payload["n_users"]:
+        msg = f"{USER_INDEX_PATH} holds {len(index)} users, the encoding {payload['n_users']}"
+        raise ValueError(msg)
+    return Encoding(
+        user_to_code=index,
+        item_to_code=payload["item_to_code"],
+        boundaries=payload["boundaries"],
+        seed=payload["seed"],
+        extras={
+            k: v
+            for k, v in payload.items()
+            if k not in {"item_to_code", "schema_version", "n_users", "n_items"}
         },
     )
 

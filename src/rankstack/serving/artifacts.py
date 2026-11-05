@@ -25,7 +25,12 @@ import scipy.sparse as sp
 
 from rankstack.config import Settings
 from rankstack.config import settings as default_settings
-from rankstack.data.encode import Encoding, load_encoding
+from rankstack.data.encode import (
+    SERVING_CODEC_PATH,
+    USER_INDEX_PATH,
+    Encoding,
+    load_serving_encoding,
+)
 from rankstack.logging import get_logger
 from rankstack.rerank.features import CodeLookup
 from rankstack.retrieval.cooccurrence import CooccurrenceModel
@@ -40,7 +45,8 @@ _logger = get_logger(__name__)
 MANIFEST_NAME = "serving_manifest.json"
 _DIGEST_CHUNK = 1 << 20
 _HASHED_ARTEFACTS = (
-    "encoding.json",
+    SERVING_CODEC_PATH,
+    USER_INDEX_PATH,
     "popularity.npy",
     "popularity.json",
     "popularity_recent.npy",
@@ -195,7 +201,7 @@ def load_artifacts(
     if not verify_checksums and (root / MANIFEST_NAME).exists():
         versions = cast("dict[str, str]", json.loads((root / MANIFEST_NAME).read_text())["files"])
 
-    encoding = load_encoding(artifact_root, corpus)
+    encoding = load_serving_encoding(artifact_root, corpus)
     history_path = root / "cooccurrence.history.npz"
     if not history_path.exists():
         msg = f"no serving history at {history_path}"

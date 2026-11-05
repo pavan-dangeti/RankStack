@@ -1,8 +1,10 @@
 """Hash the serving artefacts so the service can refuse to start on anything unverified.
 
-Run after `scripts/train_baselines.py`. The manifest is what makes the serving layer's integrity
-claim checkable: it records the SHA-256 of every artefact it loads, and `load_artifacts` refuses any
-file whose hash has moved since.
+Run after `scripts/train_baselines.py`. It first derives the serving form of the encoding: the
+user map as a sorted id array searched by bisection (`users.npz`) and the rest of the code space
+(`encoding.serving.json`), refusing to write them unless every user's code matches the encoding.
+The manifest is what makes the serving layer's integrity claim checkable: it records the SHA-256 of
+every artefact it loads, and `load_artifacts` refuses any file whose hash has moved since.
 """
 
 from __future__ import annotations
@@ -14,6 +16,7 @@ from pathlib import Path
 
 from rankstack.config import settings
 from rankstack.data.corpus import CORPORA, DEFAULT_CORPUS, get_corpus
+from rankstack.data.encode import load_encoding, write_serving_encoding
 from rankstack.logging import configure_logging, get_logger
 from rankstack.serving.artifacts import MANIFEST_NAME, build_manifest, verify
 
@@ -37,6 +40,8 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: no artefacts at {root}", file=sys.stderr)
         return 1
 
+    codec, users = write_serving_encoding(load_encoding(settings.artifact_root, corpus.name), root)
+    print(f"wrote {codec.name} and {users.name}; every user's code matches the encoding")
     path = build_manifest(root)
     manifest = json.loads(Path(path).read_text())
     _logger.info(

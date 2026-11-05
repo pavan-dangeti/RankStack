@@ -28,12 +28,16 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path  # noqa: TC003 - used at runtime by the writers
+from typing import TYPE_CHECKING
 
 import duckdb
 import numpy as np
 import scipy.sparse as sp
 
 from rankstack.logging import get_logger
+
+if TYPE_CHECKING:
+    from collections.abc import Mapping
 
 _logger = get_logger(__name__)
 
@@ -100,7 +104,7 @@ class CooccurrenceModel:
 
 def build_history(
     train_parquet: Path,
-    user_to_code: dict[str, int],
+    user_to_code: Mapping[str, int],
     item_to_code: dict[str, int],
     max_history: int,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
@@ -160,7 +164,7 @@ def build_history(
 
 def train_cooccurrence(
     train_parquet: Path,
-    user_to_code: dict[str, int],
+    user_to_code: Mapping[str, int],
     item_to_code: dict[str, int],
     *,
     max_history: int = DEFAULT_MAX_HISTORY,

@@ -1,7 +1,7 @@
 # Serving runbook
 
 Operating the recommendation API: what it serves, how it fails, what each alert means, and what to
-do about it. Every latency number here comes from `results/load_test_electronics_0core.json` and
+do about it. Every latency number here comes from `results/load_test_median_electronics_0core.json` and
 every quality number from a committed result file; the commands that produced them are given.
 
 ## What is actually being served
@@ -111,16 +111,16 @@ when a demo shopper is missing from the encoding.
 
 ## Latency
 
-From `results/load_test_electronics_0core.json`, 400 requests at concurrency 8, k=20, single
-process on the development machine:
+400 requests at concurrency 8, k=20, single process on the development machine; each figure is the
+median of three runs (`scripts/summarise_load_tests.py`, `results/load_test_median_electronics_0core.json`):
 
 | Path | Target | Measured p50 (`/p50_ms`) | p95 (`/p95_ms`) | p99 (`/p99_ms`) | Figure |
 |---|---|---|---|---|---|
-| Warm user | 60 / 150 / 300 ms | 26.8 ms | 34.2 ms | 38.9 ms | results/load_test_electronics_0core.json#/latency/0 |
-| Cold start | p95 ≤ 250 ms | 8.9 ms | 12.1 ms | 13.2 ms | results/load_test_electronics_0core.json#/latency/1 |
-| Degraded (index raising) | p95 ≤ 20 ms | 10.2 ms | 15.6 ms | 16.7 ms | results/load_test_electronics_0core.json#/latency/2 |
+| Warm user | 60 / 150 / 300 ms | 23.5 ms | 29.0 ms | 35.9 ms | results/load_test_median_electronics_0core.json#/arrays/latency/warm |
+| Cold start | p95 ≤ 250 ms | 8.2 ms | 11.2 ms | 12.3 ms | results/load_test_median_electronics_0core.json#/arrays/latency/cold_start |
+| Degraded (index raising) | p95 ≤ 20 ms | 8.7 ms | 15.7 ms | 16.1 ms | results/load_test_median_electronics_0core.json#/arrays/latency/degraded |
 
-Throughput 300.7 req/s (`results/load_test_electronics_0core.json#/throughput_requests_per_second_single_process`)
+Throughput 328.1 req/s (`results/load_test_median_electronics_0core.json#/arrays/throughput_requests_per_second_single_process`)
 in one process. All five SLOs in the design document are met.
 
 This measures `Recommender.recommend`, the path the ASGI layer calls directly, not the HTTP

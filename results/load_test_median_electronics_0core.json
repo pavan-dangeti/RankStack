@@ -1,0 +1,55 @@
+{
+  "arrays": {
+    "all_slos_met_in_every_run": true,
+    "artifact_load_seconds": 2.98,
+    "latency": {
+      "cold_start": {
+        "p50_ms": 8.196,
+        "p95_ms": 11.155,
+        "p99_ms": 12.27
+      },
+      "degraded": {
+        "p50_ms": 8.736,
+        "p95_ms": 15.725,
+        "p99_ms": 16.058
+      },
+      "warm": {
+        "p50_ms": 23.537,
+        "p95_ms": 29.015,
+        "p99_ms": 35.943
+      }
+    },
+    "runs": 3,
+    "throughput_requests_per_second_single_process": 328.1
+  },
+  "command": "uv run python scripts/summarise_load_tests.py",
+  "dict": {
+    "all_slos_met_in_every_run": true,
+    "artifact_load_seconds": 8.88,
+    "latency": {
+      "cold_start": {
+        "p50_ms": 8.17,
+        "p95_ms": 11.622,
+        "p99_ms": 12.227
+      },
+      "degraded": {
+        "p50_ms": 8.686,
+        "p95_ms": 14.198,
+        "p99_ms": 16.019
+      },
+      "warm": {
+        "p50_ms": 23.707,
+        "p95_ms": 30.29,
+        "p99_ms": 69.177
+      }
+    },
+    "runs": 3,
+    "throughput_requests_per_second_single_process": 330.0
+  },
+  "per_run_command": "uv run python scripts/load_test.py --requests 400 --concurrency 8 --k 20",
+  "statistic": "median over runs, taken separately for each figure",
+  "variants": {
+    "arrays": "the user map as sorted arrays searched by bisection (CodeIndex)",
+    "dict": "the user map as a Python dict: main at 544f891"
+  }
+}

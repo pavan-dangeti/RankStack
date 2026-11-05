@@ -1,0 +1,75 @@
+{
+  "all_slos_met": true,
+  "artifact_load_seconds": 2.98,
+  "catalogue_items": 1334914,
+  "command": "uv run python scripts/load_test.py --requests 400 --concurrency 8 --k 20",
+  "concurrency": 8,
+  "corpus": "electronics_0core",
+  "environment": {
+    "platform": "macOS-26.6.2-arm64-arm-64bit",
+    "processor": "arm",
+    "python": "3.12.13"
+  },
+  "k": 20,
+  "latency": [
+    {
+      "label": "warm",
+      "max_ms": 40.47,
+      "mean_ms": 23.917,
+      "n": 400,
+      "p50_ms": 23.53,
+      "p95_ms": 29.268,
+      "p99_ms": 37.731
+    },
+    {
+      "label": "cold_start",
+      "max_ms": 12.27,
+      "mean_ms": 8.541,
+      "n": 50,
+      "p50_ms": 8.222,
+      "p95_ms": 11.843,
+      "p99_ms": 12.27
+    },
+    {
+      "label": "degraded",
+      "max_ms": 15.385,
+      "mean_ms": 9.222,
+      "n": 50,
+      "p50_ms": 8.736,
+      "p95_ms": 14.619,
+      "p99_ms": 15.385
+    }
+  ],
+  "note": "Latency is measured on Recommender.recommend, the path the ASGI layer calls directly. Throughput is one process on one core-pool, not a deployed service under real HTTP.",
+  "requests": 400,
+  "served_source": "FusedSource",
+  "slo": {
+    "cold_start_p95": {
+      "measured_ms": 11.843,
+      "met": true,
+      "target_ms": 250.0
+    },
+    "degraded_p95": {
+      "measured_ms": 14.619,
+      "met": true,
+      "target_ms": 20.0
+    },
+    "warm_p50": {
+      "measured_ms": 23.53,
+      "met": true,
+      "target_ms": 60.0
+    },
+    "warm_p95": {
+      "measured_ms": 29.268,
+      "met": true,
+      "target_ms": 150.0
+    },
+    "warm_p99": {
+      "measured_ms": 37.731,
+      "met": true,
+      "target_ms": 300.0
+    }
+  },
+  "throughput_requests_per_second_single_process": 333.0,
+  "titles_loaded": true
+}

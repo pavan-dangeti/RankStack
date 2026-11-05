@@ -14,10 +14,17 @@ history is the same, and each phase is marked by an annotated tag at the commit 
   2,152.0 (`results/memory_electronics_0core_linux-aarch64-container.json#/rss_after_requests_mib`)
   MiB, with a peak of
   2,372.9 (`results/memory_electronics_0core_linux-aarch64-container.json#/peak_rss_mib`) MiB.
-  Warm-user latency is
-  26.8 ms (`results/load_test_electronics_0core.json#/latency/0/p50_ms`) at p50 and
-  38.9 ms (`results/load_test_electronics_0core.json#/latency/0/p99_ms`) at p99; all five SLOs
-  are met.
+  Latency was measured three times with the dict and three times with the arrays, interleaved on
+  one machine; medians of warm-user latency, dict then arrays: p50
+  23.7 ms (`results/load_test_median_electronics_0core.json#/dict/latency/warm/p50_ms`) and
+  23.5 ms (`results/load_test_median_electronics_0core.json#/arrays/latency/warm/p50_ms`), p95
+  30.3 ms (`results/load_test_median_electronics_0core.json#/dict/latency/warm/p95_ms`) and
+  29.0 ms (`results/load_test_median_electronics_0core.json#/arrays/latency/warm/p95_ms`), p99
+  69.2 ms (`results/load_test_median_electronics_0core.json#/dict/latency/warm/p99_ms`) and
+  35.9 ms (`results/load_test_median_electronics_0core.json#/arrays/latency/warm/p99_ms`); throughput
+  330.0 req/s (`results/load_test_median_electronics_0core.json#/dict/throughput_requests_per_second_single_process`) and
+  328.1 req/s (`results/load_test_median_electronics_0core.json#/arrays/throughput_requests_per_second_single_process`). All five SLOs were
+  met in every run.
 - The runbook's `docker run` mounts `data/` whole: mounting `data/processed` at `/data` left the
   catalogue where the server does not look for it.
 

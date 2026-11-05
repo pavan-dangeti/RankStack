@@ -66,11 +66,12 @@ def test_a_visitor_can_pick_a_shopper_flip_the_ranking_and_see_a_cold_start(
 ) -> None:
     """The demo's whole story: history and ten results, a toggle that changes them, a cold start."""
     page.goto(f"{base_url}/demo")
-    page.select_option("#shopper", "1")
+    expect(page.locator("#shopper")).to_have_value("5")
     expect(page.locator("#recs li")).to_have_count(10)
     expect(page.locator("#history li").first).to_contain_text("Item")
     expect(page.locator("#fallback")).to_have_text("null")
     expect(page.locator("#request")).to_have_text(re.compile(r"^[0-9a-f-]{36}$"))
+    expect(page.locator("#same-note")).to_be_hidden()
     blended = _served_ids(page)
 
     # Keyboard only: focus the radio and press Space, as a keyboard user would.
@@ -83,9 +84,20 @@ def test_a_visitor_can_pick_a_shopper_flip_the_ranking_and_see_a_cold_start(
         arg=",".join(blended),
     )
     assert _served_ids(page) != blended
+    expect(page.locator("#same-note")).to_be_hidden()
+
+    # Shopper 1 gets the same top 10 in both modes, and the page says why.
+    page.select_option("#shopper", "1")
+    expect(page.locator("#same-note")).to_be_visible()
+    expect(page.locator("#same-note a")).to_have_attribute(
+        "href", re.compile(r"/docs/adr/0007-serving-fusion-weight\.md$")
+    )
+    page.select_option("#shopper", "5")
+    expect(page.locator("#same-note")).to_be_hidden()
 
     page.select_option("#shopper", "anonymous")
     expect(page.locator("#fallback")).to_have_text("cold_start")
     expect(page.locator("#status")).to_contain_text("Cold start")
     expect(page.locator("#history li")).to_contain_text("No history")
     expect(page.locator("#recs li")).to_have_count(10)
+    expect(page.locator("#same-note")).to_be_hidden()

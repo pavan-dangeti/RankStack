@@ -306,10 +306,11 @@ def popularity_counts(trained: Trained) -> np.ndarray:
     )
 
 
-def demo_parts(
-    trained: Trained, n_shoppers: int = 3
-) -> tuple[ServingArtifacts, tuple[Shopper, ...]]:
-    """Build a synthetic artefact set and demo shoppers, those the toggle changes first.
+def demo_parts(trained: Trained) -> tuple[ServingArtifacts, tuple[Shopper, ...]]:
+    """Build a synthetic artefact set and eight demo shoppers laid out like the real fixture.
+
+    Shopper 5, which the page opens on, is one whose list the ranking toggle changes; the others
+    get the same top 10 in both modes, so the page's same-list note can be tested both ways.
 
     `popularity_recent` gets a random order of its own so that popular-only and blended lists are
     distinguishable; the shared baseline fixture uses one model for both popularity sources.
@@ -341,7 +342,9 @@ def demo_parts(
         return [item.item_id for item in recommender.recommend(user, DEMO_K).items]
 
     users = list(trained.encoding.user_to_code)
-    users.sort(key=lambda user: ids(blended, user) == ids(popular, user))
+    changed = [user for user in users if ids(blended, user) != ids(popular, user)]
+    unchanged = [user for user in users if user not in changed]
+    chosen = [*unchanged[:4], changed[0], *unchanged[4:7]]
     shoppers = tuple(
         Shopper(
             label=f"Shopper {number}",
@@ -352,6 +355,6 @@ def demo_parts(
                 for code in trained.cooccurrence.history(trained.encoding.user_to_code[user])
             ),
         )
-        for number, user in enumerate(users[:n_shoppers], start=1)
+        for number, user in enumerate(chosen, start=1)
     )
     return artifacts, shoppers

@@ -56,11 +56,16 @@ def client(parts: tuple[ServingArtifacts, tuple[Shopper, ...]]) -> TestClient:
 
 
 def test_page_loads_nothing_from_elsewhere(client: TestClient) -> None:
-    """No CDN, no external font or script: every URL the page uses is relative."""
+    """Nothing is loaded from elsewhere: an absolute URL may only be a link a person follows."""
     page = client.get("/demo")
     assert page.status_code == 200
     assert page.headers["content-type"].startswith("text/html")
-    assert not re.search(r"https?://|//[a-z0-9.-]+\.[a-z]{2,}/", page.text)
+    absolute = re.findall(r'(\S*)"(?:https?:)?//', page.text)
+    assert absolute == ["href="]
+    assert re.search(
+        r'<a href="https://github\.com/[^"]+/0007-serving-fusion-weight\.md">', page.text
+    )
+    assert not re.search(r"url\(|@import|<link|<script src", page.text)
 
 
 def test_shoppers_never_carry_a_reviewer_id(
@@ -83,7 +88,7 @@ def test_shoppers_never_carry_a_reviewer_id(
         ({"shopper": "1"}, 200),
         ({"shopper": "1", "mode": "both"}, 422),
         ({"shopper": "1", "mode": "0.75"}, 422),
-        ({"shopper": "4"}, 422),
+        ({"shopper": "9"}, 422),
         ({"shopper": "0"}, 422),
         ({"shopper": "user-a"}, 422),
     ],
@@ -103,18 +108,34 @@ def test_anonymous_visitor_takes_the_cold_start_path(client: TestClient) -> None
     assert {item["source"] for item in body["items"]} == {"trending"}
 
 
-def test_modes_serve_their_own_weight_and_differ_for_the_first_shopper(
-    client: TestClient,
-) -> None:
+def test_modes_serve_their_own_weight_and_differ_for_shopper_5(client: TestClient) -> None:
     """The toggle reaches the request path: weight 0 is popularity alone, and the lists differ."""
-    popular = client.get("/demo/recommend", params={"shopper": "1", "mode": "popular"}).json()
-    blended = client.get("/demo/recommend", params={"shopper": "1", "mode": "blended"}).json()
+    popular = client.get("/demo/recommend", params={"shopper": "5", "mode": "popular"}).json()
+    blended = client.get("/demo/recommend", params={"shopper": "5", "mode": "blended"}).json()
 
     assert (popular["weight"], blended["weight"]) == (0.0, 0.75)
     assert {item["source"] for item in popular["items"]} == {"trending"}
     assert [i["item_id"] for i in popular["items"]] != [i["item_id"] for i in blended["items"]]
+    assert not popular["same_top_10_in_both_modes"]
+    assert not blended["same_top_10_in_both_modes"]
     for field in ("elapsed_ms", "fallback_used", "model_version", "request_id"):
         assert field in blended
+
+
+def test_same_list_flag_is_true_when_both_modes_agree(client: TestClient) -> None:
+    """Shopper 1 gets the same top 10 either way, and the response says so in both modes."""
+    for mode in ("popular", "blended"):
+        body = client.get("/demo/recommend", params={"shopper": "1", "mode": mode}).json()
+        assert body["same_top_10_in_both_modes"]
+
+
+def test_metrics_count_one_served_request_per_blended_demo_request(client: TestClient) -> None:
+    """The cross-mode comparison runs on shadow recommenders and never reaches `/metrics`."""
+    for _ in range(3):
+        client.get("/demo/recommend", params={"shopper": "5", "mode": "blended"})
+    client.get("/demo/recommend", params={"shopper": "5", "mode": "popular"})
+    exposition = client.get("/metrics").text
+    assert 'recommend_requests_total{fallback="none"} 3.0' in exposition
 
 
 def test_badges_name_the_lists_each_item_came_from(
@@ -123,8 +144,8 @@ def test_badges_name_the_lists_each_item_came_from(
     """An item is badged with co-occurrence exactly when co-occurrence scored it."""
     artifacts, shoppers = parts
     recommender = Recommender(artifacts=artifacts)
-    code = artifacts.encoding.user_to_code[shoppers[0].user_id]
-    items = [item.item_id for item in recommender.recommend(shoppers[0].user_id, 10).items]
+    code = artifacts.encoding.user_to_code[shoppers[4].user_id]
+    items = [item.item_id for item in recommender.recommend(shoppers[4].user_id, 10).items]
     badges = source_badges(recommender, code, items)
 
     assert artifacts.cooccurrence is not None

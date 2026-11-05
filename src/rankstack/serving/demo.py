@@ -87,16 +87,23 @@ def build_demo_router(served: Recommender, shoppers: tuple[Shopper, ...]) -> API
     if unknown:
         msg = f"demo shoppers missing from the encoding: {', '.join(unknown)}"
         raise ValueError(msg)
+    popular_artifacts = replace(served.artifacts, cooccurrence_weight=0.0)
     recommenders: dict[str, Recommender] = {
         "blended": served,
-        "popular": Recommender(artifacts=replace(served.artifacts, cooccurrence_weight=0.0)),
+        "popular": Recommender(artifacts=popular_artifacts),
+    }
+    # Answers "would the other mode show the same list?" through recommenders whose metrics are
+    # never exported, so `/metrics` still counts one served request per demo request.
+    shadows: dict[str, Recommender] = {
+        "blended": Recommender(artifacts=served.artifacts),
+        "popular": Recommender(artifacts=popular_artifacts),
     }
     page = PAGE_PATH.read_text()
     router = APIRouter(prefix="/demo")
 
     @router.get("", response_class=HTMLResponse)
     def demo_page() -> str:
-        """Serve the page: one file, no build step, nothing loaded from elsewhere."""
+        """Serve the page: one file, no build step, no resource loaded from elsewhere."""
         return page
 
     @router.get("/shoppers")
@@ -137,7 +144,14 @@ def build_demo_router(served: Recommender, shoppers: tuple[Shopper, ...]) -> API
         )
         for item, badge in zip(items, badges, strict=True):
             item["source"] = badge
-        payload.update(shopper=label, mode=mode, weight=recommender.artifacts.cooccurrence_weight)
+        other = shadows["popular" if mode == "blended" else "blended"]
+        other_ids = [item.item_id for item in other.recommend(user_id, DEMO_K).items]
+        payload.update(
+            shopper=label,
+            mode=mode,
+            weight=recommender.artifacts.cooccurrence_weight,
+            same_top_10_in_both_modes=other_ids == [item["item_id"] for item in items],
+        )
         return payload
 
     return router

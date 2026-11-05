@@ -77,6 +77,8 @@ li:first-child { border-top: 0; }
   margin: 0 0 12px; padding: 8px 12px; border-radius: 8px;
   background: var(--warn-bg); color: var(--warn-fg); font-size: 0.9rem;
 }
+#same-note { margin: 10px 0 0; }
+.notice a { color: inherit; }
 .empty { color: var(--muted); }
 footer.response {
   margin-top: 16px; padding: 12px 16px; border: 1px solid var(--line); border-radius: 10px;
@@ -125,6 +127,8 @@ footer.response div { display: flex; }
         to
         +<span data-figure="results/fusion_weight_test_electronics_0core.json#/result/paired_hr@20_vs_popularity_recent/ci_high">0.004</span>.
       </p>
+      <p class="notice" id="same-note" hidden>Same top 10 in both modes for this shopper. Why:
+        <a href="https://github.com/pavan-dangeti/RankStack/blob/main/docs/adr/0007-serving-fusion-weight.md">ADR-0007</a></p>
     </fieldset>
   </div>
 
@@ -154,6 +158,7 @@ footer.response div { display: flex; }
 "use strict";
 const $ = (selector) => document.querySelector(selector);
 let shoppers = [];
+const DEFAULT_SHOPPER = 5;
 
 const EXPLAIN = {
   top_ranked_in_category: (e) => e[0] ? e[0].charAt(0).toUpperCase() + e[0].slice(1) : "Top pick",
@@ -196,6 +201,8 @@ function renderRecommendations(payload) {
       : `Degraded (${payload.fallback_used}): serving global popularity.`;
     status.append(el("p", "notice", reason));
   }
+  // Only a served list can be compared across modes; cold start and degraded paths ignore the weight.
+  $("#same-note").hidden = !(payload.same_top_10_in_both_modes && payload.fallback_used === null);
   for (const item of payload.items) {
     const row = el("li");
     row.dataset.itemId = item.item_id;
@@ -203,11 +210,10 @@ function renderRecommendations(payload) {
     title.append(el("span", "rank", `${item.rank}.`), document.createTextNode(item.title || item.item_id));
     const badge = el("span", `badge ${BADGE[item.source] || "trending"}`, item.source);
     title.append(badge);
-    const price = item.price === null ? "price unknown" : `$${item.price.toFixed(2)}`;
     const explain = EXPLAIN[item.explanation.template] || (() => item.explanation.template);
     row.append(
       title,
-      el("div", "meta", `${item.category || "uncategorised"} · ${price}`),
+      el("div", "meta", item.category || "uncategorised"),
       el("div", "why", explain(item.explanation.evidence)),
     );
     list.append(row);
@@ -242,6 +248,8 @@ async function init() {
     select.append(new Option(`${shopper.label} · ${shopper.theme}`, String(shopper.id)));
   }
   select.append(new Option("Anonymous visitor", "anonymous"));
+  // Shopper 5 opens the page because the ranking toggle visibly changes their list.
+  select.value = shoppers.length >= DEFAULT_SHOPPER ? String(DEFAULT_SHOPPER) : "1";
   select.addEventListener("change", load);
   for (const radio of document.querySelectorAll("input[name=mode]")) {
     radio.addEventListener("change", load);

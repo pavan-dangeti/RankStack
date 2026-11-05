@@ -218,6 +218,23 @@ COHORTS: dict[str, str] = {
         JOIN eligible USING (user_id)
         JOIN known_items ON known_items.parent_asin = last.target
         """,
+    # `warm_users` with the target taken from the validation window instead of the test window.
+    # Choices made on this cohort leave the test split untouched for a single confirmation run.
+    "warm_users_valid": """
+        WITH depths AS (
+            SELECT user_id, count(*) AS n FROM train GROUP BY user_id
+        ),
+        eligible AS (SELECT user_id FROM depths WHERE n >= 2),
+        last AS (
+            SELECT user_id, arg_max(parent_asin, timestamp) AS target
+            FROM valid GROUP BY user_id
+        ),
+        known_items AS (SELECT DISTINCT parent_asin FROM train)
+        SELECT last.user_id, last.target
+        FROM last
+        JOIN eligible USING (user_id)
+        JOIN known_items ON known_items.parent_asin = last.target
+        """,
 }
 
 

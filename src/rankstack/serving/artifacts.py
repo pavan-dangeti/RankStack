@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import hashlib
 import json
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path  # noqa: TC003 - used at runtime by the readers and writers
 from typing import TYPE_CHECKING, cast
 
@@ -95,6 +95,10 @@ class ServingArtifacts:
     history_codes: np.ndarray
     corpus: str
     versions: dict[str, str]
+    #: Co-occurrence weight in the served fusion; see `Settings.fusion_cooccurrence_weight`.
+    cooccurrence_weight: float = field(
+        default_factory=lambda: default_settings.fusion_cooccurrence_weight
+    )
 
     @property
     def n_items(self) -> int:
@@ -116,25 +120,25 @@ class ServingArtifacts:
         return available
 
     def served_source(self) -> CandidateSource:
-        """Return what the request path actually serves.
+        """Return what the request path serves to a known user.
 
-        Fusion, not the single best-scoring retriever. `popularity_recent` has the best hit rate
-        but it is a *global* ranking that gives almost every user the same top item. Fusion costs
-        hit rate and makes the list differ between users; the measured trade is in
-        `results/fusion_electronics_0core.json` and the README. A recommender that shows everyone
-        the same list is not a recommender, so the trade is taken deliberately and its cost is
-        published rather than discovered.
-
-        Falls back to the global ranking when co-occurrence was not loaded, which is the
-        memory-constrained configuration.
+        `popularity_recent` fused with co-occurrence at `cooccurrence_weight`, the weight chosen by
+        the pre-registered rule in docs/adr/0007-serving-fusion-weight.md. A weight of 0, or
+        co-occurrence not being loaded (the memory-constrained configuration), serves
+        `popularity_recent` alone.
         """
-        if self.cooccurrence is None:
+        if self.cooccurrence is None or self.cooccurrence_weight == 0:
             return self.popularity_recent
         fused_sources = {
             "popularity_recent": self.popularity_recent,
             "cooccurrence": self.cooccurrence,
         }
-        return FusedSource(sources=fused_sources, rrf_k=DEFAULT_RRF_K, depth=DEFAULT_DEPTH)
+        return FusedSource(
+            sources=fused_sources,
+            rrf_k=DEFAULT_RRF_K,
+            depth=DEFAULT_DEPTH,
+            weights={"cooccurrence": self.cooccurrence_weight},
+        )
 
     def seen_mask(self, user_code: int) -> np.ndarray:
         """Return the boolean mask of items the user has already interacted with."""
@@ -224,6 +228,7 @@ def load_artifacts(
         history_codes=history_codes,
         corpus=corpus,
         versions=versions,
+        cooccurrence_weight=(config or default_settings).fusion_cooccurrence_weight,
     )
     _logger.info(
         "serving.artifacts_loaded",

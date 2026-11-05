@@ -37,6 +37,12 @@ class Settings(BaseSettings):
     download_chunk_bytes: int = 8 * 1024 * 1024
     """Streaming chunk size for dataset downloads."""
 
+    fusion_cooccurrence_weight: float = Field(default=1.0, ge=0.0)
+    """Weight of co-occurrence in the served fusion for known users; 0 serves popularity alone.
+
+    Chosen by the pre-registered rule in docs/adr/0007-serving-fusion-weight.md, not by hand.
+    """
+
     @cached_property
     def processed_root(self) -> Path:
         """Where validated Parquet and manifests for every corpus are written."""

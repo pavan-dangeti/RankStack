@@ -13,7 +13,7 @@ not a number fitted to this corpus.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import numpy as np
 
@@ -38,6 +38,9 @@ class FusedSource:
     sources: dict[str, object]
     rrf_k: int = DEFAULT_RRF_K
     depth: int = DEFAULT_DEPTH
+    #: Multiplier on each source's `1 / (rrf_k + rank)`, by source name; a missing name means 1.
+    #: A weight of 0 skips the source, so fusing with weight 0 is the other source alone.
+    weights: dict[str, float] = field(default_factory=dict)
 
     @property
     def name(self) -> str:
@@ -57,7 +60,10 @@ class FusedSource:
         """Return fused scores for every item, with already-seen items masked to `-inf`."""
         fused = np.zeros(self.n_items(), dtype=np.float64)
         contributed = 0
-        for source in self.sources.values():
+        for name, source in self.sources.items():
+            weight = self.weights.get(name, 1.0)
+            if weight == 0:
+                continue
             scores = source.score(user_code, seen)  # type: ignore[attr-defined]
             codes, values = top_k(scores, self.depth)
             # A zero score is no evidence: co-occurrence scores 0 for every item unrelated to the
@@ -67,7 +73,7 @@ class FusedSource:
             if codes.size == 0:
                 continue
             contributed += 1
-            fused[codes] += 1.0 / (self.rrf_k + np.arange(1, codes.size + 1, dtype=np.float64))
+            fused[codes] += weight / (self.rrf_k + np.arange(1, codes.size + 1, dtype=np.float64))
         if contributed == 0:
             # No source produced a ranking, which only happens if every source raised and the
             # exception boundary above already logged it. Returning -inf keeps the item out rather

@@ -19,6 +19,10 @@ the row's pointer extended by that sub-path:
     | w (`/weight`) | HR@20 (`/hr@20/point`) | Figure |
     | 0.25 | 0.03250 | results/sweep_x.json#/by_weight/0.25 |
 
+A figure on the demo page, held by the element whose `data-figure` attribute names its pointer:
+
+    <span data-figure="results/sweep_x.json#/selected_weight">0.75</span>
+
 A prose pointer without a figure directly before it is an error rather than being skipped, so a
 sentence cannot cite a result file while stating a number the check never reads. A figure must equal
 its result rounded to the precision written: `25.1 ms` matches 25.076, `25.0 ms` does not.
@@ -42,6 +46,7 @@ DOCUMENTS = (
     REPO_ROOT / "docs" / "design.md",
     REPO_ROOT / "docs" / "runbook.md",
     *sorted((REPO_ROOT / "docs" / "adr").glob("*.md")),
+    REPO_ROOT / "src" / "rankstack" / "serving" / "demo.html",
 )
 
 _POINTER = r"results/(?P<name>[a-z0-9][a-z0-9._-]*)\.json#(?P<pointer>/[A-Za-z0-9_/.\[\]@-]*)"
@@ -54,6 +59,8 @@ REFERENCE = re.compile(_POINTER)
 NUMBER = re.compile(rf"^{_FIGURE}{_UNIT}$")
 #: A figure in prose, immediately followed by its pointer as a parenthesised code span.
 PROSE_FIGURE = re.compile(rf"{_FIGURE}{_UNIT} \(`{_POINTER}`\)")
+#: A figure on the demo page: an element whose `data-figure` names its pointer and holds the figure.
+HTML_FIGURE = re.compile(rf'data-figure="{_POINTER}"[^>]*>{_FIGURE}<')
 #: A sub-path declared in a table header cell; each row's pointer is then the base it extends.
 COLUMN_PATH = re.compile(r"`(?P<path>/[A-Za-z0-9_/.\[\]@-]*)`")
 #: The `|---|---|` line under a table header.
@@ -123,7 +130,7 @@ def check_row(document: Path, row: str) -> str | None:
 
 def check_prose(document: Path, line: str) -> tuple[list[str], int]:
     """Return the problems and the number of figures checked in one line of prose."""
-    figures = list(PROSE_FIGURE.finditer(line))
+    figures = [*PROSE_FIGURE.finditer(line), *HTML_FIGURE.finditer(line)]
     covered = {figure.start("name") for figure in figures}
     problems = [
         f"{document.name}: {reference.group(0)} is cited in prose without a figure "

@@ -90,6 +90,14 @@ is generated at request time (ADR-0003), so every explanation is traceable to a 
 | `GET /recommend` | The recommendation path. |
 | `GET /healthz` | Liveness. Artefact state, catalogue size, no model call. |
 | `GET /metrics` | Prometheus exposition. |
+| `GET /demo` | The demo page: eight curated shoppers and an anonymous visitor, served blend or popular only. |
+| `GET /demo/shoppers` | The demo fixture's labels, themes and histories. Never returns a reviewer id. |
+| `GET /demo/recommend?shopper=<1..8 or anonymous>&mode=<popular or blended>` | One demo request through the real request path. Any other value is a 422. Blended requests are counted in `/metrics`. |
+
+The demo shoppers come from `scripts/build_demo_fixture.py`, a selection rule run once against the
+processed data; the fixture is committed at `src/rankstack/serving/demo_shoppers.json`. If the
+artefacts are rebuilt for another corpus, rebuild the fixture with them: the app refuses to start
+when a demo shopper is missing from the encoding.
 
 ## Latency
 

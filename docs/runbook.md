@@ -40,18 +40,26 @@ uv run python scripts/build_serving_manifest.py          # hash the artefacts
 docker build -f infra/docker/Dockerfile.serve -t rankstack-serve .
 
 docker run --rm -p 8000:8000 \
-  -v "$PWD/data/processed:/data:ro" \
+  -v "$PWD/data:/data:ro" \
   -v "$PWD/artifacts:/artifacts:ro" \
   rankstack-serve
 ```
 
 Artefacts are mounted read-only and verified against `serving_manifest.json` before the first
 request. A hash mismatch **fails startup**. That is the intended behaviour: a serving process that
-cannot vouch for its model should not answer.
+cannot vouch for its model should not answer. The catalogue is read from
+`/data/processed/<corpus>/items/items.parquet`, so `data/` is mounted whole.
 
-First load takes about 9 s on the development machine and 683 MB resident (1.6M product titles).
-For a 512 MB free tier, build the catalogue with `with_titles=False`; responses then carry
-`title: null` and nothing else changes.
+Memory, measured with the app built exactly as the server builds it and 120 requests served
+(`scripts/measure_memory.py`; the Linux row runs inside the serving image):
+
+| Where | After load (`/rss_after_load_mib`) | After 120 requests (`/rss_after_requests_mib`) | Peak, loading included (`/peak_rss_mib`) | Load time (`/artifact_load_seconds`) | Figure |
+|---|---|---|---|---|---|
+| Linux, serving image | 3,520.3 MiB | 3,569.7 MiB | 3,788.1 MiB | 12.85 s | results/memory_electronics_0core_linux-aarch64-container.json#/ |
+| macOS, development machine | 4,954.5 MiB | 4,937.9 MiB | 4,965.8 MiB | 9.43 s | results/memory_electronics_0core_darwin-arm64.json#/ |
+
+No free tier with 512 MB or 1 GB of memory can hold this process; plan for the peak, not the steady
+state.
 
 A known user, with four train-window purchases (a charger and three sets of headphones):
 

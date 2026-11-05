@@ -1,0 +1,20 @@
+{
+  "artifact_load_seconds": 12.85,
+  "command": "docker run ... --entrypoint python rankstack-serve /app/scripts/measure_memory.py",
+  "corpus": "electronics_0core",
+  "definitions": {
+    "peak_rss_mib": "maximum resident set size of the process, loading included",
+    "rss_after_load_mib": "resident set size once the app is built",
+    "rss_after_requests_mib": "resident set size after the requests above"
+  },
+  "peak_rss_mib": 3788.1,
+  "platform": "linux-aarch64-container",
+  "python": "3.12.16",
+  "requests": {
+    "k": 20,
+    "known_users": 100,
+    "unknown_users": 20
+  },
+  "rss_after_load_mib": 3520.3,
+  "rss_after_requests_mib": 3569.7
+}

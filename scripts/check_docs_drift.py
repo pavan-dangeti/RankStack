@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 """Fail if a figure in the documentation no longer matches its committed result file.
 
-Every number in README.md, CHANGELOG.md, docs/design.md, docs/runbook.md and the ADRs must come
-from a committed file under `results/`, with the file named next to it. These forms are checked.
+Every number in README.md, CHANGELOG.md, docs/design.md, docs/runbook.md, the ADRs, the demo page
+and the serving Dockerfile's comments must come from a committed file under `results/`, with the
+file named next to it. These forms are checked.
 
 A table row, where the first figure cell is compared with the pointer in the same row:
 
@@ -52,6 +53,7 @@ DOCUMENTS = (
     REPO_ROOT / "docs" / "runbook.md",
     *sorted((REPO_ROOT / "docs" / "adr").glob("*.md")),
     REPO_ROOT / "src" / "rankstack" / "serving" / "demo.html",
+    REPO_ROOT / "infra" / "docker" / "Dockerfile.serve",
 )
 
 _POINTER = r"results/(?P<name>[a-z0-9][a-z0-9._-]*)\.json#(?P<pointer>/[A-Za-z0-9_/.\[\]@-]*)"

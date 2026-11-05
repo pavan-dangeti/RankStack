@@ -19,6 +19,10 @@ the row's pointer extended by that sub-path:
     | w (`/weight`) | HR@20 (`/hr@20/point`) | Figure |
     | 0.25 | 0.03250 | results/sweep_x.json#/by_weight/0.25 |
 
+A table row that cites its figures in the cells, read exactly like prose:
+
+    | Serving latency, warm p50 / p99 | 23.9 ms (`results/x.json#/p50`) / 34.6 ms (`...`) |
+
 A figure on the demo page, held by the element whose `data-figure` attribute names its pointer:
 
     <span data-figure="results/sweep_x.json#/selected_weight">0.75</span>
@@ -205,6 +209,12 @@ def verify_document(document: Path) -> tuple[list[str], int]:
             column_problems, column_checked = check_columns(document, line, paths)
             problems.extend(column_problems)
             checked += column_checked
+        elif PROSE_FIGURE.search(line):
+            # A row that cites figures in its cells, `23.9 ms (`results/...`)`, is read like prose:
+            # every figure is checked, and a pointer without a figure in front of it is an error.
+            cell_problems, cell_checked = check_prose(document, line)
+            problems.extend(cell_problems)
+            checked += cell_checked
         else:
             problem = check_row(document, line)
             if problem is None:

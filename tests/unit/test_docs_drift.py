@@ -117,6 +117,19 @@ def test_a_missing_figure_under_a_header_sub_path_is_an_error(sweep_document: Pa
     assert "no figure under column /hr/point" in problems[0]
 
 
+def test_every_figure_cited_in_a_table_cell_is_checked(document: Path) -> None:
+    """A key-results row cites several figures in its cells; each one is compared."""
+    row = "| Latency p50 / p99 | {p50} ms (`results/run.json#/latency/0/p50_ms`) / {extra} |\n"
+    document.write_text(row.format(p50="26.1", extra="-0.0148 (`" + POINTER + "`)"))
+    assert verify_document(document) == ([], 2)
+
+    document.write_text(row.format(p50="25.0", extra="see `" + POINTER + "`"))
+    problems, checked = verify_document(document)
+    assert checked == 1
+    assert any("25.0 does not match" in problem for problem in problems)
+    assert any("without a figure" in problem for problem in problems)
+
+
 def test_a_label_starting_with_a_digit_is_not_taken_as_the_figure() -> None:
     """A row label such as `300 (shipped)` must not be compared against the pointer."""
     assert stated_figure("| 300 (shipped) | 0.00915 | results/x.json#/a |") == "0.00915"

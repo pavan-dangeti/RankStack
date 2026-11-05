@@ -1,0 +1,40 @@
+{
+  "catalogue_items": 1334914,
+  "cohort": "warm_users",
+  "cohort_size": 2000,
+  "command": "uv run python scripts/select_fusion_weight.py confirm",
+  "corpus": "electronics_0core",
+  "elapsed_seconds": 39.4,
+  "k": 20,
+  "resamples": 1000,
+  "result": {
+    "coverage_at_20": {
+      "fraction": 9.888e-05,
+      "items": 132
+    },
+    "distinct_top_1": 19,
+    "hr@20": {
+      "ci_high": 0.027012,
+      "ci_low": 0.015,
+      "confidence": 0.95,
+      "point": 0.0205,
+      "resamples": 1000
+    },
+    "paired_hr@20_vs_popularity_recent": {
+      "bootstrap_probability_alternative_wins": 0.562,
+      "ci_high": 0.004,
+      "ci_low": -0.003,
+      "difference": 0.0005,
+      "measurable": false,
+      "metric": "hr@20",
+      "n": 2000,
+      "resamples": 1000
+    },
+    "qualifies": true,
+    "weight": 0.75
+  },
+  "rule": "docs/adr/0007-serving-fusion-weight.md",
+  "seed": 20261008,
+  "selected_in": "fusion_weight_sweep_electronics_0core.json",
+  "selected_weight": 0.75
+}

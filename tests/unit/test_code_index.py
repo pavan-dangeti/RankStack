@@ -40,6 +40,15 @@ def test_every_user_gets_the_code_the_dict_gave(trained: Trained) -> None:
     assert index.agrees_with(mapping)
 
 
+def test_id_of_finds_the_id_holding_a_code(trained: Trained) -> None:
+    """The reverse lookup the demo uses to turn a committed code back into its user."""
+    mapping = trained.encoding.user_to_code
+    index = CodeIndex.from_mapping(mapping)
+    for user, code in mapping.items():
+        assert index.id_of(code) == user
+    assert index.id_of(len(mapping) + 10) is None
+
+
 def test_unknown_ids_return_none(trained: Trained) -> None:
     """Near misses of a real id are not real ids: prefixes, extensions, padding, other types."""
     index = CodeIndex.from_mapping(trained.encoding.user_to_code)

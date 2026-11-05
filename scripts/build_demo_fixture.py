@@ -5,21 +5,21 @@
 The selection is a rule, not a hand pick, so it can be re-run and audited. For each theme, in
 order: users with 5 to 8 distinct train-window items, every item titled and categorised, and at
 least 4 items whose title matches the theme; the first such user in a seeded hash order is taken,
-and no user is taken twice. Only what the page shows is written: a label, the theme, the
-train-window history as title, category and year, and the user id the server needs to score them.
-The page never shows the id; `/demo/shoppers` never returns it.
+and no user is taken twice. Only a label, the theme and each user's internal code from the local
+encoding are written: no reviewer id and no history. The server resolves a code to its user and
+reads the history from the local train window at startup (`resolve_shoppers`).
 """
 
 from __future__ import annotations
 
 import argparse
 import json
-from datetime import UTC, datetime
 
 import duckdb
 
 from rankstack.config import settings
 from rankstack.data.corpus import CORPORA, DEFAULT_CORPUS, get_corpus
+from rankstack.data.encode import load_serving_encoding
 from rankstack.serving.demo import FIXTURE_PATH
 
 #: (theme, case-insensitive title pattern). The order is the shopper order on the page.
@@ -73,25 +73,7 @@ def select(connection: duckdb.DuckDBPyConnection, seed: int) -> list[dict[str, o
             raise LookupError(msg)
         user_id = str(row[0])
         chosen.append(user_id)
-        history = connection.execute(
-            "SELECT title, main_category, ts FROM candidate WHERE user_id = ? ORDER BY ts DESC",
-            [user_id],
-        ).fetchall()
-        shoppers.append(
-            {
-                "label": f"Shopper {number}",
-                "theme": theme,
-                "user_id": user_id,
-                "history": [
-                    {
-                        "title": title,
-                        "category": category,
-                        "year": datetime.fromtimestamp(ts / 1000, tz=UTC).year,
-                    }
-                    for title, category, ts in history
-                ],
-            }
-        )
+        shoppers.append({"label": f"Shopper {number}", "theme": theme, "user_id": user_id})
     return shoppers
 
 
@@ -109,8 +91,13 @@ def main(argv: list[str] | None = None) -> int:
         connection.execute(
             f"CREATE VIEW {relation} AS SELECT * FROM read_parquet('{path.as_posix()}')"  # noqa: S608
         )
-    shoppers = select(connection, settings.seed)
+    selected = select(connection, settings.seed)
     connection.close()
+    users = load_serving_encoding(settings.artifact_root, args.corpus).user_to_code
+    shoppers = [
+        {"label": s["label"], "theme": s["theme"], "user_code": users[str(s["user_id"])]}
+        for s in selected
+    ]
     payload = {
         "rule": "scripts/build_demo_fixture.py",
         "corpus": args.corpus,

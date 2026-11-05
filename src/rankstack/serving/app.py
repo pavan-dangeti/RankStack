@@ -21,7 +21,7 @@ from rankstack.config import Settings
 from rankstack.config import settings as default_settings
 from rankstack.logging import configure_logging, get_logger
 from rankstack.serving.artifacts import load_artifacts
-from rankstack.serving.demo import build_demo_router, load_shoppers
+from rankstack.serving.demo import build_demo_router, load_shopper_specs, resolve_shoppers
 from rankstack.serving.recommender import DEFAULT_K, MAX_K, Recommender
 
 if TYPE_CHECKING:
@@ -93,7 +93,10 @@ def build_default_app(config: Settings | None = None) -> FastAPI:
     """Load artefacts for the default corpus and build the app. Used by the container entrypoint."""
     resolved = config or default_settings
     artifacts = load_artifacts(resolved.artifact_root, CORPUS, with_titles=True)
-    return create_app(artifacts, load_shoppers())
+    shoppers = resolve_shoppers(
+        load_shopper_specs(), artifacts.encoding, resolved.processed(CORPUS)
+    )
+    return create_app(artifacts, shoppers)
 
 
 _app: FastAPI | None = None

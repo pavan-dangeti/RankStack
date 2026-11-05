@@ -14,8 +14,10 @@ from rankstack.serving.app import create_app
 from rankstack.serving.demo import (
     FIXTURE_PATH,
     Shopper,
+    ShopperSpec,
     build_demo_router,
-    load_shoppers,
+    load_shopper_specs,
+    resolve_shoppers,
     source_badges,
 )
 from rankstack.serving.recommender import Recommender
@@ -26,21 +28,45 @@ if TYPE_CHECKING:
     from tests.conftest import Trained
 
 
-def test_committed_fixture_holds_only_the_curated_shoppers() -> None:
-    """Eight shoppers, one per theme, and nothing beyond what the page shows."""
-    payload = json.loads(FIXTURE_PATH.read_text())
+def test_committed_fixture_holds_only_labels_themes_and_internal_codes() -> None:
+    """No reviewer id, no history, no title: the committed file identifies nobody on its own."""
+    text = FIXTURE_PATH.read_text()
+    payload = json.loads(text)
     shoppers = payload["shoppers"]
 
     assert set(payload) == {"rule", "corpus", "seed", "shoppers"}
     assert [s["label"] for s in shoppers] == [f"Shopper {n}" for n in range(1, len(THEMES) + 1)]
     assert [s["theme"] for s in shoppers] == [theme for theme, _ in THEMES]
-    assert len({s["user_id"] for s in shoppers}) == len(shoppers)
     for shopper in shoppers:
-        assert set(shopper) == {"label", "theme", "user_id", "history"}
-        assert 5 <= len(shopper["history"]) <= 8
-        for entry in shopper["history"]:
+        assert set(shopper) == {"label", "theme", "user_code"}
+        assert isinstance(shopper["user_code"], int)
+    assert len({s["user_code"] for s in shoppers}) == len(shoppers)
+    assert not re.search(r"\bA[A-Z0-9]{27}\b", text), "a reviewer id is committed"
+    assert load_shopper_specs() == tuple(
+        ShopperSpec(s["label"], s["theme"], s["user_code"]) for s in shoppers
+    )
+
+
+def test_shoppers_resolve_from_codes_to_their_local_history(trained: Trained) -> None:
+    """A code becomes its user; the history comes from the local train window, newest first."""
+    codes = (0, 1)
+    specs = tuple(ShopperSpec(f"Shopper {c + 1}", "theme", c) for c in codes)
+    shoppers = resolve_shoppers(specs, trained.encoding, trained.processed)
+
+    for spec, shopper in zip(specs, shoppers, strict=True):
+        assert shopper.user_id == trained.encoding.user_codes[spec.user_code]
+        assert shopper.history
+        years = [int(entry["year"]) for entry in shopper.history]  # type: ignore[call-overload]
+        assert years == sorted(years, reverse=True)
+        for entry in shopper.history:
             assert set(entry) == {"title", "category", "year"}
-    assert len(load_shoppers()) == len(THEMES)
+
+
+def test_an_unknown_code_fails_resolution(trained: Trained) -> None:
+    """A fixture built for other artefacts must fail at startup, not show an empty shopper."""
+    stranger = ShopperSpec("Shopper 1", "theme", trained.encoding.n_users + 5)
+    with pytest.raises(ValueError, match="missing from the encoding"):
+        resolve_shoppers((stranger,), trained.encoding, trained.processed)
 
 
 @pytest.fixture

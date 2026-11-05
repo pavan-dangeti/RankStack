@@ -109,6 +109,11 @@ class CodeIndex(Mapping[str, int]):
         """Return the number of ids."""
         return int(self._keys.size)
 
+    def id_of(self, code: int) -> str | None:
+        """Return the id holding `code`, or None. A linear scan, meant for a handful of codes."""
+        positions = np.flatnonzero(self._codes == code)
+        return bytes(self._keys[positions[0]]).decode("utf-8") if positions.size else None
+
     def agrees_with(self, mapping: Mapping[str, int]) -> bool:
         """Return True when every id in `mapping` maps to the same code here, and nothing more."""
         if len(mapping) != len(self):

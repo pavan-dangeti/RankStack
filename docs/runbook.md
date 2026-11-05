@@ -63,14 +63,16 @@ The user map, fifteen million ids, is held as a sorted id array searched by bise
 and refuses to write it unless every user's code matches. No free tier with 512 MB or 1 GB of
 memory can hold this process; plan for the peak, not the steady state.
 
-A known user, with four train-window purchases (a charger and three sets of headphones):
+A known user: pick one from your own local data rather than from this document, which names no real
+reviewer. This takes a random user with four to eight train-window interactions:
 
 ```bash
-curl -s 'http://localhost:8000/recommend?user_id=AE222N3VUKMF3GO6D4LHTELE7UWA&k=5' | python3 -m json.tool
+USER_ID=$(uv run python -c "import duckdb; print(duckdb.sql(\"SELECT user_id FROM 'data/processed/electronics_0core/interactions/train.parquet' GROUP BY user_id HAVING count(*) BETWEEN 4 AND 8 ORDER BY random() LIMIT 1\").fetchone()[0])")
+curl -s "http://localhost:8000/recommend?user_id=$USER_ID&k=5" | python3 -m json.tool
 ```
 
-The response has `"fallback_used": null`. For this user the fused list holds globally trending items
-reordered where co-occurrence links them to the user's history, so its order differs from the
+The response has `"fallback_used": null`. A known user's fused list holds globally trending items
+reordered where co-occurrence links them to the user's history, so its order can differ from the
 cold-start list below even where the items are the same.
 
 An unknown user takes the cold-start path:
@@ -105,9 +107,12 @@ is generated at request time (ADR-0003), so every explanation is traceable to a 
 | `GET /demo/recommend?shopper=<1..8 or anonymous>&mode=<popular or blended>` | One demo request through the real request path. Any other value is a 422. Blended requests are counted in `/metrics`. |
 
 The demo shoppers come from `scripts/build_demo_fixture.py`, a selection rule run once against the
-processed data; the fixture is committed at `src/rankstack/serving/demo_shoppers.json`. If the
-artefacts are rebuilt for another corpus, rebuild the fixture with them: the app refuses to start
-when a demo shopper is missing from the encoding.
+processed data. The committed fixture, `src/rankstack/serving/demo_shoppers.json`, holds only a label,
+a theme and an internal user code per shopper: no reviewer id and no history. At startup the server
+resolves each code to its user through the local encoding and reads the history from the local
+train window, so `data/processed` must be mounted. If the artefacts are rebuilt, rebuild the fixture
+with them: user codes belong to one encoding, and the app refuses to start when a code is missing
+from it.
 
 ## Latency
 

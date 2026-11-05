@@ -11,15 +11,21 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, replace
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, Literal
 
+import duckdb
 from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import HTMLResponse
 
+from rankstack.data.encode import CodeIndex
 from rankstack.retrieval.base import top_k
 from rankstack.retrieval.fusion import DEFAULT_DEPTH
 from rankstack.serving.recommender import Recommender
+
+if TYPE_CHECKING:
+    from rankstack.data.encode import Encoding
 
 FIXTURE_PATH = Path(__file__).with_name("demo_shoppers.json")
 PAGE_PATH = Path(__file__).with_name("demo.html")
@@ -31,8 +37,21 @@ Mode = Literal["popular", "blended"]
 
 
 @dataclass(frozen=True, slots=True)
+class ShopperSpec:
+    """One curated demo user as committed: a label, a theme and an internal user code, nothing else.
+
+    The code is an index into the locally built encoding. It identifies nobody outside this
+    process, which is why the committed fixture holds it rather than a reviewer id or a history.
+    """
+
+    label: str
+    theme: str
+    user_code: int
+
+
+@dataclass(frozen=True, slots=True)
 class Shopper:
-    """One curated demo user. `user_id` stays on the server."""
+    """One demo user resolved on the server. `user_id` and `history` never leave the process."""
 
     label: str
     theme: str
@@ -40,17 +59,71 @@ class Shopper:
     history: tuple[dict[str, object], ...]
 
 
-def load_shoppers(path: Path = FIXTURE_PATH) -> tuple[Shopper, ...]:
+def load_shopper_specs(path: Path = FIXTURE_PATH) -> tuple[ShopperSpec, ...]:
     """Read the committed shopper fixture."""
     payload = json.loads(path.read_text())
     return tuple(
-        Shopper(
+        ShopperSpec(
             label=str(entry["label"]),
             theme=str(entry["theme"]),
-            user_id=str(entry["user_id"]),
-            history=tuple(entry["history"]),
+            user_code=int(entry["user_code"]),
         )
         for entry in payload["shoppers"]
+    )
+
+
+def _user_id(encoding: Encoding, code: int) -> str | None:
+    users = encoding.user_to_code
+    if isinstance(users, CodeIndex):
+        return users.id_of(code)
+    return encoding.user_codes.get(code)
+
+
+def resolve_shoppers(
+    specs: tuple[ShopperSpec, ...], encoding: Encoding, processed: Path
+) -> tuple[Shopper, ...]:
+    """Turn committed codes into shoppers, reading each history from the local train window.
+
+    The history is what the page's left panel shows: each distinct train-window item with its
+    catalogue title and category and the year of the user's latest interaction with it, newest
+    first.
+    """
+    ids = [_user_id(encoding, spec.user_code) for spec in specs]
+    unknown = [spec.label for spec, user in zip(specs, ids, strict=True) if user is None]
+    if unknown:
+        msg = f"demo shoppers missing from the encoding: {', '.join(unknown)}"
+        raise ValueError(msg)
+    train = processed / "interactions" / "train.parquet"
+    items = processed / "items" / "items.parquet"
+    rows = (
+        duckdb.connect(database=":memory:")
+        .execute(
+            """
+            WITH hist AS (
+                SELECT user_id, parent_asin, max(timestamp) AS ts
+                FROM read_parquet(?) WHERE list_contains(?, user_id) GROUP BY ALL
+            )
+            SELECT hist.user_id, items.title, items.main_category, hist.ts
+            FROM hist LEFT JOIN read_parquet(?) AS items USING (parent_asin)
+            ORDER BY hist.user_id, hist.ts DESC, hist.parent_asin
+            """,
+            [train.as_posix(), ids, items.as_posix()],
+        )
+        .fetchall()
+    )
+    histories: dict[str, list[dict[str, object]]] = {user: [] for user in ids if user}
+    for user, title, category, ts in rows:
+        histories[user].append(
+            {
+                "title": title or "Untitled item",
+                "category": category or "Uncategorised",
+                "year": datetime.fromtimestamp(ts / 1000, tz=UTC).year,
+            }
+        )
+    return tuple(
+        Shopper(label=spec.label, theme=spec.theme, user_id=user, history=tuple(histories[user]))
+        for spec, user in zip(specs, ids, strict=True)
+        if user is not None
     )
 
 

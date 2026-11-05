@@ -33,7 +33,9 @@ the test split. There, against popularity alone, the paired HR@20 difference is
 0.0005 (`results/fusion_weight_test_electronics_0core.json#/result/paired_hr@20_vs_popularity_recent/difference`),
 95% CI -0.003 (`results/fusion_weight_test_electronics_0core.json#/result/paired_hr@20_vs_popularity_recent/ci_low`)
 to 0.004 (`results/fusion_weight_test_electronics_0core.json#/result/paired_hr@20_vs_popularity_recent/ci_high`).
-An unknown user gets popularity alone. Warm-user latency met all five SLOs in one process.
+An unknown user gets popularity alone. Warm-user latency is
+23.9 ms (`results/load_test_electronics_0core.json#/latency/0/p50_ms`) at p50 and
+34.6 ms (`results/load_test_electronics_0core.json#/latency/0/p99_ms`) at p99 in one process.
 
 **Changes since the last phase (pull requests #1 to #4 and #6):**
 

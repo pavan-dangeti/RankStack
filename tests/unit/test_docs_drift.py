@@ -8,6 +8,7 @@ written with a unit.
 from __future__ import annotations
 
 import json
+import subprocess
 from typing import TYPE_CHECKING
 
 import pytest
@@ -18,6 +19,12 @@ if TYPE_CHECKING:
     from pathlib import Path
 
 POINTER = "results/run.json#/paired/difference"
+
+
+@pytest.fixture(autouse=True)
+def fresh_results() -> None:
+    """Forget result files read by an earlier test; each test writes its own."""
+    check_docs_drift.load_result.cache_clear()
 
 
 @pytest.fixture
@@ -135,3 +142,53 @@ def test_a_label_starting_with_a_digit_is_not_taken_as_the_figure() -> None:
     assert stated_figure("| 300 (shipped) | 0.00915 | results/x.json#/a |") == "0.00915"
     assert stated_figure("| Warm user | 25.1 ms | 33.0 ms |") == "25.1"
     assert stated_figure("| Target only | p95 ≤ 250 ms |") is None
+
+
+def _git(repo: Path, *args: str) -> None:
+    subprocess.run(  # noqa: S603 - fixed git argv in a temporary repository
+        ["git", "-C", str(repo), "-c", "user.name=t", "-c", "user.email=t@example.com", *args],  # noqa: S607
+        check=True,
+        capture_output=True,
+    )
+
+
+@pytest.fixture
+def released(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """Build a repository whose result file read 1.0 when v9 was tagged and reads 2.0 now."""
+    results = tmp_path / "results"
+    results.mkdir()
+    (results / "run.json").write_text(json.dumps({"value": 1.0}))
+    _git(tmp_path, "init", "-q")
+    _git(tmp_path, "add", "results/run.json")
+    _git(tmp_path, "commit", "-q", "-m", "release")
+    _git(tmp_path, "tag", "-a", "v9", "-m", "v9")
+    (results / "run.json").write_text(json.dumps({"value": 2.0}))
+    changelog = tmp_path / "CHANGELOG.md"
+    monkeypatch.setattr(check_docs_drift, "REPO_ROOT", tmp_path)
+    monkeypatch.setattr(check_docs_drift, "RESULTS_DIR", results)
+    monkeypatch.setattr(check_docs_drift, "CHANGELOG", changelog)
+    return changelog
+
+
+CITE = "(`results/run.json#/value`)"
+
+
+def test_a_released_section_is_checked_at_its_tag(released: Path) -> None:
+    """Unreleased states today's figure, v9 the figure it shipped with; both pass."""
+    released.write_text(f"## Unreleased\n\nnow 2.0 {CITE}\n\n## v9\n\nthen 1.0 {CITE}\n")
+    assert verify_document(released) == ([], 2)
+
+
+def test_a_released_figure_is_not_checked_against_todays_file(released: Path) -> None:
+    """Rewriting a released entry to today's figure is drift, even though today's file agrees."""
+    released.write_text(f"## v9\n\nthen 2.0 {CITE}\n")
+    problems, _ = verify_document(released)
+    assert len(problems) == 1
+    assert "at v9" in problems[0]
+
+
+def test_a_section_without_a_tag_is_an_error(released: Path) -> None:
+    """A released heading must name a tag, or there is nothing to check it against."""
+    released.write_text(f"## v10\n\nsoon 2.0 {CITE}\n")
+    problems, _ = verify_document(released)
+    assert any("v10 has no tag" in problem for problem in problems)

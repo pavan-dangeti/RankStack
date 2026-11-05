@@ -40,12 +40,16 @@ from __future__ import annotations
 
 import json
 import re
+import subprocess
 import sys
+from functools import cache
 from pathlib import Path
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 RESULTS_DIR = REPO_ROOT / "results"
+#: Its released sections are checked against the result files at their own tag.
+CHANGELOG = REPO_ROOT / "CHANGELOG.md"
 DOCUMENTS = (
     REPO_ROOT / "README.md",
     REPO_ROOT / "CHANGELOG.md",
@@ -76,15 +80,46 @@ SEPARATOR = re.compile(r"^\s*\|(\s*:?-+:?\s*\|)+\s*$")
 TOLERANCE = 1e-9
 
 
-def resolve(result_path: Path, pointer: str) -> Any:
-    """Read a value from a result file, following a `/`-separated JSON pointer."""
-    payload: Any = json.loads(result_path.read_text())
+@cache
+def load_result(name: str, revision: str | None) -> Any:
+    """Read `results/<name>.json` from the working tree, or as committed at a git revision."""
+    path = RESULTS_DIR / f"{name}.json"
+    if revision is None:
+        if not path.exists():
+            msg = f"{path.name} is referenced but not committed"
+            raise FileNotFoundError(msg)
+        return json.loads(path.read_text())
+    relative = path.relative_to(REPO_ROOT).as_posix()
+    shown = subprocess.run(  # noqa: S603 - fixed git argv; the revision is a tag name from the file
+        ["git", "-C", str(REPO_ROOT), "show", f"{revision}:{relative}"],  # noqa: S607
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if shown.returncode != 0:
+        msg = f"{path.name} is not committed at {revision}"
+        raise FileNotFoundError(msg)
+    return json.loads(shown.stdout)
+
+
+def tag_exists(name: str) -> bool:
+    """Return True when `name` is a tag in this repository."""
+    found = subprocess.run(  # noqa: S603 - fixed git argv
+        ["git", "-C", str(REPO_ROOT), "rev-parse", "--verify", "--quiet", f"refs/tags/{name}"],  # noqa: S607
+        capture_output=True,
+        check=False,
+    )
+    return found.returncode == 0
+
+
+def resolve(payload: Any, label: str, pointer: str) -> Any:
+    """Follow a `/`-separated JSON pointer into a result file's payload."""
     for key in pointer.strip("/").split("/"):
         if isinstance(payload, list):
             payload = payload[int(key)]
             continue
         if not isinstance(payload, dict) or key not in payload:
-            msg = f"{result_path.name}#{pointer} is not present"
+            msg = f"{label}#{pointer} is not present"
             raise KeyError(msg)
         payload = payload[key]
     return payload
@@ -107,35 +142,32 @@ def stated_figure(row: str) -> str | None:
     return None
 
 
-def _compare(document: Path, written: str, name: str, pointer: str) -> str | None:
+def _compare(
+    document: Path, written: str, name: str, pointer: str, revision: str | None = None
+) -> str | None:
     """Return a problem message when `written` disagrees with the value at `name#pointer`."""
-    result_path = RESULTS_DIR / f"{name}.json"
-    if not result_path.exists():
-        return f"{document.name}: {result_path.name} is referenced but not committed"
+    label = f"{name}.json" if revision is None else f"{name}.json at {revision}"
     try:
-        expected = resolve(result_path, pointer)
-    except (KeyError, ValueError, IndexError) as exc:
+        expected = resolve(load_result(name, revision), label, pointer)
+    except (FileNotFoundError, KeyError, ValueError, IndexError) as exc:
         return f"{document.name}: {exc}"
     if isinstance(expected, bool) or not isinstance(expected, int | float):
         return None
     if not matches(written, float(expected)):
-        return (
-            f"{document.name}: figure {written} does not match "
-            f"{result_path.name}#{pointer} = {expected:g}"
-        )
+        return f"{document.name}: figure {written} does not match {label}#{pointer} = {expected:g}"
     return None
 
 
-def check_row(document: Path, row: str) -> str | None:
+def check_row(document: Path, row: str, revision: str | None = None) -> str | None:
     """Return a problem message when a table row's figure disagrees with its result file."""
     match = REFERENCE.search(row)
     stated = stated_figure(row)
     if match is None or stated is None:
         return None
-    return _compare(document, stated, match.group("name"), match.group("pointer"))
+    return _compare(document, stated, match.group("name"), match.group("pointer"), revision)
 
 
-def check_prose(document: Path, line: str) -> tuple[list[str], int]:
+def check_prose(document: Path, line: str, revision: str | None = None) -> tuple[list[str], int]:
     """Return the problems and the number of figures checked in one line of prose."""
     figures = [*PROSE_FIGURE.finditer(line), *HTML_FIGURE.finditer(line)]
     covered = {figure.start("name") for figure in figures}
@@ -147,7 +179,11 @@ def check_prose(document: Path, line: str) -> tuple[list[str], int]:
     ]
     for figure in figures:
         problem = _compare(
-            document, figure.group("figure"), figure.group("name"), figure.group("pointer")
+            document,
+            figure.group("figure"),
+            figure.group("name"),
+            figure.group("pointer"),
+            revision,
         )
         if problem is not None:
             problems.append(problem)
@@ -166,7 +202,9 @@ def column_paths(header: str) -> list[str | None]:
     ]
 
 
-def check_columns(document: Path, row: str, paths: list[str | None]) -> tuple[list[str], int]:
+def check_columns(
+    document: Path, row: str, paths: list[str | None], revision: str | None = None
+) -> tuple[list[str], int]:
     """Check every cell under a header sub-path against the row's pointer plus that sub-path."""
     reference = REFERENCE.search(row)
     if reference is None:
@@ -185,7 +223,9 @@ def check_columns(document: Path, row: str, paths: list[str | None]) -> tuple[li
             continue
         checked += 1
         pointer = reference.group("pointer").rstrip("/") + path
-        problem = _compare(document, figure.group("figure"), reference.group("name"), pointer)
+        problem = _compare(
+            document, figure.group("figure"), reference.group("name"), pointer, revision
+        )
         if problem is not None:
             problems.append(problem)
     return problems, checked
@@ -199,27 +239,35 @@ def verify_document(document: Path) -> tuple[list[str], int]:
     checked = 0
     previous = ""
     paths: list[str | None] | None = None
+    # In the changelog a released section is checked against the result files at its own tag: it
+    # states what was true when it shipped, and the current files have since moved on.
+    revision: str | None = None
     for line in document.read_text().splitlines():
+        if document == CHANGELOG and line.startswith("## "):
+            section = line[3:].split()[0]
+            revision = None if section.lower() == "unreleased" else section
+            if revision is not None and not tag_exists(revision):
+                problems.append(f"{document.name}: section {revision} has no tag to check it at")
         if not line.lstrip().startswith("|"):
             paths = None
-            prose_problems, prose_checked = check_prose(document, line)
+            prose_problems, prose_checked = check_prose(document, line, revision)
             problems.extend(prose_problems)
             checked += prose_checked
         elif SEPARATOR.match(line):
             declared = column_paths(previous)
             paths = declared if any(declared) else None
         elif paths is not None:
-            column_problems, column_checked = check_columns(document, line, paths)
+            column_problems, column_checked = check_columns(document, line, paths, revision)
             problems.extend(column_problems)
             checked += column_checked
         elif PROSE_FIGURE.search(line):
             # A row that cites figures in its cells, `23.9 ms (`results/...`)`, is read like prose:
             # every figure is checked, and a pointer without a figure in front of it is an error.
-            cell_problems, cell_checked = check_prose(document, line)
+            cell_problems, cell_checked = check_prose(document, line, revision)
             problems.extend(cell_problems)
             checked += cell_checked
         else:
-            problem = check_row(document, line)
+            problem = check_row(document, line, revision)
             if problem is None:
                 checked += 1 if REFERENCE.search(line) and stated_figure(line) else 0
             else:

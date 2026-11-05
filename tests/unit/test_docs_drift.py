@@ -80,6 +80,43 @@ def test_a_figure_must_equal_the_result_rounded_to_its_written_precision() -> No
     assert matches("-0.0148", -0.0148)
 
 
+SWEEP_TABLE = (
+    "| w (`/weight`) | HR@20 (`/hr/point`) | Coverage (`/coverage/items`) | Figure |\n"
+    "|---|---|---|---|\n"
+    "| 0.25 | {hr} | {coverage} | results/sweep.json#/by_weight/0.25 |\n"
+)
+
+
+@pytest.fixture
+def sweep_document(document: Path) -> Path:
+    """Add a sweep-shaped result file, where each row's pointer names an object, not a figure."""
+    row = {"weight": 0.25, "hr": {"point": 0.0325}, "coverage": {"items": 42}}
+    (check_docs_drift.RESULTS_DIR / "sweep.json").write_text(
+        json.dumps({"by_weight": {"0.25": row}})
+    )
+    return document
+
+
+def test_every_cell_under_a_header_sub_path_is_checked(sweep_document: Path) -> None:
+    """Each column is compared, not just the first figure in the row."""
+    sweep_document.write_text(SWEEP_TABLE.format(hr="0.03250", coverage="42"))
+    assert verify_document(sweep_document) == ([], 3)
+
+    sweep_document.write_text(SWEEP_TABLE.format(hr="0.03250", coverage="41"))
+    problems, _ = verify_document(sweep_document)
+    assert len(problems) == 1
+    assert "41 does not match" in problems[0]
+
+
+def test_a_missing_figure_under_a_header_sub_path_is_an_error(sweep_document: Path) -> None:
+    """A column that declares a sub-path must hold a figure in every row."""
+    sweep_document.write_text(SWEEP_TABLE.format(hr="n/a", coverage="42"))
+    problems, checked = verify_document(sweep_document)
+    assert checked == 2
+    assert len(problems) == 1
+    assert "no figure under column /hr/point" in problems[0]
+
+
 def test_a_label_starting_with_a_digit_is_not_taken_as_the_figure() -> None:
     """A row label such as `300 (shipped)` must not be compared against the pointer."""
     assert stated_figure("| 300 (shipped) | 0.00915 | results/x.json#/a |") == "0.00915"

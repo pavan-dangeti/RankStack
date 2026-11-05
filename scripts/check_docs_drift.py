@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 """Fail if a figure in the documentation no longer matches its committed result file.
 
-Every number in README.md, docs/design.md and docs/runbook.md must come from a committed file under
-`results/`, with the file named next to it. Two forms are checked.
+Every number in README.md, docs/design.md, docs/runbook.md and the ADRs must come from a committed
+file under `results/`, with the file named next to it. These forms are checked.
 
 A table row, where the first figure cell is compared with the pointer in the same row:
 
@@ -12,6 +12,12 @@ A table row, where the first figure cell is compared with the pointer in the sam
 A figure in prose, written directly before its pointer in parentheses:
 
     the re-ranker scores -0.0148 (`results/two_stage_x.json#/cohorts/.../difference`) against
+
+A table whose header cells name sub-paths, where every cell under such a header is checked against
+the row's pointer extended by that sub-path:
+
+    | w (`/weight`) | HR@20 (`/hr@20/point`) | Figure |
+    | 0.25 | 0.03250 | results/sweep_x.json#/by_weight/0.25 |
 
 A prose pointer without a figure directly before it is an error rather than being skipped, so a
 sentence cannot cite a result file while stating a number the check never reads. A figure must equal
@@ -35,6 +41,7 @@ DOCUMENTS = (
     REPO_ROOT / "README.md",
     REPO_ROOT / "docs" / "design.md",
     REPO_ROOT / "docs" / "runbook.md",
+    *sorted((REPO_ROOT / "docs" / "adr").glob("*.md")),
 )
 
 _POINTER = r"results/(?P<name>[a-z0-9][a-z0-9._-]*)\.json#(?P<pointer>/[A-Za-z0-9_/.\[\]@-]*)"
@@ -47,6 +54,10 @@ REFERENCE = re.compile(_POINTER)
 NUMBER = re.compile(rf"^{_FIGURE}{_UNIT}$")
 #: A figure in prose, immediately followed by its pointer as a parenthesised code span.
 PROSE_FIGURE = re.compile(rf"{_FIGURE}{_UNIT} \(`{_POINTER}`\)")
+#: A sub-path declared in a table header cell; each row's pointer is then the base it extends.
+COLUMN_PATH = re.compile(r"`(?P<path>/[A-Za-z0-9_/.\[\]@-]*)`")
+#: The `|---|---|` line under a table header.
+SEPARATOR = re.compile(r"^\s*\|(\s*:?-+:?\s*\|)+\s*$")
 
 TOLERANCE = 1e-9
 
@@ -129,23 +140,71 @@ def check_prose(document: Path, line: str) -> tuple[list[str], int]:
     return problems, len(figures)
 
 
+def _cells(row: str) -> list[str]:
+    return [cell.strip() for cell in row.strip().strip("|").split("|")]
+
+
+def column_paths(header: str) -> list[str | None]:
+    """Return the sub-path each header cell declares, e.g. ``HR@20 (`/hr@20/point`)``."""
+    return [
+        match.group("path") if (match := COLUMN_PATH.search(cell)) else None
+        for cell in _cells(header)
+    ]
+
+
+def check_columns(document: Path, row: str, paths: list[str | None]) -> tuple[list[str], int]:
+    """Check every cell under a header sub-path against the row's pointer plus that sub-path."""
+    reference = REFERENCE.search(row)
+    if reference is None:
+        return [], 0
+    problems: list[str] = []
+    checked = 0
+    for cell, path in zip(_cells(row), paths, strict=False):
+        if path is None:
+            continue
+        figure = NUMBER.match(cell.strip("`* "))
+        if figure is None:
+            problems.append(
+                f"{document.name}: no figure under column {path} in the row citing "
+                f"{reference.group(0)}"
+            )
+            continue
+        checked += 1
+        pointer = reference.group("pointer").rstrip("/") + path
+        problem = _compare(document, figure.group("figure"), reference.group("name"), pointer)
+        if problem is not None:
+            problems.append(problem)
+    return problems, checked
+
+
 def verify_document(document: Path) -> tuple[list[str], int]:
     """Return the drift problems and the number of verified figures for one document."""
     if not document.exists():
         return [], 0
     problems: list[str] = []
     checked = 0
+    previous = ""
+    paths: list[str | None] | None = None
     for line in document.read_text().splitlines():
         if not line.lstrip().startswith("|"):
+            paths = None
             prose_problems, prose_checked = check_prose(document, line)
             problems.extend(prose_problems)
             checked += prose_checked
-            continue
-        problem = check_row(document, line)
-        if problem is None:
-            checked += 1 if REFERENCE.search(line) and stated_figure(line) else 0
+        elif SEPARATOR.match(line):
+            declared = column_paths(previous)
+            paths = declared if any(declared) else None
+        elif paths is not None:
+            column_problems, column_checked = check_columns(document, line, paths)
+            problems.extend(column_problems)
+            checked += column_checked
         else:
-            problems.append(problem)
+            problem = check_row(document, line)
+            if problem is None:
+                checked += 1 if REFERENCE.search(line) and stated_figure(line) else 0
+            else:
+                problems.append(problem)
+        previous = line
     return problems, checked
 
 

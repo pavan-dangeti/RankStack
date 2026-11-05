@@ -1,29 +1,101 @@
 # RankStack
 
-A production-style recommendation system: given a user, it returns a ranked list of products they
-are likely to want next, with a short explanation for each item and the model version that produced
-it. Retrieval narrows a ~1.6M-item catalogue to a few hundred candidates, a learned ranker orders
-them, and business rules enforce diversity and freshness. Evaluation is time-respecting: every
-split, feature and metric is defined against a global timeline, and leakage is tested automatically.
+An online store has to decide, for every visitor and in a few milliseconds, which handful of a
+million-plus products to show next. RankStack is a production-style recommender on Amazon's
+Electronics reviews that does that end to end, from validated data to a served API, and measures
+every component honestly, including the ones that lost.
 
-**Status: Phases 0–5 complete, plus the stage-1 ANN index benchmark.** The service answers, and
-every answer is explained. Two of the three learned components lost their measurements and are
-documented as such rather than quietly dropped. The two-tower retrieval model reaches warm-user HR@20
-0.00025 (`results/evaluation_electronics_0core.json#/cohorts/warm_users/sources/two_tower/ranking/hr@20`).
-The LambdaMART re-ranker changes warm-user HR@20 by
--0.0148 (`results/two_stage_electronics_0core.json#/cohorts/warm_users/paired_two_stage_vs_stage_1/hr/hr@20/difference`)
-against its own stage 1, with a 95% CI from
--0.0172 (`results/two_stage_electronics_0core.json#/cohorts/warm_users/paired_two_stage_vs_stage_1/hr/hr@20/ci_low`)
-to -0.0125 (`results/two_stage_electronics_0core.json#/cohorts/warm_users/paired_two_stage_vs_stage_1/hr/hr@20/ci_high`).
-The ANN benchmark found no approximate index that reaches the 0.95 recall@200 target, so exact search
-is the stage-1 index for ALS. What the service actually ships is the retriever that won, fused with a
-personalised source for known users; unknown users get the global ranking alone. Every failure mode
-on the degradation ladder returns a working list instead of an error.
+![The demo page: Shopper 5's history and recommendations, the ranking toggle, then an anonymous visitor](docs/media/demo.gif)
+
+The page above is the real service at `/demo`: pick a shopper, see what they bought and what the
+API recommends next, flip between popularity alone and the served blend, or arrive as an anonymous
+visitor.
+
+## Key results
+
+Every figure is read by CI from the committed result file it names, so this table cannot drift from
+what the code produces.
+
+| Result | Measured | Command |
+|---|---|---|
+| Data after validation | 43,365,424 (`results/dataset_electronics_0core.json#/totals/interactions`) interactions over 1,610,012 (`results/dataset_electronics_0core.json#/totals/items_with_metadata`) items | `uv run python scripts/build_dataset.py --corpus electronics_0core` |
+| Best baseline, recency-weighted popularity, warm-user HR@20 | 0.02395 (`results/evaluation_electronics_0core.json#/cohorts/warm_users/sources/popularity_recent/ranking/hr@20`) | `uv run python scripts/evaluate_baselines.py --corpus electronics_0core` |
+| Two-tower retriever, warm-user HR@20 | 0.00025 (`results/evaluation_electronics_0core.json#/cohorts/warm_users/sources/two_tower/ranking/hr@20`) | `uv run python scripts/evaluate_baselines.py --corpus electronics_0core` |
+| LambdaMART re-ranker against its own stage 1, paired HR@20 difference (95% CI) | -0.0148 (`results/two_stage_electronics_0core.json#/cohorts/warm_users/paired_two_stage_vs_stage_1/hr/hr@20/difference`) (-0.0172 (`results/two_stage_electronics_0core.json#/cohorts/warm_users/paired_two_stage_vs_stage_1/hr/hr@20/ci_low`) to -0.0125 (`results/two_stage_electronics_0core.json#/cohorts/warm_users/paired_two_stage_vs_stage_1/hr/hr@20/ci_high`)) | `uv run python scripts/evaluate_reranker.py --corpus electronics_0core --candidates 120 --cohort-size 20000 --resamples 1000` |
+| Served blend against popularity alone, test split, paired HR@20 difference (95% CI) | +0.0005 (`results/fusion_weight_test_electronics_0core.json#/result/paired_hr@20_vs_popularity_recent/difference`) (-0.003 (`results/fusion_weight_test_electronics_0core.json#/result/paired_hr@20_vs_popularity_recent/ci_low`) to +0.004 (`results/fusion_weight_test_electronics_0core.json#/result/paired_hr@20_vs_popularity_recent/ci_high`)); catalogue coverage@20 23 (`results/fusion_weight_sweep_electronics_0core.json#/by_weight/0.0/coverage_at_20/items`) → 133 (`results/fusion_weight_sweep_electronics_0core.json#/by_weight/0.75/coverage_at_20/items`) items on validation | `uv run python scripts/select_fusion_weight.py confirm` |
+| Serving latency, warm user, p50 / p99 | 23.9 ms (`results/load_test_electronics_0core.json#/latency/0/p50_ms`) / 34.6 ms (`results/load_test_electronics_0core.json#/latency/0/p99_ms`) | `uv run python scripts/load_test.py --requests 400 --concurrency 8 --k 20` |
+| Stage-1 index for ALS: exact search p99, against the best approximate index's recall@200 | 3.8184 ms (`results/ann_index_electronics_0core_als.json#/curves/flat/0/p99_ms`), against 0.90175 (`results/ann_index_electronics_0core_als.json#/curves/hnsw/53/recall_at_top_k`) recall for HNSW, below the 0.95 target | `uv run python scripts/bench_ann_index.py --vectors als --queries 200` |
+
+## Architecture
+
+```mermaid
+flowchart LR
+    data["Amazon Reviews 2023, Electronics<br/>validated, split on a global timeline,<br/>leakage-tested"]
+    baselines["Baselines<br/>popularity, recency-weighted popularity,<br/>co-occurrence, ALS"]
+    retrieval["Two-tower retriever<br/>measured, not served"]
+    rerank["Stage-2 LambdaMART<br/>measured, not served"]
+    fusion["Rank fusion<br/>recent popularity + co-occurrence,<br/>weight chosen by ADR-0007"]
+    api["Serving API, FastAPI<br/>checksum-verified artefacts,<br/>degradation ladder, /metrics"]
+    demo["/demo page"]
+    data --> baselines
+    data --> retrieval
+    baselines --> fusion
+    baselines --> rerank
+    fusion --> api
+    api --> demo
+```
+
+## Run it locally
+
+```bash
+uv sync --all-groups
+uv run python scripts/download_data.py && uv run python scripts/build_dataset.py
+uv run python scripts/train_baselines.py && uv run python scripts/build_serving_manifest.py
+uv run python -m uvicorn rankstack.serving.app:app      # then open http://localhost:8000/demo
+```
+
+The first two steps download and validate the published dataset; the third trains the served models
+and records their checksums, which the server verifies before it answers.
+
+## Findings
+
+- **The two-tower retriever failed.** Its training loss falls while its hit rate does not move, and it
+  ends far below every baseline (table above). It is documented and diagnosed, not served.
+- **Re-ranking hurt.** Stage 2 puts the right item in its candidate list often enough to help, then
+  orders it worse than stage 1 did; the paired difference above excludes zero. Not served.
+- **The business rules are unmeasurable at their shipped weights.** Warm-user HR@20 is
+  0.00915 (`results/two_stage_model_only_electronics_0core.json#/cohorts/warm_users/stage_2/ranking/hr@20`)
+  with the rules removed and
+  0.00915 (`results/two_stage_electronics_0core.json#/cohorts/warm_users/stage_2/ranking/hr@20`)
+  with them: they reorder the list only below the depth any hit rate looks at.
+- **A cold-start privacy bug was found and fixed.** Unknown users were scored as the first encoded
+  user, a real customer, so every anonymous visitor was shown items drawn from that customer's
+  history. They now get the global ranking alone, and the tests check the list's contents, not just
+  its status.
+- **What is served was decided by a rule written before the results.** The co-occurrence weight was
+  chosen on the validation split by a pre-registered rule
+  ([ADR-0007](docs/adr/0007-serving-fusion-weight.md)) and confirmed once on the test split.
+
+## Limitations
+
+- **The served blend personalises shallowly.** At the selected weight, co-occurrence can reorder and
+  promote items that popularity already ranks, but it cannot bring an item into a top 20 on its own;
+  that needs a weight above 61/80. The range from there to equal weight is deferred to a future phase
+  with a fresh, never-evaluated hold-out window, because the current test split has been used once.
+- **The ANN recall ground truth counts items a user has already seen**, which the served list
+  excludes; the bound on that effect is in the ANN section below.
+- **Evaluation is offline only.** No online test has measured any of this on real traffic.
+- **Some published prices are implausible** and are passed through as published (data notes below).
+- **One process, no load shedding, no exported traces** ([runbook](docs/runbook.md#known-limits)).
+  It is not hosted: the artefacts need more memory than most free tiers give.
+
+## Documentation
 
 - [Design document](docs/design.md) — requirements, SLOs, architecture, alternatives, risks, threat model
 - [Architecture decisions](docs/adr/) — the decisions worth arguing about, and what was rejected
 - [Data contracts](docs/schemas.md) — the Parquet schemas every later phase reads
 - [Serving runbook](docs/runbook.md) — operating the API, every degradation and its alert
+- [Changelog](CHANGELOG.md) — what each phase delivered
 - Data: Amazon Reviews 2023 (McAuley Lab), Electronics. Terms analysis and mitigations in
   `docs/design.md` §4.3.
 

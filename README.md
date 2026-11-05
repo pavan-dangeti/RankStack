@@ -9,7 +9,8 @@ every component honestly, including the ones that lost.
 
 The page above is the real service at `/demo`: pick a shopper, see what they bought and what the
 API recommends next, flip between popularity alone and the served blend, or arrive as an anonymous
-visitor.
+visitor. A hosted demo is planned; until then, run it locally (below) or watch the walkthrough attached
+to the v1.0.0 release.
 
 ## Key results
 

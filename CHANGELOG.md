@@ -7,6 +7,9 @@ history is the same, and each phase is marked by an annotated tag at the commit 
 
 ## Unreleased
 
+- Demo fixture and runbook no longer contain reviewer ids; earlier commits, the v1.0.0 tag and PR
+  refs #1 to #9 still do (9 pseudonymous ids from the public dataset); fixed forward, no history
+  rewrite (rationale in design §4.3).
 - The serving process's memory is measured, not assumed (`scripts/measure_memory.py`); the
   runbook and Dockerfile had understated it several times over. The user map is now a sorted id
   array searched by bisection instead of a dict of fifteen million ids, which brings the process

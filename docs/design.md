@@ -171,16 +171,18 @@ one catalogue and to give a second point on the popularity/coverage trade-off cu
 
 ### 4.3 Terms of use — verified, with a caveat that matters
 
-Verified 2026-10-08 from the publisher's dataset page and from Amazon's Conditions of Use.
+Re-verified 2026-11-05. Only what can be checked on that date is stated.
 
-- The McAuley Lab release is published for **research use**. The authors state they are "not in a
-  position to assign a license to this dataset or dictate the terms of its usage", and make it
-  available "primarily for research purposes". It has no explicit licence file; derivatives on the
-  Hub carry a "non-commercial academic research use" label by third-party interpretation.
-- Amazon's Conditions of Use grant only "personal and non-commercial use", and explicitly exclude
-  "any resale or commercial use … any collection and use of product listings, descriptions, or
-  prices; any derivative use of any Amazon Service or its contents … or any use of data mining,
-  robots, or similar data gathering and extraction tools."
+- The publisher's dataset page (https://amazon-reviews-2023.github.io/) and the Hugging Face dataset
+  card (https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023) state **no licence and no
+  terms of use**. Both ask only that users cite the paper (Hou et al., "Bridging Language and Items
+  for Retrieval and Recommendation", arXiv:2403.03952); the page footer reads "Copyright © 2024,
+  McAuley Lab".
+- Amazon's Conditions of Use (https://www.amazon.com/gp/help/customer/display.html?nodeId=508088)
+  grant a limited licence for personal, non-commercial use, and exclude resale and commercial use,
+  the collection and use of product listings, descriptions or prices, derivative use of Amazon's
+  services or their contents, and data mining or similar extraction tools. This is a paraphrase:
+  the page returned HTTP 503 on 2026-11-05, so its current wording could not be quoted.
 
 RankStack's position: this is a non-commercial, non-redistributing research and portfolio project
 that cites the source, downloads the data at runtime with the publisher's own script, never
@@ -196,6 +198,14 @@ Mitigations that are enforced in code and CI, not just stated:
 3. The demo UI displays derived output only; the item text shown is title + category, no
    descriptions, no review text.
 4. The citation is in the README and in `docs/design.md`, with the retrieval URLs.
+
+**Reviewer ids in the repository's history.** Until 2026-11-05 the demo fixture held eight reviewer
+ids from the dataset, with their train-window histories, and the runbook held one more as an
+example. Both now hold none: the fixture stores internal user codes, and the server reads the
+histories from local data at startup. Earlier commits, the `v1.0.0` tag and the heads of pull
+requests #1 to #9 still contain them. History is fixed forward, not rewritten: the ids are the
+pseudonymous `user_id` values the dataset itself publishes, and rewriting `main` would not change
+the pull-request heads, which GitHub retains.
 
 Swapping datasets must stay cheap, so the pipeline is written against a single canonical schema
 (`docs/schemas.md`, Phase 1) and category selection is configuration. Yelp Open Dataset (CC BY 4.0)

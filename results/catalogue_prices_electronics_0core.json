@@ -1,0 +1,23 @@
+{
+  "category": "Amazon Devices",
+  "command": "uv run python scripts/audit_catalogue_prices.py",
+  "corpus": "electronics_0core",
+  "examples": {
+    "B008KPEFPI": {
+      "price": 0.64,
+      "title": "Echo 3-Snap Shorty Shield (AMBER)"
+    },
+    "B01K8B8YA8": {
+      "price": 0.99,
+      "title": "Echo Dot (2nd Generation) - Smart speaker with Alexa - White"
+    },
+    "B01KIOU4EO": {
+      "price": 0.62,
+      "title": "Echo Show - 1st Generation Black"
+    }
+  },
+  "items": 8484,
+  "priced": 1372,
+  "priced_below_threshold": 1372,
+  "threshold": 1.0
+}

@@ -77,6 +77,13 @@ Three findings, all recorded in the result file rather than smoothed over:
   em-dash placeholder `—` and the rest look like `from 9.95`. The reader takes the first number in a
   string price and never coerces a missing price to zero, because "unknown price" and "free" are
   different facts for a price-affinity feature.
+- **Some published prices are implausible.** Of the
+  1,372 (`results/catalogue_prices_electronics_0core.json#/priced`) priced Amazon Devices items,
+  1,372 (`results/catalogue_prices_electronics_0core.json#/priced_below_threshold`) are listed under
+  one dollar; the Echo Dot (2nd Generation) is at
+  $0.99 (`results/catalogue_prices_electronics_0core.json#/examples/B01K8B8YA8/price`). The API
+  returns prices as published; the demo page does not show them
+  (`uv run python scripts/audit_catalogue_prices.py`).
 - **128,442 items have no category path** and 106,334 have no `main_category`. Category affinity
   treats those as unknown rather than as a bucket of their own.
 

@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RankStack demo</title>
+<meta name="description" content="Live recommendations from the RankStack serving API.">
+<style>
+:root {
+  color-scheme: light dark;
+  --bg: #f7f7f5; --panel: #ffffff; --text: #1d1d1b; --muted: #5d5d58; --line: #deded8;
+  --accent: #1f5fbf; --focus: #1f5fbf;
+  --trending-bg: #e8eefb; --trending-fg: #1c4a96;
+  --pair-bg: #e6f4ea; --pair-fg: #1e6b34;
+  --both-bg: #f6ecdf; --both-fg: #7a4a0c;
+  --warn-bg: #fff4d6; --warn-fg: #6b4d00;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #151514; --panel: #1f1f1d; --text: #ececea; --muted: #a9a9a3; --line: #3a3a36;
+    --accent: #8db4ff; --focus: #8db4ff;
+    --trending-bg: #22314d; --trending-fg: #b9cfff;
+    --pair-bg: #1f3a28; --pair-fg: #a8e3b8;
+    --both-bg: #43341f; --both-fg: #f1cf9f;
+    --warn-bg: #3d3216; --warn-fg: #f3dc9b;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--text);
+  font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+.wrap { max-width: 1120px; margin: 0 auto; padding: 24px 16px 40px; }
+header h1 { margin: 0 0 4px; font-size: 1.6rem; }
+header p { margin: 0; color: var(--muted); max-width: 70ch; }
+.controls {
+  display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  margin: 20px 0; padding: 16px; background: var(--panel); border: 1px solid var(--line);
+  border-radius: 10px;
+}
+label, legend { font-weight: 600; display: block; margin-bottom: 6px; }
+select {
+  width: 100%; padding: 10px; font: inherit; color: var(--text); background: var(--bg);
+  border: 1px solid var(--line); border-radius: 8px;
+}
+fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
+.modes { display: flex; flex-wrap: wrap; gap: 8px; }
+.modes label {
+  font-weight: 500; margin: 0; padding: 8px 12px; border: 1px solid var(--line);
+  border-radius: 999px; cursor: pointer; background: var(--bg);
+}
+.modes input { margin-right: 6px; }
+.modes label:has(input:checked) { border-color: var(--accent); color: var(--accent); }
+.tradeoff { margin: 10px 0 0; font-size: 0.9rem; color: var(--muted); }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+main { display: grid; gap: 16px; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); }
+section {
+  background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px;
+  min-width: 0;
+}
+h2 { margin: 0 0 12px; font-size: 1.1rem; }
+ol { list-style: none; margin: 0; padding: 0; }
+li { padding: 10px 0; border-top: 1px solid var(--line); }
+li:first-child { border-top: 0; }
+.title { font-weight: 600; overflow-wrap: anywhere; }
+.meta { color: var(--muted); font-size: 0.9rem; }
+.why { font-size: 0.9rem; margin-top: 2px; }
+.rank { color: var(--muted); font-variant-numeric: tabular-nums; margin-right: 6px; }
+.badge {
+  display: inline-block; font-size: 0.75rem; font-weight: 600; padding: 1px 8px;
+  border-radius: 999px; margin-left: 6px; white-space: nowrap;
+}
+.badge.trending { background: var(--trending-bg); color: var(--trending-fg); }
+.badge.co-occurrence { background: var(--pair-bg); color: var(--pair-fg); }
+.badge.both { background: var(--both-bg); color: var(--both-fg); }
+.notice {
+  margin: 0 0 12px; padding: 8px 12px; border-radius: 8px;
+  background: var(--warn-bg); color: var(--warn-fg); font-size: 0.9rem;
+}
+.empty { color: var(--muted); }
+footer.response {
+  margin-top: 16px; padding: 12px 16px; border: 1px solid var(--line); border-radius: 10px;
+  background: var(--panel); font: 0.85rem/1.6 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+footer.response dl { display: flex; flex-wrap: wrap; gap: 4px 24px; margin: 0; }
+footer.response dt { color: var(--muted); }
+footer.response dd { margin: 0 0 0 6px; overflow-wrap: anywhere; }
+footer.response div { display: flex; }
+@media (max-width: 760px) {
+  .controls, main { grid-template-columns: minmax(0, 1fr); }
+  header h1 { font-size: 1.35rem; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>RankStack, live</h1>
+    <p>Pick a shopper to see their purchase history and what the serving API recommends next.
+      Every request below is a real call to the running service.</p>
+  </header>
+
+  <div class="controls">
+    <div>
+      <label for="shopper">Shopper</label>
+      <select id="shopper" name="shopper" aria-describedby="shopper-help"></select>
+      <p id="shopper-help" class="tradeoff">Real reviewers from the dataset, shown without their ids.</p>
+    </div>
+    <fieldset>
+      <legend>Ranking</legend>
+      <div class="modes">
+        <label><input type="radio" name="mode" value="popular">Popular only (w=0)</label>
+        <label><input type="radio" name="mode" value="blended" checked>Blended
+          (w=<span data-figure="results/fusion_weight_sweep_electronics_0core.json#/selected_weight">0.75</span>, served default)</label>
+      </div>
+      <p class="tradeoff" id="tradeoff">
+        Chosen by a pre-registered rule. Validation split: catalogue coverage@20 grows from
+        <span data-figure="results/fusion_weight_sweep_electronics_0core.json#/by_weight/0.0/coverage_at_20/items">23</span>
+        to
+        <span data-figure="results/fusion_weight_sweep_electronics_0core.json#/by_weight/0.75/coverage_at_20/items">133</span>
+        items. Test split, run once: HR@20 difference against popular only
+        +<span data-figure="results/fusion_weight_test_electronics_0core.json#/result/paired_hr@20_vs_popularity_recent/difference">0.0005</span>,
+        95% CI
+        <span data-figure="results/fusion_weight_test_electronics_0core.json#/result/paired_hr@20_vs_popularity_recent/ci_low">-0.003</span>
+        to
+        +<span data-figure="results/fusion_weight_test_electronics_0core.json#/result/paired_hr@20_vs_popularity_recent/ci_high">0.004</span>.
+      </p>
+    </fieldset>
+  </div>
+
+  <main>
+    <section aria-labelledby="history-heading">
+      <h2 id="history-heading">Purchase history <span class="meta">(training window, newest first)</span></h2>
+      <ol id="history"></ol>
+    </section>
+    <section aria-labelledby="recs-heading">
+      <h2 id="recs-heading">Top 10 recommendations</h2>
+      <div id="status" role="status" aria-live="polite"></div>
+      <ol id="recs" aria-live="polite"></ol>
+    </section>
+  </main>
+
+  <footer class="response" aria-label="Response details">
+    <dl>
+      <div><dt>elapsed_ms</dt><dd id="elapsed">–</dd></div>
+      <div><dt>fallback_used</dt><dd id="fallback">–</dd></div>
+      <div><dt>model_version</dt><dd id="model">–</dd></div>
+      <div><dt>request_id</dt><dd id="request">–</dd></div>
+    </dl>
+  </footer>
+</div>
+
+<script>
+"use strict";
+const $ = (selector) => document.querySelector(selector);
+let shoppers = [];
+
+const EXPLAIN = {
+  top_ranked_in_category: (e) => e[0] ? e[0].charAt(0).toUpperCase() + e[0].slice(1) : "Top pick",
+  popular_in_category: (e) => `Popular in ${e[0]}`,
+  trending_by_interactions: () => "Trending by recent interactions",
+};
+const BADGE = { trending: "trending", "co-occurrence": "co-occurrence", both: "both" };
+
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
+function renderHistory() {
+  const list = $("#history");
+  list.replaceChildren();
+  const value = $("#shopper").value;
+  if (value === "anonymous") {
+    list.append(el("li", "empty", "No history. An anonymous visitor gets the cold-start list."));
+    return;
+  }
+  const shopper = shoppers[Number(value) - 1];
+  for (const entry of shopper.history) {
+    const item = el("li");
+    item.append(el("div", "title", entry.title), el("div", "meta", `${entry.category} · ${entry.year}`));
+    list.append(item);
+  }
+}
+
+function renderRecommendations(payload) {
+  const list = $("#recs");
+  list.replaceChildren();
+  const status = $("#status");
+  status.replaceChildren();
+  if (payload.fallback_used) {
+    const reason = payload.fallback_used === "cold_start"
+      ? "Cold start: no history, so this is the trending list every new visitor sees."
+      : `Degraded (${payload.fallback_used}): serving global popularity.`;
+    status.append(el("p", "notice", reason));
+  }
+  for (const item of payload.items) {
+    const row = el("li");
+    row.dataset.itemId = item.item_id;
+    const title = el("div", "title");
+    title.append(el("span", "rank", `${item.rank}.`), document.createTextNode(item.title || item.item_id));
+    const badge = el("span", `badge ${BADGE[item.source] || "trending"}`, item.source);
+    title.append(badge);
+    const price = item.price === null ? "price unknown" : `$${item.price.toFixed(2)}`;
+    const explain = EXPLAIN[item.explanation.template] || (() => item.explanation.template);
+    row.append(
+      title,
+      el("div", "meta", `${item.category || "uncategorised"} · ${price}`),
+      el("div", "why", explain(item.explanation.evidence)),
+    );
+    list.append(row);
+  }
+  $("#elapsed").textContent = payload.elapsed_ms.toFixed(1);
+  $("#fallback").textContent = payload.fallback_used ?? "null";
+  $("#model").textContent = payload.model_version;
+  $("#request").textContent = payload.request_id;
+}
+
+async function load() {
+  renderHistory();
+  const shopper = encodeURIComponent($("#shopper").value);
+  const mode = document.querySelector("input[name=mode]:checked").value;
+  $("#recs").setAttribute("aria-busy", "true");
+  try {
+    const response = await fetch(`/demo/recommend?shopper=${shopper}&mode=${mode}`);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    renderRecommendations(await response.json());
+  } catch (error) {
+    $("#status").replaceChildren(el("p", "notice", `Request failed: ${error.message}`));
+  } finally {
+    $("#recs").removeAttribute("aria-busy");
+  }
+}
+
+async function init() {
+  const response = await fetch("/demo/shoppers");
+  shoppers = (await response.json()).shoppers;
+  const select = $("#shopper");
+  for (const shopper of shoppers) {
+    select.append(new Option(`${shopper.label} · ${shopper.theme}`, String(shopper.id)));
+  }
+  select.append(new Option("Anonymous visitor", "anonymous"));
+  select.addEventListener("change", load);
+  for (const radio of document.querySelectorAll("input[name=mode]")) {
+    radio.addEventListener("change", load);
+  }
+  await load();
+}
+
+init();
+</script>
+</body>
+</html>

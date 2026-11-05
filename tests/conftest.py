@@ -10,7 +10,7 @@ from __future__ import annotations
 import gzip
 import json
 import random
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from typing import TYPE_CHECKING, Any
 
@@ -33,6 +33,9 @@ from rankstack.eval.harness import CohortHistory
 from rankstack.retrieval.als import AlsConfig, train_als
 from rankstack.retrieval.cooccurrence import train_cooccurrence
 from rankstack.retrieval.popularity import train_popularity
+from rankstack.serving.artifacts import ItemCatalogue, ServingArtifacts
+from rankstack.serving.demo import DEMO_K, Shopper
+from rankstack.serving.recommender import Recommender
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
@@ -301,3 +304,54 @@ def popularity_counts(trained: Trained) -> np.ndarray:
     return np.bincount(codes.astype(np.int64), minlength=trained.encoding.n_items).astype(
         np.float32
     )
+
+
+def demo_parts(
+    trained: Trained, n_shoppers: int = 3
+) -> tuple[ServingArtifacts, tuple[Shopper, ...]]:
+    """Build a synthetic artefact set and demo shoppers, those the toggle changes first.
+
+    `popularity_recent` gets a random order of its own so that popular-only and blended lists are
+    distinguishable; the shared baseline fixture uses one model for both popularity sources.
+    """
+    n_items = trained.encoding.n_items
+    order = np.random.default_rng(3).permutation(n_items)
+    artifacts = ServingArtifacts(
+        encoding=trained.encoding,
+        popularity=trained.popularity,
+        popularity_recent=replace(trained.popularity, scores=(order + 1).astype(np.float32)),
+        cooccurrence=trained.cooccurrence,
+        catalogue=ItemCatalogue(
+            titles=np.array([f"Item {code}" for code in range(n_items)], dtype=object),
+            categories=np.array(
+                ["cat_a" if c % 2 == 0 else "cat_b" for c in range(n_items)], dtype=object
+            ),
+            prices=np.where(np.arange(n_items) % 3 == 0, 0.0, 9.99).astype(np.float32),
+        ),
+        history_indptr=trained.cooccurrence.history_indptr,
+        history_codes=trained.cooccurrence.history_codes,
+        corpus="synthetic",
+        versions={"popularity.npy": "a" * 64, "popularity_recent.npy": "b" * 64},
+        cooccurrence_weight=0.75,
+    )
+    blended = Recommender(artifacts=artifacts)
+    popular = Recommender(artifacts=replace(artifacts, cooccurrence_weight=0.0))
+
+    def ids(recommender: Recommender, user: str) -> list[str]:
+        return [item.item_id for item in recommender.recommend(user, DEMO_K).items]
+
+    users = list(trained.encoding.user_to_code)
+    users.sort(key=lambda user: ids(blended, user) == ids(popular, user))
+    shoppers = tuple(
+        Shopper(
+            label=f"Shopper {number}",
+            theme=f"theme {number}",
+            user_id=user,
+            history=tuple(
+                {"title": f"Item {int(code)}", "category": "cat_a", "year": 2020}
+                for code in trained.cooccurrence.history(trained.encoding.user_to_code[user])
+            ),
+        )
+        for number, user in enumerate(users[:n_shoppers], start=1)
+    )
+    return artifacts, shoppers

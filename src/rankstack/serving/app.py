@@ -21,17 +21,19 @@ from rankstack.config import Settings
 from rankstack.config import settings as default_settings
 from rankstack.logging import configure_logging, get_logger
 from rankstack.serving.artifacts import load_artifacts
+from rankstack.serving.demo import build_demo_router, load_shoppers
 from rankstack.serving.recommender import DEFAULT_K, MAX_K, Recommender
 
 if TYPE_CHECKING:
     from rankstack.serving.artifacts import ServingArtifacts
+    from rankstack.serving.demo import Shopper
 
 _logger = get_logger(__name__)
 
 CORPUS = "electronics_0core"
 
 
-def create_app(artifacts: ServingArtifacts) -> FastAPI:
+def create_app(artifacts: ServingArtifacts, shoppers: tuple[Shopper, ...] = ()) -> FastAPI:
     """Build the ASGI application around an already-loaded artefact set.
 
     Artefacts are passed in rather than loaded here so the failure-injection tests can start
@@ -82,6 +84,8 @@ def create_app(artifacts: ServingArtifacts) -> FastAPI:
         exposition = generate_latest(recommender.metrics.registry)
         return Response(content=exposition, media_type=CONTENT_TYPE_LATEST)
 
+    if shoppers:
+        app.include_router(build_demo_router(recommender, shoppers))
     return app
 
 
@@ -89,7 +93,7 @@ def build_default_app(config: Settings | None = None) -> FastAPI:
     """Load artefacts for the default corpus and build the app. Used by the container entrypoint."""
     resolved = config or default_settings
     artifacts = load_artifacts(resolved.artifact_root, CORPUS, with_titles=True)
-    return create_app(artifacts)
+    return create_app(artifacts, load_shoppers())
 
 
 _app: FastAPI | None = None

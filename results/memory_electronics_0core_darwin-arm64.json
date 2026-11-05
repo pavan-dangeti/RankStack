@@ -1,5 +1,5 @@
 {
-  "artifact_load_seconds": 9.43,
+  "artifact_load_seconds": 2.89,
   "command": "uv run python scripts/measure_memory.py",
   "corpus": "electronics_0core",
   "definitions": {
@@ -7,7 +7,7 @@
     "rss_after_load_mib": "resident set size once the app is built",
     "rss_after_requests_mib": "resident set size after the requests above"
   },
-  "peak_rss_mib": 4965.8,
+  "peak_rss_mib": 2971.9,
   "platform": "darwin-arm64",
   "python": "3.12.13",
   "requests": {
@@ -15,6 +15,6 @@
     "known_users": 100,
     "unknown_users": 20
   },
-  "rss_after_load_mib": 4954.5,
-  "rss_after_requests_mib": 4937.9
+  "rss_after_load_mib": 2961.9,
+  "rss_after_requests_mib": 2971.9
 }

@@ -5,6 +5,22 @@ against that file. Entries from v1.0.0 on refer to pull requests in this reposit
 entries before it refer to pull requests in the original repository, which is now archived; the
 history is the same, and each phase is marked by an annotated tag at the commit where it landed.
 
+## Unreleased
+
+- The serving process's memory is measured, not assumed (`scripts/measure_memory.py`); the
+  runbook and Dockerfile had understated it several times over. The user map is now a sorted id
+  array searched by bisection instead of a dict of fifteen million ids, which brings the process
+  inside the serving image to
+  2,152.0 (`results/memory_electronics_0core_linux-aarch64-container.json#/rss_after_requests_mib`)
+  MiB, with a peak of
+  2,372.9 (`results/memory_electronics_0core_linux-aarch64-container.json#/peak_rss_mib`) MiB.
+  Warm-user latency is
+  26.8 ms (`results/load_test_electronics_0core.json#/latency/0/p50_ms`) at p50 and
+  38.9 ms (`results/load_test_electronics_0core.json#/latency/0/p99_ms`) at p99; all five SLOs
+  are met.
+- The runbook's `docker run` mounts `data/` whole: mounting `data/processed` at `/data` left the
+  catalogue where the server does not look for it.
+
 ## v1.0.0
 
 The first release: a recommender that answers, explains every answer, and shows it working at
@@ -17,9 +33,7 @@ the test split. There, against popularity alone, the paired HR@20 difference is
 0.0005 (`results/fusion_weight_test_electronics_0core.json#/result/paired_hr@20_vs_popularity_recent/difference`),
 95% CI -0.003 (`results/fusion_weight_test_electronics_0core.json#/result/paired_hr@20_vs_popularity_recent/ci_low`)
 to 0.004 (`results/fusion_weight_test_electronics_0core.json#/result/paired_hr@20_vs_popularity_recent/ci_high`).
-An unknown user gets popularity alone. Warm-user latency is
-23.9 ms (`results/load_test_electronics_0core.json#/latency/0/p50_ms`) at p50 and
-34.6 ms (`results/load_test_electronics_0core.json#/latency/0/p99_ms`) at p99 in one process.
+An unknown user gets popularity alone. Warm-user latency met all five SLOs in one process.
 
 **Changes since the last phase (pull requests #1 to #4 and #6):**
 

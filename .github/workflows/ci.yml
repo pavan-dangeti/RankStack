@@ -39,6 +39,9 @@ jobs:
         with:
           enable-cache: true
       - run: uv sync --all-groups --locked
+      - name: Browser for the demo page test
+        # The coverage step below runs every suite, including the Playwright demo test.
+        run: uv run playwright install --with-deps chromium
       - name: Unit and property tests
         # -rA names every outcome, passes included. Some faiss tests skip on macOS when torch is
         # loaded, so this log is where they are shown to have run.
@@ -72,7 +75,9 @@ jobs:
         with:
           enable-cache: true
       - run: uv sync --all-groups --locked
-      - name: Whole pipeline, including the leakage negative control
+      - name: Browser for the demo page test
+        run: uv run playwright install --with-deps chromium
+      - name: Whole pipeline, the leakage negative control, and the demo page in a browser
         run: uv run pytest tests/e2e
 
   security:

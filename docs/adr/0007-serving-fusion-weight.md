@@ -91,3 +91,6 @@ can reach a top 20 only when w exceeds 61/80. Every candidate weight below 1 sit
 the grid could not test a blend that brings new items into the top 20 at an acceptable hit-rate cost.
 A future rule that wants to test that should place grid points between 61/80 and 1; this one is not
 re-run to do so.
+
+**Deferred.** Weights from 0.76 to 1.0 are deferred to a future phase that evaluates them on a fresh,
+never-evaluated hold-out window, because the current test split has now been used once.
